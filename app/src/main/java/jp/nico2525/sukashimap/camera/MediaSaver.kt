@@ -46,9 +46,16 @@ class MediaSaver(private val context: Context) {
             canvas.restore()
         }
         val name = "SUKASHI_${System.currentTimeMillis()}.jpg"
+        val takenMs = System.currentTimeMillis()
         val values = ContentValues().apply {
             put(MediaStore.Images.Media.DISPLAY_NAME, name)
             put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+            put(MediaStore.Images.Media.DATE_TAKEN, takenMs)
+            put(MediaStore.Images.Media.DATE_ADDED, takenMs / 1000)
+            if (latitude != null && longitude != null) {
+                put(MediaStore.Images.Media.LATITUDE, latitude)
+                put(MediaStore.Images.Media.LONGITUDE, longitude)
+            }
             if (Build.VERSION.SDK_INT >= 29) {
                 put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/SukashiMap")
                 put(MediaStore.Images.Media.IS_PENDING, 1)

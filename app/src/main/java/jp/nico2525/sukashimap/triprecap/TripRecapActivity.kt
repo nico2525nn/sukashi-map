@@ -296,10 +296,11 @@ class TripRecapActivity : AppCompatActivity() {
           "layers": [
             {"id": "bg", "type": "background", "paint": {"background-color": "$bg"}},
             {"id": "water", "type": "fill", "source": "ofm", "source-layer": "water", "paint": {"fill-color": "$water"}},
-            {"id": "land", "type": "fill", "source": "ofm", "source-layer": "boundary", "paint": {"fill-color": "$land"}},
+            {"id": "landcover", "type": "fill", "source": "ofm", "source-layer": "landcover", "paint": {"fill-color": "$land"}},
+            {"id": "landuse", "type": "fill", "source": "ofm", "source-layer": "landuse", "paint": {"fill-color": "$land"}},
             {"id": "roads", "type": "line", "source": "ofm", "source-layer": "transportation", "paint": {"line-color": "$road", "line-width": 1}},
             {"id": "places", "type": "symbol", "source": "ofm", "source-layer": "place",
-             "layout": {"text-field": "{name:latin}", "text-size": 11}, "paint": {"text-color": "${if (dark) "#ffffff" else "#111111"}"}}
+             "layout": {"text-field": ["coalesce", ["get", "name:latin"], ["get", "name"]], "text-size": 11}, "paint": {"text-color": "${if (dark) "#ffffff" else "#111111"}"}}
           ]
         }
         """.trimIndent()

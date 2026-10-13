@@ -244,8 +244,8 @@ class GalleryDetailActivity : AppCompatActivity() {
     }
 
     private fun releaseVideoView(root: View) {
-        val playerView = root.findViewById<PlayerView>(R.id.detail_player)
-        if (playerView?.player === player) playerView.player = null
+        val playerView = root.findViewById<PlayerView>(R.id.detail_player) ?: return
+        if (playerView.player === player) playerView.player = null
     }
 
     private fun releasePlayer() {
