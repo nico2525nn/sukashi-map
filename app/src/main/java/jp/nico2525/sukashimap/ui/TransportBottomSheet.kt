@@ -198,6 +198,9 @@ class TransportBottomSheet : BottomSheetDialogFragment() {
         binding.formTrain.visibility = if (mode == TransportMode.TRAIN) View.VISIBLE else View.GONE
         binding.formOther.visibility = if (mode == TransportMode.OTHER) View.VISIBLE else View.GONE
         binding.formSpot.visibility = if (mode == TransportMode.SPOT) View.VISIBLE else View.GONE
+        binding.tvMapDisclaimer.setText(
+            if (mode == TransportMode.TRAIN) R.string.map_disclaimer_train_jp else R.string.map_disclaimer,
+        )
     }
 
     // ---- inputs ----

@@ -423,6 +423,13 @@
                 android:checked="true"
                 android:text="@string/settings_show_map" />
 
+            <TextView
+                android:id="@+id/tvMapDisclaimer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/map_disclaimer"
+                android:textAppearance="?attr/textAppearanceBodySmall" />
+
             <com.google.android.material.materialswitch.MaterialSwitch
                 android:id="@+id/switchShowWatermark"
                 android:layout_width="wrap_content"
