@@ -290,7 +290,7 @@ class TripRecapActivity : AppCompatActivity() {
           "version": 8,
           "name": "SukashiRecap",
           "sources": {
-            "ofm": {"type": "vector", "tiles": ["$TILES/planet/{z}/{x}/{y}.pbf"], "maxzoom": 14}
+            "ofm": {"type": "vector", "url": "$TILES/planet", "maxzoom": 14}
           },
           "glyphs": "$TILES/fonts/{fontstack}/{range}.pbf",
           "layers": [

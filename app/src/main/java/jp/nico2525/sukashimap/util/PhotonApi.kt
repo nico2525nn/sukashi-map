@@ -27,8 +27,12 @@ object PhotonApi {
         withContext(Dispatchers.IO) {
             val q = query.trim()
             if (q.isEmpty()) return@withContext emptyList()
+            val safeLang = when (lang.lowercase().take(2)) {
+                "de", "en", "fr" -> lang.lowercase().take(2)
+                else -> "default"
+            }
             val url = "https://photon.komoot.io/api/?q=" +
-                URLEncoder.encode(q, "UTF-8") + "&lang=" + lang + "&limit=" + limit
+                URLEncoder.encode(q, "UTF-8") + "&lang=" + safeLang + "&limit=" + limit
             val req = Request.Builder().url(url).header("User-Agent", "sukashi-map/1.0").build()
             runCatching {
                 client.newCall(req).execute().use { resp ->

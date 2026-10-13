@@ -32,7 +32,11 @@ object PhotonApi {
         withContext(Dispatchers.IO) {
             val q = query.trim()
             if (q.isEmpty()) return@withContext emptyList()
-            val language = lang.substringBefore('-').lowercase(Locale.US).ifEmpty { "en" }
+            val rawLang = lang.substringBefore('-').lowercase(Locale.US)
+            val language = when (rawLang) {
+                "de", "en", "fr" -> rawLang
+                else -> "default"
+            }
             val url = okhttp3.HttpUrl.Builder()
                 .scheme("https")
                 .host("photon.komoot.io")
