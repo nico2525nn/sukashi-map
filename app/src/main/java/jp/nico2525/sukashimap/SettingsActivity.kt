@@ -104,8 +104,8 @@ class SettingsActivity : AppCompatActivity() {
     private fun languageDisplayName(tag: String): String {
         if (tag.isEmpty()) return getString(R.string.settings_language_system)
         return runCatching {
-            Locale.forLanguageTag(tag).getDisplayLanguage(Locale.getDefault())
-                .replaceFirstChar { it.titlecase(Locale.getDefault()) }
+            val locale = Locale.forLanguageTag(tag)
+            locale.getDisplayLanguage(locale).replaceFirstChar { it.titlecase(locale) }
         }.getOrDefault(tag)
     }
 

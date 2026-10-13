@@ -32,7 +32,10 @@ object PhotonApi {
             val req = Request.Builder().url(url).header("User-Agent", "sukashi-map/1.0").build()
             runCatching {
                 client.newCall(req).execute().use { resp ->
-                    if (!resp.isSuccessful) return@use emptyList()
+                    if (!resp.isSuccessful) {
+                        android.util.Log.w("PhotonApi", "HTTP ${resp.code}")
+                        return@use emptyList()
+                    }
                     val body = resp.body?.string() ?: return@use emptyList()
                     val features = JSONObject(body).optJSONArray("features") ?: return@use emptyList()
                     List(features.length()) { i ->
@@ -50,6 +53,6 @@ object PhotonApi {
                         PhotonPlace(name, display, lat, lon, cc)
                     }
                 }
-            }.getOrDefault(emptyList())
+            }.onFailure { android.util.Log.w("PhotonApi", "search failed", it) }.getOrDefault(emptyList())
         }
 }
