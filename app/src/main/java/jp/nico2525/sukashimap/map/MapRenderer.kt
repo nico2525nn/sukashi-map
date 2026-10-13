@@ -199,6 +199,8 @@ class MapRenderer(private val context: Context) {
 
         // scrim behind map
         canvas.drawRect(frame.bounds, Paint().apply { color = Color.argb(140, 0, 0, 0) })
+        canvas.save()
+        canvas.clipRect(frame.bounds)
 
         val coastPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = borderColor
@@ -268,6 +270,7 @@ class MapRenderer(private val context: Context) {
                 drawMarker(canvas, frame, lat, lon, Color.WHITE, r * 0.8f)
             }
         }
+        canvas.restore()
         // frame
         canvas.drawRect(frame.bounds, Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.argb(200, 255, 255, 255)

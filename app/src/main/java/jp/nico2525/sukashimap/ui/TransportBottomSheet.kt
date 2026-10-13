@@ -36,8 +36,10 @@ import jp.nico2525.sukashimap.util.PhotonPlace
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Transport info editor bottom sheet: 4 mode tabs, history chips, date/time,
@@ -228,6 +230,18 @@ class TransportBottomSheet : BottomSheetDialogFragment() {
                 )
                 binding.inputRailLine.showDropDown()
                 renderViaChips(lines.map { it.name }.take(8))
+                binding.inputRailLine.setOnItemClickListener { _, _, pos, _ ->
+                    lines.getOrNull(pos)?.let { picked ->
+                        // Suppress the watcher re-query while committing the pick.
+                        binding.inputRailLine.setText(picked.name, false)
+                        binding.inputRailLine.dismissDropDown()
+                        depStation = null
+                        arrStation = null
+                        binding.inputDepStation.setText("")
+                        binding.inputArrStation.setText("")
+                        maybeGeometries()
+                    }
+                }
             }
         })
         stationAuto(binding.inputDepStation) { depStation = it }
@@ -267,26 +281,61 @@ class TransportBottomSheet : BottomSheetDialogFragment() {
         }
     }
 
+    private var suppressStationWatcher = false
+
     private fun stationAuto(field: AutoCompleteTextView, onPick: (Station) -> Unit) {
         field.threshold = 1
         field.addTextChangedListener(simpleWatcher { q ->
+            if (suppressStationWatcher) return@simpleWatcher
             searchJob?.cancel()
             searchJob = viewLifecycleOwner.lifecycleScope.launch {
-                val line = binding.inputRailLine.text?.toString().orEmpty().ifBlank { null }
-                val hits = railwayRepo.searchStations(q, line)
-                val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, hits.map { "${it.name} (${it.line})" })
-                field.setAdapter(adapter)
-                field.showDropDown()
-                field.setOnItemClickListener { _, _, pos, _ ->
-                    hits.getOrNull(pos)?.let {
+                showStationHits(field, onPick, q.ifBlank { null })
+            }
+        })
+        // Focus with empty text lists every station of the chosen line.
+        field.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus && field.text?.toString().isNullOrBlank()) {
+                searchJob?.cancel()
+                searchJob = viewLifecycleOwner.lifecycleScope.launch {
+                    showStationHits(field, onPick, null)
+                }
+            }
+        }
+    }
+
+    private var stationDialog: androidx.appcompat.app.AlertDialog? = null
+
+    private suspend fun showStationHits(field: AutoCompleteTextView, onPick: (Station) -> Unit, query: String?) {
+        val line = binding.inputRailLine.text?.toString().orEmpty().ifBlank { null }
+        val hits = if (query == null) {
+            if (line == null) railwayRepo.stations().take(60) else railwayRepo.stationsOfLine(line)
+        } else {
+            railwayRepo.searchStations(query, line)
+        }
+        if (hits.isEmpty()) {
+            Toast.makeText(requireContext(), R.string.transport_no_stations, Toast.LENGTH_SHORT).show()
+            return
+        }
+        // BottomSheet + soft-keyboard steals AutoComplete dropdowns; use a dialog instead.
+        val labels = hits.map { "${it.name} (${it.line})" }.toTypedArray()
+        withContext(Dispatchers.Main) {
+            stationDialog?.dismiss()
+            stationDialog = com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                .setTitle(if (query == null) R.string.transport_pick_station else R.string.transport_pick_station_match)
+                .setItems(labels) { _, which ->
+                    hits.getOrNull(which)?.let {
+                        suppressStationWatcher = true
                         field.setText(it.name)
+                        field.dismissDropDown()
                         onPick(it)
                         maybeGeometries()
                         autoShortest()
+                        field.post { suppressStationWatcher = false }
                     }
                 }
-            }
-        })
+                .setNegativeButton(R.string.crop_cancel, null)
+                .show()
+        }
     }
 
     private fun photonAuto(field: AutoCompleteTextView, onPick: (PhotonPlace) -> Unit) {
@@ -321,8 +370,19 @@ class TransportBottomSheet : BottomSheetDialogFragment() {
                 text = name
                 isCheckable = true
                 isChecked = viaLines.contains(name)
-                setOnCheckedChangeListener { _, checked ->
-                    if (checked) viaLines.add(name) else viaLines.remove(name)
+                setOnClickListener {
+                    // First tap commits the main line if empty/different; tap again to toggle via.
+                    val current = binding.inputRailLine.text?.toString().orEmpty()
+                    if (current != name) {
+                        binding.inputRailLine.setText(name, false)
+                        depStation = null
+                        arrStation = null
+                        binding.inputDepStation.setText("")
+                        binding.inputArrStation.setText("")
+                        maybeGeometries()
+                    }
+                    isChecked = !isChecked
+                    if (isChecked) viaLines.add(name) else viaLines.remove(name)
                     maybeGeometries()
                 }
             }

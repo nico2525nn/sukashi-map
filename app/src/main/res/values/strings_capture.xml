@@ -33,4 +33,7 @@
     <string name="transport_font_mono">Monospace</string>
     <string name="transport_shortest_route">Shortest route</string>
     <string name="transport_via_hint">Tap station chips to add via lines</string>
+    <string name="transport_no_stations">No stations found — pick a railway line first</string>
+    <string name="transport_pick_station">Choose a station</string>
+    <string name="transport_pick_station_match">Choose a matching station</string>
 </resources>

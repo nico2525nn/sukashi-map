@@ -33,4 +33,7 @@
     <string name="transport_font_mono">等幅</string>
     <string name="transport_shortest_route">最短ルート</string>
     <string name="transport_via_hint">駅チップをタップして経由線を追加</string>
+    <string name="transport_no_stations">駅が見つかりません — 先に路線を選択してください</string>
+    <string name="transport_pick_station">駅を選択</string>
+    <string name="transport_pick_station_match">一致する駅を選択</string>
 </resources>
