@@ -63,6 +63,7 @@ object TransportResult {
             }
             is TransportInfo.Train -> {
                 putBoolean("is_domestic", info.isDomesticRoute)
+                putString("operator", info.operator)
                 putString("line_name", info.lineName)
                 putString("train_name", info.trainName)
                 putString("vehicle_model", info.vehicleModel)
@@ -122,7 +123,7 @@ object TransportResult {
             OverlayPosition.valueOf(b.getString(KEY_MAP_POSITION, OverlayPosition.TOP_RIGHT.name)!!)
         }.getOrDefault(OverlayPosition.TOP_RIGHT)
         val showMap = b.getBoolean(KEY_SHOW_MAP, true)
-        val showWm = b.getBoolean(KEY_SHOW_WATERMARK, true)
+        val showWm = b.getBoolean(KEY_SHOW_WATERMARK, false)
         val lat = b.getDouble(KEY_PHOTO_LAT, Double.NaN).takeUnless { it.isNaN() }
         val lon = b.getDouble(KEY_PHOTO_LON, Double.NaN).takeUnless { it.isNaN() }
         val country = b.getString(KEY_PHOTO_COUNTRY)
@@ -149,6 +150,7 @@ object TransportResult {
             )
             TransportMode.TRAIN -> TransportInfo.Train(
                 isDomesticRoute = b.getBoolean("is_domestic", true),
+                operator = b.getString("operator").orEmpty(),
                 lineName = b.getString("line_name").orEmpty(),
                 trainName = b.getString("train_name").orEmpty(),
                 vehicleModel = b.getString("vehicle_model").orEmpty(),

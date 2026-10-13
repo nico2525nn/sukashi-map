@@ -134,17 +134,44 @@ class RailwayRepository(context: Context) {
         }
     }
 
+    private var aliasesCache: Pair<Map<String, List<String>>, Map<String, List<String>>>? = null
+
+    private fun aliases(): Pair<Map<String, List<String>>, Map<String, List<String>>> {
+        aliasesCache?.let { return it }
+        val result = runCatching {
+            val o = org.json.JSONObject(readAsset(app, "romaji_aliases.json"))
+            fun section(key: String): Map<String, List<String>> {
+                val s = o.optJSONObject(key) ?: return emptyMap()
+                return s.keys().asSequence().associateWith { k ->
+                    val arr = s.optJSONArray(k)
+                    List(arr?.length() ?: 0) { i -> arr!!.optString(i).lowercase() }
+                }
+            }
+            Pair(section("lines"), section("stations"))
+        }.getOrDefault(Pair(emptyMap(), emptyMap()))
+        aliasesCache = result
+        return result
+    }
+
     suspend fun searchLines(query: String): List<RailLine> {
         val q = query.trim()
         if (q.isEmpty()) return emptyList()
-        return lines().filter { it.name.contains(q) || it.operator.contains(q) }.take(50)
+        val ql = q.lowercase()
+        val (lineAlias, _) = aliases()
+        return lines().filter {
+            it.name.contains(q) || it.operator.contains(q) ||
+                (lineAlias[it.name]?.any { a -> a.contains(ql) } == true)
+        }.take(50)
     }
 
     suspend fun searchStations(query: String, lineFilter: String? = null): List<Station> {
         val q = query.trim()
         if (q.isEmpty()) return emptyList()
+        val ql = q.lowercase()
+        val (_, stationAlias) = aliases()
         return stations().filter {
-            (lineFilter.isNullOrBlank() || it.line == lineFilter) && it.name.contains(q)
+            (lineFilter.isNullOrBlank() || it.line == lineFilter) &&
+                (it.name.contains(q) || (stationAlias[it.name]?.any { a -> a.contains(ql) } == true))
         }.take(50)
     }
 

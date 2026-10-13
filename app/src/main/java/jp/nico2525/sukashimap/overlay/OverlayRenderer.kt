@@ -10,6 +10,7 @@ import jp.nico2525.sukashimap.data.LocationDisplayMode
 import jp.nico2525.sukashimap.data.OverlayPosition
 import jp.nico2525.sukashimap.data.TransportInfo
 import jp.nico2525.sukashimap.map.MapRenderer
+import java.time.format.DateTimeFormatter
 
 data class OverlayStyle(
     val font: Typeface? = null,
@@ -20,9 +21,20 @@ data class OverlayStyle(
     val locationMode: LocationDisplayMode = LocationDisplayMode.REGION_NAME,
 )
 
+data class ExifOverlay(
+    val makeModel: String = "",
+    val dateTime: String = "",
+    val fNumber: String = "",
+    val exposure: String = "",
+    val iso: String = "",
+    val focal: String = "",
+) {
+    fun isEmpty() = makeModel.isBlank() && dateTime.isBlank() && fNumber.isBlank()
+}
+
 /**
- * Renders the text block + map + watermark bitmaps that get composited
- * onto captured photos / videos.
+ * Renders the text block + map + EXIF + logo bitmaps composited onto photos/videos.
+ * Layout mirrors the reference overlay: headers big, route biggest, names/location/date small.
  */
 class OverlayRenderer(private val context: Context) {
     private val mapRenderer = MapRenderer(context)
@@ -30,66 +42,85 @@ class OverlayRenderer(private val context: Context) {
     data class OverlayBitmaps(
         val text: Bitmap?,
         val map: Bitmap?,
+        val exif: Bitmap?,
         val watermark: Bitmap?,
     )
 
-    suspend fun render(info: TransportInfo, imgW: Int, imgH: Int, style: OverlayStyle): OverlayBitmaps {
+    suspend fun render(
+        info: TransportInfo,
+        imgW: Int,
+        imgH: Int,
+        style: OverlayStyle,
+        exif: ExifOverlay = ExifOverlay(),
+    ): OverlayBitmaps {
         val text = renderText(info, imgW, imgH, style)
         val map = if (info.showMap) renderMap(info, imgW, imgH, style) else null
+        val exifBmp = if (!exif.isEmpty()) renderExif(exif, imgW) else null
         val watermark = if (info.showWatermark) renderWatermark(imgW) else null
-        return OverlayBitmaps(text, map, watermark)
+        return OverlayBitmaps(text, map, exifBmp, watermark)
+    }
+
+    private data class Line(val text: String, val ratio: Float, val bold: Boolean)
+
+    private fun textLines(info: TransportInfo, style: OverlayStyle): List<Line> {
+        val headers = when (info) {
+            is TransportInfo.Train -> listOf(info.headerLine1(), info.headerLine2())
+            is TransportInfo.Airplane -> listOf(info.transportLabel)
+            is TransportInfo.Other -> listOf(info.transportLabel)
+            is TransportInfo.Spot -> emptyList()
+        }.filter { it.isNotBlank() }
+        val route = info.routeDisplay()
+        val names = listOf(info.departureName, info.arrivalName)
+            .filter { it.isNotBlank() }.joinToString("  ")
+        val location = info.locationDisplay(style.locationMode)?.let { "📍 $it" } ?: ""
+        val date = info.dateTime.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
+        val out = mutableListOf<Line>()
+        for (h in headers) out += Line(h, 0.058f, true)
+        if (route.isNotBlank()) out += Line(route, 0.066f, true)
+        if (names.isNotBlank()) out += Line(names, 0.030f, false)
+        if (location.isNotBlank()) out += Line(location, 0.034f, false)
+        if (date.isNotBlank()) out += Line(date, 0.034f, false)
+        return out
     }
 
     private fun renderText(info: TransportInfo, imgW: Int, imgH: Int, style: OverlayStyle): Bitmap? {
-        val label = info.transportLabel
-        val route = info.routeDisplay()
-        val names = listOf(info.departureName, info.arrivalName).filter { it.isNotBlank() }.joinToString(" → ")
-        val location = info.locationDisplay(style.locationMode)?.let { "📍 $it" } ?: ""
-        val date = info.formattedDate()
-        val lines = listOf(
-            Triple(label, 0.042f, true),
-            Triple(route, 0.058f, true),
-            Triple(names, 0.026f, false),
-            Triple(location, 0.026f, false),
-            Triple(date, 0.026f, false),
-        ).filter { it.first.isNotBlank() }
+        val lines = textLines(info, style)
         if (lines.isEmpty()) return null
-
         val scale = imgW / 1080f
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = style.textColor
             style.font?.let { typeface = it }
-            setShadowLayer(8f * scale, 0f, 0f, Color.argb(180, 0, 0, 0))
+            // soft drop shadow for legibility over bright skies
+            setShadowLayer(10f * scale, 2f * scale, 2f * scale, Color.argb(200, 0, 0, 0))
         }
-        // measure
         var totalH = 0f
         var maxW = 0f
-        val sizes = lines.map { (_, ratio, _) -> ratio * imgW }
-        lines.forEachIndexed { i, (text, _, _) ->
+        val sizes = lines.map { it.ratio * imgW }
+        lines.forEachIndexed { i, line ->
             paint.textSize = sizes[i]
-            maxW = maxOf(maxW, paint.measureText(text))
-            totalH += sizes[i] * 1.18f
+            maxW = maxOf(maxW, paint.measureText(line.text))
+            totalH += sizes[i] * 1.22f
         }
-        // Constrain text block width so it never runs under the map frame.
         val pad = 20f * scale
-        val maxTextW = imgW * 0.52f
+        val shadowPad = 12f * scale
+        val maxTextW = imgW * 0.60f
         val scaleAdjust = if (maxW + pad * 2 > maxTextW) maxTextW / (maxW + pad * 2) else 1f
         val bmp = Bitmap.createBitmap(
-            ((maxW + pad * 2) * scaleAdjust).toInt().coerceAtLeast(8),
-            ((totalH + pad * 2) * scaleAdjust).toInt().coerceAtLeast(8),
+            ((maxW + (pad + shadowPad) * 2) * scaleAdjust).toInt().coerceAtLeast(8),
+            ((totalH + (pad + shadowPad) * 2) * scaleAdjust).toInt().coerceAtLeast(8),
             Bitmap.Config.ARGB_8888,
         )
         val canvas = Canvas(bmp)
         canvas.scale(scaleAdjust, scaleAdjust)
         val leftAligned = style.position == OverlayPosition.TOP_LEFT || style.position == OverlayPosition.BOTTOM_LEFT
         paint.textAlign = if (leftAligned) Paint.Align.LEFT else Paint.Align.RIGHT
-        var y = pad
-        lines.forEachIndexed { i, (text, _, bold) ->
+        var y = pad + shadowPad
+        lines.forEachIndexed { i, line ->
             paint.textSize = sizes[i]
-            paint.isFakeBoldText = bold
-            y += sizes[i] * 1.18f
-            val x = if (leftAligned) pad else bmp.width - pad
-            canvas.drawText(text, x, y - sizes[i] * 0.18f, paint)
+            paint.isFakeBoldText = line.bold
+            y += sizes[i] * 1.22f
+            val x = if (leftAligned) pad + shadowPad else bmp.width / scaleAdjust - pad - shadowPad
+            canvas.drawText(line.text, x, y - sizes[i] * 0.18f, paint)
         }
         return bmp
     }
@@ -100,18 +131,70 @@ class OverlayRenderer(private val context: Context) {
         return bmp
     }
 
+    /**
+     * Bottom-left camera stamp: "OLYMPUS E-M5MarkII" bold + "2026.10.13 14:12:12 | f/5.6 · 1/1000s · ISO 200 · 28mm".
+     */
+    private fun renderExif(exif: ExifOverlay, imgW: Int): Bitmap {
+        val scale = imgW / 1080f
+        val mainSize = 40f * scale
+        val subSize = 30f * scale
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.WHITE
+            setShadowLayer(8f * scale, 2f * scale, 2f * scale, Color.argb(200, 0, 0, 0))
+        }
+        val sub = listOf(
+            exif.dateTime,
+            listOf(exif.fNumber, exif.exposure, exif.iso, exif.focal)
+                .filter { it.isNotBlank() }.joinToString(" · "),
+        ).filter { it.isNotBlank() }.joinToString(" | ")
+        paint.textSize = mainSize
+        paint.isFakeBoldText = true
+        val w1 = if (exif.makeModel.isNotBlank()) paint.measureText(exif.makeModel) else 0f
+        paint.textSize = subSize
+        paint.isFakeBoldText = false
+        val w2 = if (sub.isNotBlank()) paint.measureText(sub) else 0f
+        val pad = 16f * scale
+        val shadowPad = 10f * scale
+        val bmp = Bitmap.createBitmap(
+            (maxOf(w1, w2) + (pad + shadowPad) * 2).toInt().coerceAtLeast(8),
+            ((mainSize + subSize) * 1.22f + (pad + shadowPad) * 2).toInt().coerceAtLeast(8),
+            Bitmap.Config.ARGB_8888,
+        )
+        val canvas = Canvas(bmp)
+        paint.textAlign = Paint.Align.LEFT
+        var y = pad + shadowPad
+        if (exif.makeModel.isNotBlank()) {
+            paint.textSize = mainSize
+            paint.isFakeBoldText = true
+            y += mainSize * 1.22f
+            canvas.drawText(exif.makeModel, pad + shadowPad, y - mainSize * 0.18f, paint)
+        }
+        if (sub.isNotBlank()) {
+            paint.textSize = subSize
+            paint.isFakeBoldText = false
+            y += subSize * 1.22f
+            canvas.drawText(sub, pad + shadowPad, y - subSize * 0.18f, paint)
+        }
+        return bmp
+    }
+
     private fun renderWatermark(imgW: Int): Bitmap {
         val scale = imgW / 1080f
-        val text = "Sukashi Map"
+        val text = "Sukashi"
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.argb(220, 255, 255, 255)
-            textSize = 30f * scale
-            setShadowLayer(4f * scale, 0f, 0f, Color.argb(160, 0, 0, 0))
+            color = Color.argb(200, 255, 255, 255)
+            textSize = 44f * scale
+            typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL)
+            setShadowLayer(6f * scale, 1f * scale, 1f * scale, Color.argb(180, 0, 0, 0))
         }
-        val w = (paint.measureText(text) + 24 * scale).toInt()
-        val h = (44 * scale).toInt()
+        val pad = 12f * scale
+        val shadowPad = 8f * scale
+        val w = (paint.measureText(text) + (pad + shadowPad) * 2).toInt()
+        val h = (paint.textSize * 1.5f + (pad + shadowPad) * 2).toInt()
         val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-        Canvas(bmp).drawText(text, 12 * scale, 32 * scale, paint)
+        val canvas = Canvas(bmp)
+        paint.textAlign = Paint.Align.LEFT
+        canvas.drawText(text, pad + shadowPad, pad + shadowPad + paint.textSize * 1.1f, paint)
         return bmp
     }
 }

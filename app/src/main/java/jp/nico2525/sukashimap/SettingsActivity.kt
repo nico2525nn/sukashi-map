@@ -7,19 +7,12 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.switchmaterial.SwitchMaterial
-import jp.nico2525.sukashimap.billing.PaywallActivity
-import jp.nico2525.sukashimap.plus.PlusManager
 import jp.nico2525.sukashimap.prefs.SettingsStore
-import jp.nico2525.sukashimap.util.ConsentHelper
 import java.util.Locale
 
 class SettingsActivity : AppCompatActivity() {
 
     private lateinit var store: SettingsStore
-    private lateinit var plus: PlusManager
-
-    private lateinit var tvPlusBannerTitle: TextView
-    private lateinit var tvPlusBannerStatus: TextView
     private lateinit var tvLanguageValue: TextView
     private lateinit var switchAutoGeotag: SwitchMaterial
     private lateinit var switchPreserveHdr: SwitchMaterial
@@ -33,26 +26,14 @@ class SettingsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_settings)
 
         store = SettingsStore(this)
-        plus = PlusManager(this)
 
         findViewById<MaterialToolbar>(R.id.toolbarSettings).setNavigationOnClickListener {
             onBackPressedDispatcher.onBackPressed()
         }
-        tvPlusBannerTitle = findViewById(R.id.tvPlusBannerTitle)
-        tvPlusBannerStatus = findViewById(R.id.tvPlusBannerStatus)
         tvLanguageValue = findViewById(R.id.tvLanguageValue)
         switchAutoGeotag = findViewById(R.id.switchAutoGeotag)
         switchPreserveHdr = findViewById(R.id.switchPreserveHdr)
         tvVersionValue = findViewById(R.id.tvVersionValue)
-
-        findViewById<android.view.View>(R.id.bannerPlus).setOnClickListener {
-            startActivity(
-                Intent(this, PaywallActivity::class.java).putExtra(
-                    PaywallActivity.EXTRA_SOURCE,
-                    "settings",
-                ),
-            )
-        }
 
         switchAutoGeotag.isChecked = store.autoGeotagging
         switchAutoGeotag.setOnCheckedChangeListener { _, checked ->
@@ -74,9 +55,6 @@ class SettingsActivity : AppCompatActivity() {
         findViewById<android.view.View>(R.id.rowPrivacyPolicy).setOnClickListener {
             startActivity(Intent(this, PrivacyPolicyActivity::class.java))
         }
-        findViewById<android.view.View>(R.id.rowPrivacyOptions).setOnClickListener {
-            ConsentHelper.showPrivacyOptions(this)
-        }
 
         refresh()
     }
@@ -87,15 +65,6 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private fun refresh() {
-        val state = plus.current()
-        if (state.active) {
-            tvPlusBannerTitle.setText(R.string.pro_status_active)
-            tvPlusBannerStatus.text =
-                getString(R.string.paywall_remaining_format, plus.remainingText(state.expiryMs))
-        } else {
-            tvPlusBannerTitle.setText(R.string.settings_plus_upgrade_title)
-            tvPlusBannerStatus.setText(R.string.plan_no_auto_renew)
-        }
         tvLanguageValue.text = languageDisplayName(store.languageTag)
         switchAutoGeotag.isChecked = store.autoGeotagging
         switchPreserveHdr.isChecked = store.preserveHdr

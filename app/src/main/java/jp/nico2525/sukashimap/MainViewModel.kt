@@ -41,6 +41,8 @@ class MainViewModel : ViewModel() {
     var currentLon: Double? = null
     var currentPlace: String? = null
     var currentCountry: String? = null
+    var exifOverlay: jp.nico2525.sukashimap.overlay.ExifOverlay =
+        jp.nico2525.sukashimap.overlay.ExifOverlay()
     var dateTimeMode: DateTimeDisplayMode = DateTimeDisplayMode.DATE_TIME
     var showWatermark: Boolean = true
 

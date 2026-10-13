@@ -16,6 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.chip.Chip
 import com.google.android.material.tabs.TabLayout
+import jp.nico2525.sukashimap.MainActivity
 import jp.nico2525.sukashimap.R
 import jp.nico2525.sukashimap.data.Airline
 import jp.nico2525.sukashimap.data.Airport
@@ -72,6 +73,23 @@ class TransportBottomSheet : BottomSheetDialogFragment() {
     private var depPlace: PhotonPlace? = null
     private var destPlace: PhotonPlace? = null
     private val viaLines = mutableSetOf<String>()
+    private var pickedOperator: String = ""
+
+    /** "Tokyo Station (JR東日本)" style; falls back to typed text. */
+    private fun stationFull(st: Station?, typed: String): String {
+        if (st == null) return typed
+        val op = shortOperator(st.operator.ifBlank { pickedOperator })
+        return if (op.isBlank()) st.name else "${st.name} ($op)"
+    }
+
+    /** 東日本旅客鉄道→JR東日本 etc. for compact overlay lines. */
+    private fun shortOperator(op: String): String {
+        val t = op.trim()
+        if (t.isEmpty()) return ""
+        JR_SHORT[t]?.let { return it }
+        // Generic: strip 旅客鉄道/鉄道 suffixes for compactness.
+        return t.replace("旅客鉄道", "").replace("鉄道", "")
+    }
 
     private var textColor: Int = Color.WHITE
     private var mapLineColor: Int = Color.parseColor("#FF5252")
@@ -80,8 +98,15 @@ class TransportBottomSheet : BottomSheetDialogFragment() {
 
     private var searchJob: Job? = null
 
-    private val photoPicker = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        if (uri == null) return@registerForActivityResult
+    private val photoPicker =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode != android.app.Activity.RESULT_OK) return@registerForActivityResult
+            val raw = result.data?.getStringExtra(MainActivity.EXTRA_CAPTURED_URI)
+                ?: return@registerForActivityResult
+            loadPhotoInfo(android.net.Uri.parse(raw))
+        }
+
+    private fun loadPhotoInfo(uri: android.net.Uri) {
         runCatching {
             requireContext().contentResolver.openInputStream(uri)?.use { ins ->
                 val exif = ExifInterface(ins)
@@ -94,11 +119,6 @@ class TransportBottomSheet : BottomSheetDialogFragment() {
                     time = ldt.toLocalTime().withSecond(0).withNano(0)
                     refreshDateTime()
                     Toast.makeText(requireContext(), R.string.transport_photo_info_loaded, Toast.LENGTH_SHORT).show()
-                }
-                val latLong = exif.latLong
-                if (latLong != null) {
-                    depPlace = null
-                    // remembered as current-location fallback via arrival fields is wrong; keep date only.
                 }
             }
         }
@@ -127,32 +147,18 @@ class TransportBottomSheet : BottomSheetDialogFragment() {
         setupDates()
         setupColors()
         setupFonts()
-        setupWatermarkGate()
         refreshDateTime()
         showForm(0)
         refreshHistory()
 
-        binding.btnPickOverlayPhoto.setOnClickListener { photoPicker.launch("image/*") }
-        binding.btnTransportConfirm.setOnClickListener { confirm() }
-    }
-
-    /** Hiding the logo requires Plus or a rewarded ad; otherwise force-show. */
-    private fun setupWatermarkGate() {
-        binding.switchShowWatermark.setOnCheckedChangeListener { _, checked ->
-            if (!checked && !canHideWatermark()) {
-                binding.switchShowWatermark.isChecked = true
-                showWatermarkGate()
-            }
+        binding.btnPickOverlayPhoto.setOnClickListener {
+            photoPicker.launch(
+                android.content.Intent(requireContext(), jp.nico2525.sukashimap.GalleryActivity::class.java)
+                    .putExtra(jp.nico2525.sukashimap.GalleryActivity.EXTRA_PICK_MODE, true)
+                    .putExtra(jp.nico2525.sukashimap.GalleryActivity.EXTRA_OWN_ONLY, false),
+            )
         }
-    }
-
-    private fun canHideWatermark(): Boolean {
-        val act = activity as? jp.nico2525.sukashimap.MainActivity ?: return true
-        return act.canHideLogo()
-    }
-
-    private fun showWatermarkGate() {
-        (activity as? jp.nico2525.sukashimap.MainActivity)?.showWatermarkGate()
+        binding.btnTransportConfirm.setOnClickListener { confirm() }
     }
 
     private fun seedFromArguments() {
@@ -164,7 +170,7 @@ class TransportBottomSheet : BottomSheetDialogFragment() {
         runCatching { overlayPos = OverlayPosition.valueOf(a.getString(TransportResult.KEY_OVERLAY_POSITION, overlayPos.name)!!) }
         runCatching { mapPos = OverlayPosition.valueOf(a.getString(TransportResult.KEY_MAP_POSITION, mapPos.name)!!) }
         binding.switchShowMap.isChecked = a.getBoolean(TransportResult.KEY_SHOW_MAP, true)
-        binding.switchShowWatermark.isChecked = a.getBoolean(TransportResult.KEY_SHOW_WATERMARK, true)
+        binding.switchShowWatermark.isChecked = a.getBoolean(TransportResult.KEY_SHOW_WATERMARK, false)
     }
 
     // ---- tabs ----
@@ -235,6 +241,7 @@ class TransportBottomSheet : BottomSheetDialogFragment() {
                         // Suppress the watcher re-query while committing the pick.
                         binding.inputRailLine.setText(picked.name, false)
                         binding.inputRailLine.dismissDropDown()
+                        pickedOperator = picked.operator
                         depStation = null
                         arrStation = null
                         binding.inputDepStation.setText("")
@@ -294,6 +301,7 @@ class TransportBottomSheet : BottomSheetDialogFragment() {
         })
         // Focus with empty text lists every station of the chosen line.
         field.setOnFocusChangeListener { _, hasFocus ->
+            if (suppressStationWatcher) return@setOnFocusChangeListener
             if (hasFocus && field.text?.toString().isNullOrBlank()) {
                 searchJob?.cancel()
                 searchJob = viewLifecycleOwner.lifecycleScope.launch {
@@ -375,6 +383,9 @@ class TransportBottomSheet : BottomSheetDialogFragment() {
                     val current = binding.inputRailLine.text?.toString().orEmpty()
                     if (current != name) {
                         binding.inputRailLine.setText(name, false)
+                        viewLifecycleOwner.lifecycleScope.launch {
+                            pickedOperator = railwayRepo.lines().firstOrNull { it.name == name }?.operator.orEmpty()
+                        }
                         depStation = null
                         arrStation = null
                         binding.inputDepStation.setText("")
@@ -500,16 +511,35 @@ class TransportBottomSheet : BottomSheetDialogFragment() {
     }
 
     private fun applyHistory(payload: Map<String, String>) {
+        suppressStationWatcher = true
         payload["dep"]?.let { binding.inputDepAirport.setText(it) }
         payload["arr"]?.let { binding.inputArrAirport.setText(it) }
-        payload["line"]?.let { binding.inputRailLine.setText(it) }
-        payload["depStation"]?.let { binding.inputDepStation.setText(it) }
-        payload["arrStation"]?.let { binding.inputArrStation.setText(it) }
+        payload["operator"]?.let { pickedOperator = shortOperator(it) }
+        payload["line"]?.let { binding.inputRailLine.setText(it, false) }
+        payload["train"]?.let { binding.inputTrainName.setText(it) }
+        payload["vehicle"]?.let { binding.inputVehicleModel.setText(it) }
+        payload["depStation"]?.let {
+            binding.inputDepStation.setText(it)
+            resolveStationAsync(it, binding.inputRailLine.text?.toString().orEmpty()) { depStation = it }
+        }
+        payload["arrStation"]?.let {
+            binding.inputArrStation.setText(it)
+            resolveStationAsync(it, binding.inputRailLine.text?.toString().orEmpty()) { arrStation = it }
+        }
         payload["transport"]?.let { binding.inputTransportName.setText(it) }
         payload["dest"]?.let { binding.inputDestination.setText(it) }
         payload["spot1"]?.let { binding.inputSpot1.setText(it) }
         payload["spot2"]?.let { binding.inputSpot2.setText(it) }
         payload["spot3"]?.let { binding.inputSpot3.setText(it) }
+        binding.inputRailLine.post { suppressStationWatcher = false }
+    }
+
+    private fun resolveStationAsync(name: String, line: String, done: (Station?) -> Unit) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val hits = railwayRepo.searchStations(name, line.ifBlank { null })
+            done(hits.firstOrNull { it.name == name } ?: hits.firstOrNull())
+            maybeGeometries()
+        }
     }
 
     private fun confirm() {
@@ -554,15 +584,16 @@ class TransportBottomSheet : BottomSheetDialogFragment() {
             )
             TransportMode.TRAIN -> TransportInfo.Train(
                 isDomesticRoute = binding.switchDomesticRail.isChecked,
+                operator = shortOperator(pickedOperator),
                 lineName = binding.inputRailLine.text?.toString().orEmpty(),
                 trainName = binding.inputTrainName.text?.toString().orEmpty(),
                 vehicleModel = binding.inputVehicleModel.text?.toString().orEmpty(),
                 departureStation = depStation?.name ?: binding.inputDepStation.text?.toString().orEmpty(),
-                departureStationFull = depStation?.let { "${it.name} (${it.line})" } ?: binding.inputDepStation.text?.toString().orEmpty(),
+                departureStationFull = stationFull(depStation, binding.inputDepStation.text?.toString().orEmpty()),
                 departureLatitude = depStation?.lat,
                 departureLongitude = depStation?.lon,
                 arrivalStation = arrStation?.name ?: binding.inputArrStation.text?.toString().orEmpty(),
-                arrivalStationFull = arrStation?.let { "${it.name} (${it.line})" } ?: binding.inputArrStation.text?.toString().orEmpty(),
+                arrivalStationFull = stationFull(arrStation, binding.inputArrStation.text?.toString().orEmpty()),
                 arrivalLatitude = arrStation?.lat,
                 arrivalLongitude = arrStation?.lon,
                 geometries = pendingGeometries.ifEmpty {
@@ -631,7 +662,10 @@ class TransportBottomSheet : BottomSheetDialogFragment() {
                 base["arr"] = info.arrivalAirport
             }
             is TransportInfo.Train -> {
+                base["operator"] = info.operator
                 base["line"] = info.lineName
+                base["train"] = info.trainName
+                base["vehicle"] = info.vehicleModel
                 base["depStation"] = info.departureStation
                 base["arrStation"] = info.arrivalStation
             }
@@ -657,5 +691,15 @@ class TransportBottomSheet : BottomSheetDialogFragment() {
     companion object {
         fun newInstance(seed: Bundle? = null): TransportBottomSheet =
             TransportBottomSheet().apply { arguments = seed }
+
+        private val JR_SHORT = mapOf(
+            "北海道旅客鉄道" to "JR北海道",
+            "東日本旅客鉄道" to "JR東日本",
+            "東海旅客鉄道" to "JR東海",
+            "西日本旅客鉄道" to "JR西日本",
+            "四国旅客鉄道" to "JR四国",
+            "九州旅客鉄道" to "JR九州",
+            "日本貨物鉄道" to "JR貨物",
+        )
     }
 }

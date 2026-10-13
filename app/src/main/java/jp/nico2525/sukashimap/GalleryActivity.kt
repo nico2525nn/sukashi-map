@@ -49,6 +49,7 @@ class GalleryActivity : AppCompatActivity() {
         const val EXTRA_OWN_ONLY = "extra_own_only"
         const val EXTRA_SORT_TAKEN = "extra_sort_taken"
         const val EXTRA_ITEM_KEYS = "extra_item_keys"
+        const val EXTRA_PICK_MODE = "extra_pick_mode"
     }
 
     private lateinit var binding: ActivityGalleryBinding
@@ -400,6 +401,16 @@ class GalleryActivity : AppCompatActivity() {
     }
 
     private fun openDetail(pos: Int) {
+        val item = items.getOrNull(pos) ?: return
+        if (intent.getBooleanExtra(EXTRA_PICK_MODE, false)) {
+            setResult(
+                RESULT_OK,
+                Intent().putExtra(MainActivity.EXTRA_CAPTURED_URI, item.uri.toString())
+                    .putExtra(MainActivity.EXTRA_CAPTURED_IS_VIDEO, item.isVideo),
+            )
+            finish()
+            return
+        }
         startActivity(
             Intent(this, GalleryDetailActivity::class.java)
                 .putExtra(EXTRA_INITIAL_POS, pos)

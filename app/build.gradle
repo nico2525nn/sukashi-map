@@ -25,13 +25,7 @@ android {
         versionName = "0.1.0"
 
         buildConfigField("String", "MAPS_API_KEY", "\"${key("MAPS_API_KEY")}\"")
-        buildConfigField("String", "ADMOB_APP_ID", "\"${key("ADMOB_APP_ID")}\"")
-        buildConfigField("String", "ADMOB_BANNER", "\"${key("ADMOB_BANNER")}\"")
-        buildConfigField("String", "ADMOB_INTERSTITIAL", "\"${key("ADMOB_INTERSTITIAL")}\"")
-        buildConfigField("String", "ADMOB_REWARDED", "\"${key("ADMOB_REWARDED")}\"")
-        buildConfigField("String", "BILLING_PRODUCT_IDS", "\"${key("BILLING_PRODUCT_IDS")}\"")
         manifestPlaceholders["MAPS_API_KEY"] = key("MAPS_API_KEY") ?: "MISSING_MAPS_API_KEY"
-        manifestPlaceholders["ADMOB_APP_ID"] = key("ADMOB_APP_ID") ?: "MISSING_ADMOB_APP_ID"
     }
 
     buildFeatures {
@@ -92,11 +86,6 @@ dependencies {
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")
-
-    // Ads / Billing (keys injected at build time; no-ops when empty)
-    implementation("com.google.android.gms:play-services-ads:24.6.0")
-    implementation("com.google.android.ump:user-messaging-platform:3.1.0")
-    implementation("com.android.billingclient:billing-ktx:8.1.0")
 
     // Trip Recap map (MapLibre GL)
     implementation("org.maplibre.gl:android-sdk:11.8.0")

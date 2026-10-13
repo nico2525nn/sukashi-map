@@ -41,16 +41,16 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import jp.nico2525.sukashimap.ads.AdManager
 import jp.nico2525.sukashimap.camera.LocationHelper
 import jp.nico2525.sukashimap.camera.MediaSaver
 import jp.nico2525.sukashimap.data.OverlayPosition
 import jp.nico2525.sukashimap.data.TransportInfo
 import jp.nico2525.sukashimap.databinding.ActivityMainBinding
+import jp.nico2525.sukashimap.overlay.ExifOverlay
 import jp.nico2525.sukashimap.overlay.OverlayItem
+import kotlin.math.roundToInt
 import jp.nico2525.sukashimap.overlay.OverlayRenderer
 import jp.nico2525.sukashimap.overlay.OverlayStyle
-import jp.nico2525.sukashimap.plus.PlusManager
 import jp.nico2525.sukashimap.prefs.SettingsStore
 import jp.nico2525.sukashimap.ui.SaveSuccessSheet
 import jp.nico2525.sukashimap.ui.TransportBottomSheet
@@ -86,8 +86,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var mediaSaver: MediaSaver
     private lateinit var renderer: OverlayRenderer
     private lateinit var settings: SettingsStore
-    private lateinit var plus: PlusManager
-    private lateinit var ads: AdManager
 
     private var imageCapture: ImageCapture? = null
     private var videoCapture: VideoCapture<Recorder>? = null
@@ -145,13 +143,6 @@ class MainActivity : AppCompatActivity() {
         mediaSaver = MediaSaver(this)
         renderer = OverlayRenderer(this)
         settings = SettingsStore(this)
-        plus = PlusManager(this)
-        ads = AdManager(this).also { it.adsRemoved = plus.isActive() }
-        ads.init()
-        ads.bannerInto(binding.adContainer)
-
-        binding.overlayDragView.manipulationGate = { plus.isActive() || ads.timedRewardActive() }
-        binding.overlayDragView.onManipulationBlocked = { showAdjustGate() }
 
         supportFragmentManager.setFragmentResultListener(TransportResult.REQUEST_KEY, this) { _, bundle ->
             val info = TransportResult.fromBundle(bundle).withLocation(vm)
@@ -284,6 +275,7 @@ class MainActivity : AppCompatActivity() {
         runCatching {
             contentResolver.openInputStream(uri)?.use { ins ->
                 val exif = ExifInterface(ins)
+                vm.exifOverlay = readExifOverlay(exif)
                 val dt = exif.dateTime ?: exif.dateTimeOriginal
                 if (dt != null && dt > 0) {
                     withContext(Dispatchers.Main) {
@@ -302,6 +294,37 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
+    private fun readExifOverlay(exif: ExifInterface): ExifOverlay {
+        val make = exif.getAttribute(ExifInterface.TAG_MAKE).orEmpty().trim()
+        val model = exif.getAttribute(ExifInterface.TAG_MODEL).orEmpty().trim()
+        // "OLYMPUS E-M5MarkII": keep make uppercase, drop duplicated make prefix in model.
+        val makeModel = when {
+            model.isBlank() -> make.uppercase()
+            make.isBlank() -> model
+            model.uppercase().startsWith(make.uppercase()) -> "${make.uppercase()} ${model.substring(make.length).trimStart()}"
+            else -> "${make.uppercase()} $model"
+        }.trim()
+        val dtMs = exif.dateTime ?: exif.dateTimeOriginal ?: exif.dateTimeDigitized
+        val dateTime = if (dtMs != null && dtMs > 0) {
+            java.time.LocalDateTime.ofInstant(
+                java.time.Instant.ofEpochMilli(dtMs), java.time.ZoneId.systemDefault(),
+            ).format(java.time.format.DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss"))
+        } else ""
+        val f = exif.getAttributeDouble(ExifInterface.TAG_F_NUMBER, Double.NaN)
+            .takeUnless { it.isNaN() }?.let { "f/$it" }.orEmpty()
+        val exp = exif.getAttributeDouble(ExifInterface.TAG_EXPOSURE_TIME, Double.NaN)
+            .takeUnless { it.isNaN() }?.let {
+                if (it > 0 && it < 1) "1/${(1 / it).roundToInt()}s" else "${it}s"
+            }.orEmpty()
+        val iso = exif.getAttributeInt(ExifInterface.TAG_PHOTOGRAPHIC_SENSITIVITY, 0)
+            .takeIf { it > 0 }?.let { "ISO $it" }.orEmpty()
+        val focal = exif.getAttributeDouble(ExifInterface.TAG_FOCAL_LENGTH, Double.NaN)
+            .takeUnless { it.isNaN() }?.let { "${it.roundToInt()}mm" }.orEmpty()
+        return ExifOverlay(makeModel, dateTime, f, exp, iso, focal)
+    }
+
+    private fun currentExif(): ExifOverlay = vm.exifOverlay
 
     // ---- permissions ----
     private fun requestPermissions() {
@@ -488,14 +511,16 @@ class MainActivity : AppCompatActivity() {
         binding.overlayDragView.photoWidth = w.toFloat()
         binding.overlayDragView.photoHeight = h.toFloat()
         lifecycleScope.launch {
-            val bits = withContext(Dispatchers.Default) { renderer.render(info, w, h, overlayStyle()) }
+            val exif = withContext(Dispatchers.IO) { currentExif() }
+            val bits = withContext(Dispatchers.Default) { renderer.render(info, w, h, overlayStyle(), exif) }
             val items = mutableListOf<OverlayItem>()
             bits.text?.let { items += OverlayItem("text", it, w * 0.05f, anchorY(it, w, h), 1f) }
             bits.map?.let {
                 // Map bitmap is already full-photo-size with the frame baked in.
                 items += OverlayItem("map", it, 0f, 0f, 1f, scalable = false)
             }
-            bits.watermark?.let { items += OverlayItem("watermark", it, w * 0.05f, h - it.height - w * 0.05f, 1f, scalable = false) }
+            bits.exif?.let { items += OverlayItem("exif", it, w * 0.05f, h - it.height - w * 0.05f, 1f) }
+            bits.watermark?.let { items += OverlayItem("watermark", it, w - it.width - w * 0.05f, w * 0.05f, 1f, scalable = false) }
             binding.overlayDragView.setOverlayItems(items)
         }
     }
@@ -677,10 +702,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showCropDialog() {
-        if (!plus.isActive() && !ads.timedRewardActive()) {
-            showCropGate()
-            return
-        }
         val labels = listOf(
             getString(R.string.crop_aspect_original), getString(R.string.crop_aspect_free),
             getString(R.string.crop_aspect_4_5), getString(R.string.crop_aspect_2_3),
@@ -703,56 +724,6 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
-    private fun showCropGate() {
-        MaterialAlertDialogBuilder(this)
-            .setTitle(R.string.crop_gate_title)
-            .setMessage(R.string.crop_gate_message)
-            .setPositiveButton(R.string.crop_gate_watch_ad) { _, _ ->
-                ads.showRewarded(this, onEarned = { showCropDialog() }, onUnavailable = {
-                    Toast.makeText(this, R.string.ad_not_ready, Toast.LENGTH_SHORT).show()
-                })
-            }
-            .setNegativeButton(R.string.cancel, null)
-            .setNeutralButton(R.string.plus_gate_subscribe) { _, _ ->
-                runCatching { startActivity(Intent(this, Class.forName("jp.nico2525.sukashimap.billing.PaywallActivity"))) }
-            }
-            .show()
-    }
-
-    private fun showAdjustGate() {
-        MaterialAlertDialogBuilder(this)
-            .setTitle(R.string.adjust_gate_title)
-            .setMessage(R.string.adjust_gate_message)
-            .setPositiveButton(R.string.adjust_gate_watch_ad) { _, _ ->
-                ads.showRewarded(this, onEarned = { ads.grantTimedReward() }, onUnavailable = {
-                    Toast.makeText(this, R.string.ad_not_ready, Toast.LENGTH_SHORT).show()
-                })
-            }
-            .setNegativeButton(R.string.cancel, null)
-            .setNeutralButton(R.string.plus_gate_subscribe) { _, _ ->
-                runCatching { startActivity(Intent(this, Class.forName("jp.nico2525.sukashimap.billing.PaywallActivity"))) }
-            }
-            .show()
-    }
-
-    fun canHideLogo(): Boolean = plus.isActive() || ads.timedRewardActive()
-
-    fun showWatermarkGate() {
-        MaterialAlertDialogBuilder(this)
-            .setTitle(R.string.watermark_gate_title)
-            .setMessage(R.string.watermark_gate_message)
-            .setPositiveButton(R.string.crop_gate_watch_ad) { _, _ ->
-                ads.showRewarded(this, onEarned = { ads.grantTimedReward() }, onUnavailable = {
-                    Toast.makeText(this, R.string.ad_not_ready, Toast.LENGTH_SHORT).show()
-                })
-            }
-            .setNegativeButton(R.string.cancel, null)
-            .setNeutralButton(R.string.plus_gate_subscribe) { _, _ ->
-                runCatching { startActivity(Intent(this, Class.forName("jp.nico2525.sukashimap.billing.PaywallActivity"))) }
-            }
-            .show()
-    }
-
     // ---- transport sheet ----
     private fun openTransportSheet() {
         val seed = currentInfo()?.let {
@@ -772,8 +743,8 @@ class MainActivity : AppCompatActivity() {
                 videoFile?.delete()
                 videoFile = null
                 albumVideoUri = null
-                binding.overlayDragView.setOverlayItems(emptyList())
                 showCaptureControls()
+                redrawOverlayItems()
             }
             .setNegativeButton(R.string.cancel, null)
             .show()
@@ -859,7 +830,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        ads.adsRemoved = plus.isActive()
         if (vm.photoBitmap.value == null && vm.videoUri.value == null) startCameraIfReady()
         if (settings.autoGeotagging && vm.currentLat == null) refreshLocation()
     }

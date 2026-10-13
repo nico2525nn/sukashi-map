@@ -106,8 +106,8 @@ class MapRenderer(private val context: Context) {
         var minLat = pts.minOf { it.second }
         var maxLat = pts.maxOf { it.second }
         // pad span; single-point gets a default window
-        var spanLon = max(0.6, (maxLon - minLon) * 1.35)
-        var spanLat = max(0.6, (maxLat - minLat) * 1.35)
+        var spanLon = max(0.6, (maxLon - minLon) * 1.15)
+        var spanLat = max(0.6, (maxLat - minLat) * 1.15)
         var cLon = (minLon + maxLon) / 2
         var cLat = (minLat + maxLat) / 2
         // match box aspect
@@ -191,37 +191,54 @@ class MapRenderer(private val context: Context) {
         canvas.drawCircle(q.x, q.y, r, ring)
     }
 
+    /** White-filled dot with a thick colored ring (departure/arrival stations). */
+    private fun drawRingMarker(canvas: Canvas, frame: MapFrame, lat: Double, lon: Double, color: Int, r: Float) {
+        val q = project(frame, lon, lat)
+        val halo = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            this.color = Color.argb(90, 0, 0, 0)
+            style = Paint.Style.FILL
+        }
+        canvas.drawCircle(q.x, q.y, r * 1.25f, halo)
+        val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            this.color = Color.WHITE
+            style = Paint.Style.FILL
+        }
+        canvas.drawCircle(q.x, q.y, r, fill)
+        val ring = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            this.color = color
+            style = Paint.Style.STROKE
+            strokeWidth = r * 0.45f
+        }
+        canvas.drawCircle(q.x, q.y, r * 0.8f, ring)
+    }
+
     suspend fun render(canvas: Canvas, info: TransportInfo, imgW: Int, imgH: Int, lineColor: Int, borderColor: Int) {
         preload()
         val frame = frameFor(info, imgW, imgH) ?: return
         val spanLon = frame.maxLon - frame.minLon
         val useFine = spanLon < 25
 
-        // scrim behind map
-        canvas.drawRect(frame.bounds, Paint().apply { color = Color.argb(140, 0, 0, 0) })
         canvas.save()
         canvas.clipRect(frame.bounds)
 
         val coastPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = borderColor
             style = Paint.Style.STROKE
-            strokeWidth = max(1.5f, frame.bounds.width() / 220f)
+            strokeWidth = max(2f, frame.bounds.width() / 180f)
+            setShadowLayer(max(2f, frame.bounds.width() / 250f), 0f, 0f, Color.argb(170, 0, 0, 0))
         }
         val base = if (useFine) fineRings().ifEmpty { coarse!! } else coarse!!
         drawRings(canvas, base, frame, coastPaint)
 
         val cLon = (frame.minLon + frame.maxLon) / 2
         val cLat = (frame.minLat + frame.maxLat) / 2
-        val detailPaint = Paint(coastPaint).apply { strokeWidth = coastPaint.strokeWidth * 0.7f }
+        val detailPaint = Paint(coastPaint).apply {
+            strokeWidth = coastPaint.strokeWidth * 0.4f
+            alpha = 170
+        }
         if (isJapan(cLon, cLat) && spanLon < 30) {
             drawRings(canvas, jpPrefs!!, frame, detailPaint)
             drawRings(canvas, jpCoast!!, frame, coastPaint)
-            val waterPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = Color.parseColor("#4FC3F7")
-                style = Paint.Style.STROKE
-                strokeWidth = coastPaint.strokeWidth * 0.8f
-            }
-            drawRings(canvas, jpWater!!, frame, waterPaint)
         } else if (isUsa(cLon, cLat) && spanLon < 60) {
             drawRings(canvas, usStates!!, frame, detailPaint)
         } else if (spanLon > 60) {
@@ -230,13 +247,14 @@ class MapRenderer(private val context: Context) {
         }
 
         val routePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = lineColor
+            color = Color.WHITE
             style = Paint.Style.STROKE
-            strokeWidth = max(2.5f, frame.bounds.width() / 130f)
+            strokeWidth = max(5f, frame.bounds.width() / 60f)
             strokeCap = Paint.Cap.ROUND
             strokeJoin = Paint.Join.ROUND
+            setShadowLayer(max(3f, frame.bounds.width() / 200f), 0f, 0f, Color.argb(190, 0, 0, 0))
         }
-        val r = max(4f, frame.bounds.width() / 70f)
+        val r = max(9f, frame.bounds.width() / 34f)
         when (info) {
             is TransportInfo.Airplane -> {
                 val dLat = info.departureLatitude
@@ -257,7 +275,17 @@ class MapRenderer(private val context: Context) {
                 for (g in info.geometries) {
                     drawRoute(canvas, parseRing(g), frame, routePaint)
                 }
-                singleMarkers(canvas, frame, info, r)
+                // departure: cyan ring; arrival: red-orange ring; both white-filled
+                info.departureLatitude?.let { dLat ->
+                    info.departureLongitude?.let { dLon ->
+                        drawRingMarker(canvas, frame, dLat, dLon, Color.parseColor("#29B6F6"), r)
+                    }
+                }
+                info.arrivalLatitude?.let { aLat ->
+                    info.arrivalLongitude?.let { aLon ->
+                        drawRingMarker(canvas, frame, aLat, aLon, Color.parseColor("#FF5722"), r)
+                    }
+                }
             }
             is TransportInfo.Other -> {
                 info.routePolyline?.forEach { drawRoute(canvas, parseRing(it), frame, routePaint) }
@@ -271,12 +299,6 @@ class MapRenderer(private val context: Context) {
             }
         }
         canvas.restore()
-        // frame
-        canvas.drawRect(frame.bounds, Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = Color.argb(200, 255, 255, 255)
-            style = Paint.Style.STROKE
-            strokeWidth = 2f
-        })
     }
 
     private fun singleMarkers(canvas: Canvas, frame: MapFrame, info: TransportInfo, r: Float) {

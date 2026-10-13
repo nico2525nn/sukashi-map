@@ -12,10 +12,14 @@ class LaunchActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLaunchBinding
 
-    private val albumPhoto = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        if (uri == null) return@registerForActivityResult
-        openMain(uri)
-    }
+    private val galleryPick =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode != RESULT_OK) return@registerForActivityResult
+            val data = result.data ?: return@registerForActivityResult
+            val uri = data.getStringExtra(MainActivity.EXTRA_CAPTURED_URI)?.let { Uri.parse(it) }
+                ?: return@registerForActivityResult
+            openMain(uri)
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,7 +30,11 @@ class LaunchActivity : AppCompatActivity() {
             startActivity(Intent(this, MainActivity::class.java))
         }
         binding.cardFromAlbum.setOnClickListener {
-            albumPhoto.launch("*/*")
+            galleryPick.launch(
+                Intent(this, GalleryActivity::class.java)
+                    .putExtra(GalleryActivity.EXTRA_PICK_MODE, true)
+                    .putExtra(GalleryActivity.EXTRA_OWN_ONLY, false),
+            )
         }
         binding.btnLaunchGallery.setOnClickListener {
             runCatching {

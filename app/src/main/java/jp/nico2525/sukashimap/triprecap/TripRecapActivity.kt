@@ -33,12 +33,9 @@ import com.google.android.material.tabs.TabLayout
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import jp.nico2525.sukashimap.R
-import jp.nico2525.sukashimap.ads.AdManager
-import jp.nico2525.sukashimap.billing.BillingManager
 import jp.nico2525.sukashimap.databinding.ActivityTripRecapBinding
 import jp.nico2525.sukashimap.gallery.GallerySort
 import jp.nico2525.sukashimap.gallery.MediaStoreLoader
-import jp.nico2525.sukashimap.plus.PlusManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -75,8 +72,6 @@ class TripRecapActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityTripRecapBinding
     private lateinit var loader: MediaStoreLoader
-    private lateinit var plus: PlusManager
-    private lateinit var ads: AdManager
 
     private val photos = ArrayList<Uri>()
     private val places = ArrayList<VisitStop>()
@@ -106,8 +101,6 @@ class TripRecapActivity : AppCompatActivity() {
         binding = ActivityTripRecapBinding.inflate(layoutInflater)
         setContentView(binding.root)
         loader = MediaStoreLoader(this)
-        plus = PlusManager(this)
-        ads = AdManager(this)
 
         binding.recapToolbar.title = getString(R.string.trip_title)
         binding.recapToolbar.setNavigationIcon(R.drawable.ic_back)
@@ -568,11 +561,6 @@ class TripRecapActivity : AppCompatActivity() {
         group.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (!isChecked) return@addOnButtonCheckedListener
             val idx = (group.findViewById<View>(checkedId)?.tag as? Int) ?: return@addOnButtonCheckedListener
-            if (idx > 0 && !plus.isActive()) {
-                gatePlusOrAd { group.check(group.getChildAt(0).id) }
-                style.aspectIndex = 0
-                return@addOnButtonCheckedListener
-            }
             style.aspectIndex = idx
             markDirty()
         }
@@ -641,11 +629,6 @@ class TripRecapActivity : AppCompatActivity() {
         qGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (!isChecked) return@addOnButtonCheckedListener
             val wantHigh = checkedId == high.id
-            if (wantHigh && !plus.isActive()) {
-                gatePlusOrAd { qGroup.check(std.id) }
-                style.highQuality = false
-                return@addOnButtonCheckedListener
-            }
             style.highQuality = wantHigh
             markDirty()
         }
@@ -907,10 +890,6 @@ class TripRecapActivity : AppCompatActivity() {
             Toast.makeText(this, R.string.trip_start_hint, Toast.LENGTH_SHORT).show()
             return
         }
-        if (style.highQuality && !plus.isActive()) {
-            gatePlusOrAd(saveAfterGate = true)
-            return
-        }
         saving = true
         Toast.makeText(this, R.string.trip_saving, Toast.LENGTH_SHORT).show()
         lifecycleScope.launch {
@@ -993,101 +972,7 @@ class TripRecapActivity : AppCompatActivity() {
         }
     }
 
-    private fun gatePlusOrAd(saveAfterGate: Boolean = false, revert: (() -> Unit)? = null) {
-        val billing = BillingManager(this, plus)
-        MaterialAlertDialogBuilder(this)
-            .setTitle(R.string.trip_plus_gate_title)
-            .setMessage(R.string.trip_plus_gate_message)
-            .setPositiveButton(R.string.plus_gate_subscribe) { _, _ ->
-                startActivity(Intent(this, jp.nico2525.sukashimap.billing.PaywallActivity::class.java))
-                revert?.invoke()
-                billing.destroy()
-            }
-            .setNeutralButton(R.string.trip_plus_gate_watch_ad) { _, _ ->
-                ads.showRewarded(this, onEarned = {
-                    if (saveAfterGate) savePosterAfterAd()
-                    billing.destroy()
-                }, onUnavailable = {
-                    Toast.makeText(this, R.string.ad_not_ready, Toast.LENGTH_SHORT).show()
-                    revert?.invoke()
-                    billing.destroy()
-                })
-            }
-            .setNegativeButton(R.string.trip_cancel) { _, _ ->
-                revert?.invoke()
-                billing.destroy()
-            }
-            .setOnDismissListener { runCatching { billing.destroy() } }
-            .show()
-    }
-
-    private fun savePosterAfterAd() {
-        // One-shot high-quality save unlocked by the rewarded ad.
-        val prevHigh = style.highQuality
-        style.highQuality = true
-        // Temporarily bypass the Plus check by inlining the save path.
-        saving = false
-        val keepGate = style.highQuality
-        style.highQuality = keepGate
-        doSaveIgnoringGate(prevHigh)
-    }
-
-    private fun doSaveIgnoringGate(restoreHigh: Boolean) {
-        if (saving) return
-        saving = true
-        Toast.makeText(this, R.string.trip_saving, Toast.LENGTH_SHORT).show()
-        lifecycleScope.launch {
-            try {
-                val sizePx = if (style.highQuality) 4096 else 2048
-                val (w, h) = RecapStyle.ASPECTS[style.aspectIndex.coerceIn(RecapStyle.ASPECTS.indices)]
-                val geo = withContext(Dispatchers.IO) {
-                    runCatching { photoGeoPoints() }.getOrDefault(emptyList())
-                }
-                val renderer = TripPosterRenderer(this@TripRecapActivity)
-                renderer.setPhotoGeo(geo)
-                val bmp = withContext(Dispatchers.Default) {
-                    renderer.render(
-                        PosterSpec(
-                            title = posterTitle.ifEmpty { getString(R.string.trip_recap_title) },
-                            dateRange = "",
-                            photoUris = photos.toList(),
-                            photoCount = photos.size,
-                            places = places.toList(),
-                            routeMeasured = routeMeasured,
-                            routeEstimated = routeEstimated,
-                            aspectW = w,
-                            aspectH = h,
-                            cornerRadiusPx = style.cornerRadiusPx,
-                            backgroundColor = style.backgroundColor,
-                            textColor = style.textColor,
-                            fontKind = style.fontKind,
-                            mapZoom = style.zoom,
-                            showPlaceNames = style.showPlaceNames,
-                            routeColor = style.routeColor,
-                            sizePx = sizePx,
-                        ),
-                    )
-                }
-                val saved = withContext(Dispatchers.IO) { storeBitmap(bmp) }
-                if (!bmp.isRecycled) bmp.recycle()
-                Toast.makeText(
-                    this@TripRecapActivity,
-                    if (saved != null) R.string.trip_saved else R.string.trip_save_failed,
-                    Toast.LENGTH_LONG,
-                ).show()
-                if (saved != null) dirty = false
-            } catch (_: Exception) {
-                Toast.makeText(this@TripRecapActivity, R.string.trip_save_failed, Toast.LENGTH_LONG).show()
-            } finally {
-                saving = false
-                if (!plus.isActive()) style.highQuality = restoreHigh && false
-            }
-        }
-    }
-
     // ---------- misc ----------
-
-    private fun gatePlusOrAd(revert: () -> Unit) = gatePlusOrAd(false, revert)
 
     private fun pickDate(current: Long, done: (Long) -> Unit) {
         val cal = Calendar.getInstance().apply { if (current > 0) timeInMillis = current }

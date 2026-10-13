@@ -73,7 +73,7 @@ sealed class TransportInfo {
         override val currentLongitude: Double? = null,
         override val currentCountryCode: String? = null,
         override val showMap: Boolean = true,
-        override val showWatermark: Boolean = true,
+        override val showWatermark: Boolean = false,
         override val mapPosition: OverlayPosition = OverlayPosition.TOP_RIGHT,
     ) : TransportInfo() {
         override val mode = TransportMode.AIRPLANE
@@ -93,6 +93,7 @@ sealed class TransportInfo {
 
     data class Train(
         val isDomesticRoute: Boolean = true,
+        val operator: String = "",
         val lineName: String = "",
         val trainName: String = "",
         val vehicleModel: String = "",
@@ -114,7 +115,7 @@ sealed class TransportInfo {
         override val currentLongitude: Double? = null,
         override val currentCountryCode: String? = null,
         override val showMap: Boolean = true,
-        override val showWatermark: Boolean = true,
+        override val showWatermark: Boolean = false,
         override val mapPosition: OverlayPosition = OverlayPosition.TOP_RIGHT,
     ) : TransportInfo() {
         override val mode = TransportMode.TRAIN
@@ -124,6 +125,14 @@ sealed class TransportInfo {
         override val arrivalName: String get() = arrivalStationFull.ifBlank { arrivalStation }
         override val transportLabel: String get() =
             listOf(lineName, trainName).filter { it.isNotBlank() }.joinToString(" ")
+
+        /** First header line: operator + line (e.g. "JR東日本 東北新幹線"). */
+        fun headerLine1(): String =
+            listOf(operator, lineName).filter { it.isNotBlank() }.joinToString(" ")
+
+        /** Second header line: train + vehicle (e.g. "はやぶさ 9号"). */
+        fun headerLine2(): String =
+            listOf(trainName, vehicleModel).filter { it.isNotBlank() }.joinToString(" ")
 
         override fun withShowWatermark(show: Boolean) = copy(showWatermark = show)
     }
@@ -146,7 +155,7 @@ sealed class TransportInfo {
         override val currentLongitude: Double? = null,
         override val currentCountryCode: String? = null,
         override val showMap: Boolean = true,
-        override val showWatermark: Boolean = true,
+        override val showWatermark: Boolean = false,
         override val mapPosition: OverlayPosition = OverlayPosition.TOP_RIGHT,
     ) : TransportInfo() {
         override val mode = TransportMode.OTHER
@@ -170,7 +179,7 @@ sealed class TransportInfo {
         override val currentLongitude: Double? = null,
         override val currentCountryCode: String? = null,
         override val showMap: Boolean = true,
-        override val showWatermark: Boolean = true,
+        override val showWatermark: Boolean = false,
         override val mapPosition: OverlayPosition = OverlayPosition.TOP_RIGHT,
     ) : TransportInfo() {
         override val mode = TransportMode.SPOT
