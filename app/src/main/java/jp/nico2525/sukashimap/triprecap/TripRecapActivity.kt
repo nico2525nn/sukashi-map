@@ -862,6 +862,15 @@ class TripRecapActivity : AppCompatActivity() {
             val root = com.google.gson.JsonParser.parseString(text).asJsonObject
             val measured = ArrayList<Pair<Double, Double>>()
             val estimated = ArrayList<Pair<Double, Double>>()
+            // Legacy Location History: {"locations": [{"latitudeE7":..,"longitudeE7":..}, ...]}.
+            root.getAsJsonArray("locations")?.let { locs ->
+                for (p in locs) {
+                    val o = p.asJsonObject
+                    if (!o.has("latitudeE7") || !o.has("longitudeE7")) continue
+                    measured.add(o.get("latitudeE7").asDouble / 1e7 to o.get("longitudeE7").asDouble / 1e7)
+                }
+                return measured to estimated
+            }
             val segments = root.getAsJsonArray("semanticSegments") ?: return measured to estimated
             for (seg in segments) {
                 val obj = seg.asJsonObject
