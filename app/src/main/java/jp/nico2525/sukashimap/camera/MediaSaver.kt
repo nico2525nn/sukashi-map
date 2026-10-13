@@ -92,31 +92,37 @@ class MediaSaver(private val context: Context) {
      * file is passed through Transformer so export always succeeds.
      */
     // TODO: burn overlay + logo into video frames once an OverlayEffect path is wired.
-    suspend fun exportVideo(input: Uri): Uri? = withContext(Dispatchers.IO) {
+    suspend fun exportVideo(input: Uri): Uri? {
+        // Transformer must be created/started on the app main thread.
         val outFile = File(context.cacheDir, "export_${System.currentTimeMillis()}.mp4")
         val edited = EditedMediaItem.Builder(MediaItem.fromUri(input)).setEffects(Effects.EMPTY).build()
-        suspendCancellableCoroutine { cont ->
-            val transformer = Transformer.Builder(context).addListener(
-                object : Transformer.Listener {
-                    override fun onCompleted(composition: Composition, result: ExportResult) {
-                        if (cont.isActive) cont.resume(registerExportedVideo(outFile))
-                    }
+        val done: Uri? = withContext(Dispatchers.Main) {
+            suspendCancellableCoroutine { cont ->
+                val transformer = Transformer.Builder(context).addListener(
+                    object : Transformer.Listener {
+                        override fun onCompleted(composition: Composition, result: ExportResult) {
+                            if (cont.isActive) {
+                                cont.resume(registerExportedVideo(outFile))
+                            }
+                        }
 
-                    override fun onError(
-                        composition: Composition,
-                        result: ExportResult,
-                        exception: ExportException,
-                    ) {
-                        if (cont.isActive) cont.resume(null)
-                    }
-                },
-            ).build()
-            transformer.start(
-                Composition.Builder(EditedMediaItemSequence.withAudioAndVideoFrom(listOf(edited))).build(),
-                outFile.absolutePath,
-            )
-            cont.invokeOnCancellation { transformer.cancel() }
+                        override fun onError(
+                            composition: Composition,
+                            result: ExportResult,
+                            exception: ExportException,
+                        ) {
+                            if (cont.isActive) cont.resume(null)
+                        }
+                    },
+                ).build()
+                transformer.start(
+                    Composition.Builder(EditedMediaItemSequence.withAudioAndVideoFrom(listOf(edited))).build(),
+                    outFile.absolutePath,
+                )
+                cont.invokeOnCancellation { transformer.cancel() }
+            }
         }
+        return done
     }
 
     private fun registerExportedVideo(file: File): Uri? {
