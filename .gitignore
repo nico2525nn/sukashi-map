@@ -1,0 +1,23 @@
+# Analysis artifacts (NEVER push: original APK + decoded resources)
+*.apk
+analysis/
+*.prof
+/tmp/
+
+# Local secrets (each dev sets their own keys)
+/local.properties
+/secrets.properties
+*.jks
+*.keystore
+
+# Android / Gradle
+.gradle/
+build/
+app/build/
+local.properties
+.idea/
+*.iml
+.DS_Store
+
+# Raw upstream geo downloads (re-fetchable, large)
+tools/mapdata/raw/
