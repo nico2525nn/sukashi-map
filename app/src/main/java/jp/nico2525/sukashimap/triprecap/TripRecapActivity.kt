@@ -112,6 +112,12 @@ class TripRecapActivity : AppCompatActivity() {
         binding.recapToolbar.title = getString(R.string.trip_title)
         binding.recapToolbar.setNavigationIcon(R.drawable.ic_back)
         binding.recapToolbar.setNavigationOnClickListener { confirmDiscard() }
+        onBackPressedDispatcher.addCallback(
+            this,
+            object : androidx.activity.OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() = confirmDiscard()
+            },
+        )
         binding.recapToolbar.inflateMenu(R.menu.recap_menu)
         binding.recapToolbar.setOnMenuItemClickListener { item ->
             when (item.itemId) {
