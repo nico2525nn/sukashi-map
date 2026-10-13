@@ -35,6 +35,8 @@ class BillingManager(private val activity: Activity, private val plus: PlusManag
     var callback: Callback? = null
     val products = mutableMapOf<String, ProductDetails>()
 
+    private fun post(fn: () -> Unit) = activity.runOnUiThread(fn)
+
     private val purchasesListener = PurchasesUpdatedListener { result, purchases ->
         when (result.responseCode) {
             BillingClient.BillingResponseCode.OK -> {
@@ -42,7 +44,7 @@ class BillingManager(private val activity: Activity, private val plus: PlusManag
             }
             BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> queryPurchases(restore = true)
             BillingClient.BillingResponseCode.USER_CANCELED -> {}
-            else -> callback?.onPurchaseFailed()
+            else -> post { callback?.onPurchaseFailed() }
         }
     }
 
@@ -58,11 +60,13 @@ class BillingManager(private val activity: Activity, private val plus: PlusManag
     fun connect(onReady: () -> Unit = {}) {
         client.startConnection(object : BillingClientStateListener {
             override fun onBillingSetupFinished(result: BillingResult) {
-                if (result.responseCode == BillingClient.BillingResponseCode.OK) {
-                    queryProducts()
-                    onReady()
-                } else {
-                    callback?.onProductsError()
+                activity.runOnUiThread {
+                    if (result.responseCode == BillingClient.BillingResponseCode.OK) {
+                        queryProducts()
+                        onReady()
+                    } else {
+                        callback?.onProductsError()
+                    }
                 }
             }
 
@@ -82,9 +86,10 @@ class BillingManager(private val activity: Activity, private val plus: PlusManag
             if (result.responseCode == BillingClient.BillingResponseCode.OK) {
                 products.clear()
                 details.productDetailsList.forEach { products[it.productId] = it }
-                callback?.onProducts(details.productDetailsList)
+                val list = details.productDetailsList
+                post { callback?.onProducts(list) }
             } else {
-                callback?.onProductsError()
+                post { callback?.onProductsError() }
             }
         }
     }
@@ -106,11 +111,11 @@ class BillingManager(private val activity: Activity, private val plus: PlusManag
             .setProductType(BillingClient.ProductType.INAPP).build()
         client.queryPurchasesAsync(params) { result, purchases ->
             if (result.responseCode != BillingClient.BillingResponseCode.OK) {
-                if (restore) callback?.onRestoreError()
+                if (restore) post { callback?.onRestoreError() }
                 return@queryPurchasesAsync
             }
             if (purchases.isEmpty()) {
-                if (restore) callback?.onRestoreEmpty()
+                if (restore) post { callback?.onRestoreEmpty() }
                 return@queryPurchasesAsync
             }
             val ids = mutableSetOf<String>()
@@ -123,20 +128,21 @@ class BillingManager(private val activity: Activity, private val plus: PlusManag
                 }
             }
             if (restore) {
-                if (ids.isEmpty()) callback?.onRestoreEmpty() else callback?.onRestored(ids)
+                if (ids.isEmpty()) post { callback?.onRestoreEmpty() } else post { callback?.onRestored(ids) }
             } else if (ids.isNotEmpty()) {
-                callback?.onPurchaseCompleted(ids.first())
+                val first = ids.first()
+                post { callback?.onPurchaseCompleted(first) }
             }
         }
     }
 
     private fun handlePurchase(purchase: Purchase) {
         if (purchase.purchaseState == Purchase.PurchaseState.PENDING) {
-            callback?.onPurchasePending()
+            post { callback?.onPurchasePending() }
             return
         }
         if (purchase.purchaseState != Purchase.PurchaseState.PURCHASED) {
-            callback?.onPurchaseFailed()
+            post { callback?.onPurchaseFailed() }
             return
         }
         purchase.products.forEach { plus.grant(it, purchase.purchaseTime) }
@@ -147,7 +153,7 @@ class BillingManager(private val activity: Activity, private val plus: PlusManag
             ) {}
         }
         val id = purchase.products.firstOrNull()
-        if (id != null) callback?.onPurchaseCompleted(id) else callback?.onPurchaseFailed()
+        if (id != null) post { callback?.onPurchaseCompleted(id) } else post { callback?.onPurchaseFailed() }
     }
 
     fun destroy() {
