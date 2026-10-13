@@ -17,19 +17,6 @@
         app:layout_constraintEnd_toStartOf="@id/sideControlsLayout" />
 
     <TextView
-        android:id="@+id/flightInfoOverlay"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_margin="12dp"
-        android:background="#99000000"
-        android:padding="8dp"
-        android:textColor="@android:color/white"
-        android:textAppearance="?attr/textAppearanceBodyMedium"
-        app:layout_constraintTop_toTopOf="@id/previewView"
-        app:layout_constraintStart_toStartOf="@id/previewView"
-        app:layout_constraintEnd_toEndOf="@id/previewView" />
-
-    <TextView
         android:id="@+id/tvRecTimer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -37,7 +24,7 @@
         android:text="@string/recording_time_format"
         android:textColor="#FF5252"
         android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/flightInfoOverlay"
+        app:layout_constraintTop_toTopOf="@id/previewView"
         app:layout_constraintStart_toStartOf="@id/previewView" />
 
     <ImageView
@@ -142,8 +129,7 @@
     <LinearLayout
         android:id="@+id/previewControls"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:gravity="center"
+        android:layout_height="1dp"
         android:orientation="horizontal"
         android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
@@ -204,30 +190,40 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnShare"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:maxLines="1"
             android:text="@string/chooser_share_image" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnShareX"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="@string/share_x" />
+            android:layout_marginStart="4dp"
+            android:insetLeft="0dp"
+            android:insetRight="0dp"
+            android:minWidth="0dp"
+            android:paddingHorizontal="10dp"
+            android:text="X" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnShareIG"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="@string/share_instagram" />
+            android:layout_marginStart="4dp"
+            android:insetLeft="0dp"
+            android:insetRight="0dp"
+            android:minWidth="0dp"
+            android:paddingHorizontal="10dp"
+            android:text="IG" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSave"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="4dp"
             android:text="@string/save" />
     </LinearLayout>
 

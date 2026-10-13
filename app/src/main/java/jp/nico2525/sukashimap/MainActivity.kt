@@ -155,7 +155,6 @@ class MainActivity : AppCompatActivity() {
             vm.textColor = bundle.getInt("text_color", vm.textColor)
             vm.mapLineColor = bundle.getInt("map_line_color", vm.mapLineColor)
             vm.mapBorderColor = bundle.getInt("map_border_color", vm.mapBorderColor)
-            refreshOverlayText()
             redrawOverlayItems()
         }
 
@@ -181,7 +180,6 @@ class MainActivity : AppCompatActivity() {
         binding.btnToggleLocationMode.setOnClickListener {
             vm.toggleLocationMode()
             settings.locationDisplayMode = vm.locationMode.value
-            refreshOverlayText()
             redrawOverlayItems()
         }
         binding.btnCropFrame.setOnClickListener { showCropDialog() }
@@ -204,7 +202,6 @@ class MainActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                launch { vm.transportInfo.collect { refreshOverlayText() } }
                 launch { vm.photoBitmap.collect { showPhotoPreview(it) } }
                 launch { vm.videoUri.collect { u -> if (u != null) showVideoPreview(u) } }
             }
@@ -483,12 +480,6 @@ class MainActivity : AppCompatActivity() {
     // ---- overlay text + items ----
     private fun currentInfo(): TransportInfo? = vm.transportInfo.value
 
-    private fun refreshOverlayText() {
-        // The rendered overlay bitmap already contains the text; the live
-        // TextView stays hidden whenever transport info is set.
-        binding.flightInfoOverlay.visibility = View.GONE
-    }
-
     private fun overlayStyle(): OverlayStyle = OverlayStyle(
         font = vm.chosenFont.value,
         textColor = vm.textColor,
@@ -612,10 +603,14 @@ class MainActivity : AppCompatActivity() {
         binding.videoControls.visibility = View.GONE
         binding.postCaptureControls.visibility = View.GONE
         binding.previewControls.visibility = View.VISIBLE
+        binding.btnCaptureMode.visibility = View.VISIBLE
+        binding.btnCropFrame.visibility = View.VISIBLE
         binding.bottomBar.visibility = View.VISIBLE
     }
 
     private fun showPostCapture() {
+        binding.btnCaptureMode.visibility = View.GONE
+        binding.btnCropFrame.visibility = View.GONE
         binding.bottomBar.visibility = View.GONE
         binding.postCaptureControls.visibility = View.VISIBLE
         binding.btnShare.setText(if (vm.photoBitmap.value != null) R.string.chooser_share_image else R.string.chooser_share_video)
