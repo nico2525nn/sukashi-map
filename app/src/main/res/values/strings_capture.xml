@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Launch / Main / TransportBottomSheet additions (self-written wording). -->
+    <string name="launch_hero_subtitle">Map-styled travel photos</string>
+    <string name="launch_pick_photo">Choose a photo</string>
+    <string name="launch_pick_video">Choose a video</string>
+    <string name="launch_unsupported_file">Please choose a photo or video file</string>
+
+    <string name="main_open_transport">Transport info</string>
+    <string name="main_start_recording">Start recording</string>
+    <string name="main_stop_recording">Stop recording</string>
+    <string name="main_crop_frame">Crop &amp; frame</string>
+    <string name="main_refresh_location">Update location</string>
+    <string name="main_toggle_location_mode">Toggle location display</string>
+    <string name="main_album_photo_ready">Album photo loaded — add overlay info</string>
+    <string name="main_album_video_ready">Album video loaded — add overlay info</string>
+    <string name="main_crop_applied">Crop applied</string>
+    <string name="main_preview_photo_desc">Captured photo preview</string>
+
+    <string name="transport_tab_flight">Flight</string>
+    <string name="transport_tab_rail">Rail</string>
+    <string name="transport_tab_other">Other</string>
+    <string name="transport_tab_spot">Spot</string>
+    <string name="transport_history_empty">No history yet</string>
+    <string name="transport_pick_overlay_photo">Choose overlay photo</string>
+    <string name="transport_photo_info_loaded">Photo date and location loaded</string>
+    <string name="transport_searching_places">Searching places…</string>
+    <string name="transport_no_places">No places found</string>
+    <string name="transport_route_fallback">Route unavailable — drawing a straight line</string>
+    <string name="transport_font_default">Default</string>
+    <string name="transport_font_serif">Serif</string>
+    <string name="transport_font_sans">Sans</string>
+    <string name="transport_font_mono">Monospace</string>
+    <string name="transport_shortest_route">Shortest route</string>
+    <string name="transport_via_hint">Tap station chips to add via lines</string>
+</resources>

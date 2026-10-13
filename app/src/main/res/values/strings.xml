@@ -77,6 +77,7 @@
     <string name="adjust_gate_watch_ad">Watch ad</string>
     <string name="watermark_gate_title">Hiding the logo is a premium feature</string>
     <string name="watermark_gate_message">Hide the app logo on saved photos and videos with Plus or a short ad.</string>
+    <string name="show_watermark">Show logo</string>
     <string name="hide_watermark">Hide logo</string>
     <string name="remove_watermark">▶ Hide Logo &amp; Skip Ads (5 times/2h)</string>
     <string name="watermark_removed_timed">Reward obtained!</string>
@@ -262,4 +263,79 @@
     <string name="trip_plus_gate_title">Plus</string>
     <string name="trip_plus_gate_message">Unlock 4096 px high-quality export and every poster aspect ratio with Plus or a rewarded ad.</string>
     <string name="trip_plus_gate_watch_ad">Watch ad</string>
+
+    <!-- Settings / About / Paywall additions -->
+    <string name="about_intro">Sukashi Map is a camera app that burns travel overlays — route text, a hand-drawn style map and the app logo — directly into your photos and videos.</string>
+    <string name="about_trip_map_credits">Trip Recap maps are powered by OpenFreeMap tiles with MapLibre GL. Railway shapes derive from MLIT National Land Numerical Information (railway data). Airport data derives from OpenFlights (ODbL). World coastlines derive from Natural Earth. Japanese coastline, prefecture borders and water bodies derive from the Global Map Japan dataset (Geospatial Information Authority of Japan).</string>
+    <string name="settings_language_dialog_title">Choose language</string>
+    <string name="settings_privacy_unavailable">Privacy options are not available on this device right now.</string>
+    <string name="paywall_remaining_format">Remaining: %1$s</string>
+    <string name="paywall_no_plus">Plus is not active yet.</string>
+    <string name="paywall_source_format">From: %1$s</string>
+    <string name="paywall_retry">Retry</string>
+    <string name="review_store_unavailable">Google Play could not be opened.</string>
+
+    <!-- Gallery additions -->
+    <string name="gallery_filter_own">Show only Sukashi photos</string>
+    <string name="gallery_map_key_missing">Map view needs a Google Maps API key. Add MAPS_API_KEY in local.properties and rebuild.</string>
+    <string name="detail_share">Share</string>
+    <string name="detail_delete">Delete</string>
+    <string name="detail_delete_title">Delete this file?</string>
+    <string name="detail_delete_message">Delete %1$s from this device? This cannot be undone.</string>
+    <string name="info_row_filename">File: %1$s</string>
+    <string name="info_row_path">Folder: %1$s</string>
+    <string name="info_row_size">Size: %1$s</string>
+    <string name="info_row_resolution">Dimensions: %1$s</string>
+    <string name="info_row_taken">Taken: %1$s</string>
+    <string name="info_row_added">Added: %1$s</string>
+    <string name="info_row_location">Coordinates: %1$s</string>
+
+    <!-- Trip Recap additions -->
+    <string name="recap_attribution_openfreemap">© OpenMapTiles © OpenStreetMap contributors · Tiles: OpenFreeMap</string>
+    <string name="recap_gl_unsupported">This device does not support OpenGL ES 2.0, so the trip map cannot be shown. You can still pick photos and places.</string>
+    <string name="recap_map_title">Trip map</string>
+    <string name="recap_search_hint">Search places (Photon)</string>
+    <string name="recap_search_go">Search</string>
+    <string name="recap_search_empty">No places found. Check the spelling or tap the map.</string>
+    <string name="recap_search_results">Search results</string>
+    <string name="recap_map_light">Light map</string>
+    <string name="recap_map_dark">Dark map</string>
+    <string name="recap_names_on">Names: on</string>
+    <string name="recap_names_off">Names: off</string>
+    <string name="recap_fit_all">Fit all</string>
+    <string name="recap_fit_empty">Add a place or load a route first.</string>
+    <string name="recap_map_tap_hint">Tip: tap the map to drop a visit pin.</string>
+    <string name="recap_new_stop_default">Stop %1$d</string>
+    <string name="recap_places_full">You can add up to 20 stops.</string>
+    <string name="recap_photos_title">Photos (%1$d / %2$d)</string>
+    <string name="recap_add_photos">Choose photos</string>
+    <string name="recap_add_from_map">Add located photos</string>
+    <string name="recap_pick_title">Pick up to 12 photos (videos are skipped)</string>
+    <string name="recap_auto_empty">No located photos matched the current filter.</string>
+    <string name="recap_remove">Remove</string>
+    <string name="recap_edit">Rename</string>
+    <string name="recap_ratio_title">Poster ratio</string>
+    <string name="recap_zoom_title">Map zoom</string>
+    <string name="recap_period_title">Trip dates</string>
+    <string name="recap_period_start">Start date</string>
+    <string name="recap_period_end">End date</string>
+    <string name="recap_style_title">Poster style</string>
+    <string name="recap_poster_title_hint">Poster title</string>
+    <string name="recap_bg_title">Background color</string>
+    <string name="recap_text_color_title">Text color</string>
+    <string name="recap_route_color_title">Route color</string>
+    <string name="recap_font_title">Font</string>
+    <string name="recap_font_default">System default</string>
+    <string name="recap_font_serif">Serif</string>
+    <string name="recap_font_mono">Monospace</string>
+    <string name="recap_corner_title">Corner rounding</string>
+    <string name="recap_places_title">Stops (%1$d / %2$d)</string>
+    <string name="recap_places_empty">No stops yet. Search above or tap the map.</string>
+    <string name="recap_reorder_hint">Newest stops go last; remove and re-add to reorder.</string>
+    <string name="recap_move_last_up">Reorder: remove + re-add</string>
+    <string name="recap_stop_name_title">Stop name</string>
+    <string name="recap_import_timeline">Import Timeline JSON</string>
+    <string name="recap_timeline_loading">Reading Timeline file…</string>
+    <string name="recap_timeline_failed">Could not read that Timeline file.</string>
+    <string name="recap_timeline_loaded">Loaded %1$d measured and %2$d estimated points.</string>
 </resources>

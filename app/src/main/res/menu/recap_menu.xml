@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/action_recap_import_timeline"
+        android:title="@string/recap_import_timeline"
+        android:showAsAction="never" />
+    <item
+        android:id="@+id/action_recap_save"
+        android:title="@string/trip_save"
+        android:showAsAction="always" />
+</menu>

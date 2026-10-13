@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/action_trip_recap"
+        android:title="@string/trip_title"
+        android:showAsAction="never" />
+    <item
+        android:id="@+id/action_sort_added"
+        android:title="@string/menu_sort_by_added"
+        android:showAsAction="never" />
+    <item
+        android:id="@+id/action_sort_taken"
+        android:title="@string/menu_sort_by_taken"
+        android:showAsAction="never" />
+    <item
+        android:id="@+id/action_filter_own"
+        android:title="@string/gallery_filter_own"
+        android:checkable="true"
+        android:showAsAction="never" />
+    <item
+        android:id="@+id/action_toggle_map"
+        android:title="@string/menu_toggle_map"
+        android:showAsAction="never" />
+    <item
+        android:id="@+id/action_toggle_map_type"
+        android:title="@string/menu_toggle_map_type"
+        android:checkable="true"
+        android:showAsAction="never" />
+</menu>

@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/mainRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/black">
+
+    <androidx.camera.view.PreviewView
+        android:id="@+id/previewView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintDimensionRatio="3:4"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/sideControlsLayout"
+        app:layout_constraintBottom_toTopOf="@id/bottomBar" />
+
+    <TextView
+        android:id="@+id/flightInfoOverlay"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="12dp"
+        android:background="#99000000"
+        android:padding="8dp"
+        android:textColor="@android:color/white"
+        android:includeFontPadding="false"
+        android:lineSpacingExtra="2dp"
+        android:textAppearance="?attr/textAppearanceBodyMedium"
+        app:layout_constraintTop_toTopOf="@id/previewView"
+        app:layout_constraintStart_toStartOf="@id/previewView"
+        app:layout_constraintEnd_toEndOf="@id/previewView" />
+
+    <TextView
+        android:id="@+id/tvRecTimer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="12dp"
+        android:text="@string/recording_time_format"
+        android:textColor="#FF5252"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/flightInfoOverlay"
+        app:layout_constraintStart_toStartOf="@id/previewView" />
+
+    <ImageView
+        android:id="@+id/photoPreview"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:contentDescription="@string/main_preview_photo_desc"
+        android:scaleType="fitCenter"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="@id/previewView"
+        app:layout_constraintStart_toStartOf="@id/previewView"
+        app:layout_constraintEnd_toEndOf="@id/previewView"
+        app:layout_constraintBottom_toBottomOf="@id/previewView" />
+
+    <androidx.media3.ui.PlayerView
+        android:id="@+id/videoPreview"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="@id/previewView"
+        app:layout_constraintStart_toStartOf="@id/previewView"
+        app:layout_constraintEnd_toEndOf="@id/previewView"
+        app:layout_constraintBottom_toBottomOf="@id/previewView"
+        app:use_controller="false" />
+
+    <jp.nico2525.sukashimap.overlay.DraggableOverlayView
+        android:id="@+id/overlayDragView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toTopOf="@id/previewView"
+        app:layout_constraintStart_toStartOf="@id/previewView"
+        app:layout_constraintEnd_toEndOf="@id/previewView"
+        app:layout_constraintBottom_toBottomOf="@id/previewView" />
+
+    <LinearLayout
+        android:id="@+id/sideControlsLayout"
+        android:layout_width="56dp"
+        android:layout_height="0dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/bottomBar">
+
+        <ImageButton
+            android:id="@+id/btnFlash"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/flash_toggle"
+            android:src="@drawable/ic_flash_off" />
+
+        <ImageButton
+            android:id="@+id/btnFlipCamera"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/flip_camera"
+            android:src="@drawable/ic_flip_camera" />
+
+        <ImageButton
+            android:id="@+id/btnLocation"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/main_refresh_location"
+            android:src="@drawable/ic_location" />
+
+        <ImageButton
+            android:id="@+id/btnToggleLocationMode"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/main_toggle_location_mode"
+            android:src="@drawable/ic_pin" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/previewControls"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/bottomBar">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnTransportInfo"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/main_open_transport" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCaptureMode"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="@string/mode_switch_to_video" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCropFrame"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="@string/main_crop_frame" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/bottomBar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="12dp"
+        app:layout_constraintBottom_toTopOf="@id/adContainer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageButton
+            android:id="@+id/btnGallery"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/btn_gallery"
+            android:src="@drawable/ic_gallery" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCapture"
+            android:layout_width="88dp"
+            android:layout_height="88dp"
+            app:cornerRadius="44dp"
+            android:text="@string/capture" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:id="@+id/btnSettings"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/settings"
+            android:src="@drawable/ic_settings" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/postCaptureControls"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/adContainer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDiscard"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/discard" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnShare"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="@string/chooser_share_image" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnShareX"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:minWidth="0dp"
+            android:paddingHorizontal="12dp"
+            android:text="X" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnShareIG"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:minWidth="0dp"
+            android:paddingHorizontal="12dp"
+            android:text="IG" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSave"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:text="@string/save" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/videoControls"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/postCaptureControls"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageButton
+            android:id="@+id/btnPlayPause"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/video_play_pause"
+            android:src="@drawable/ic_play" />
+
+        <SeekBar
+            android:id="@+id/seekBar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:id="@+id/btnMute"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/video_mute_toggle"
+            android:src="@drawable/ic_volume_on" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/adContainer"
+        android:layout_width="0dp"
+        android:layout_height="52dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>

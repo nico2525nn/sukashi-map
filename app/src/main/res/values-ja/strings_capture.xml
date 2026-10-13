@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Launch / Main / TransportBottomSheet additions (self-written wording). -->
+    <string name="launch_hero_subtitle">地図スタンプ付きの旅写真</string>
+    <string name="launch_pick_photo">写真を選ぶ</string>
+    <string name="launch_pick_video">動画を選ぶ</string>
+    <string name="launch_unsupported_file">写真または動画のファイルを選んでください</string>
+
+    <string name="main_open_transport">交通情報</string>
+    <string name="main_start_recording">録画開始</string>
+    <string name="main_stop_recording">録画停止</string>
+    <string name="main_crop_frame">切り抜き・フレーム</string>
+    <string name="main_refresh_location">位置情報を更新</string>
+    <string name="main_toggle_location_mode">位置表示を切替</string>
+    <string name="main_album_photo_ready">アルバムの写真を読み込みました — 情報を追加できます</string>
+    <string name="main_album_video_ready">アルバムの動画を読み込みました — 情報を追加できます</string>
+    <string name="main_crop_applied">切り抜きを適用しました</string>
+    <string name="main_preview_photo_desc">撮影した写真のプレビュー</string>
+
+    <string name="transport_tab_flight">飛行機</string>
+    <string name="transport_tab_rail">電車</string>
+    <string name="transport_tab_other">その他</string>
+    <string name="transport_tab_spot">スポット</string>
+    <string name="transport_history_empty">履歴はまだありません</string>
+    <string name="transport_pick_overlay_photo">写真から読み込む</string>
+    <string name="transport_photo_info_loaded">写真の日時・位置を読み込みました</string>
+    <string name="transport_searching_places">場所を検索中…</string>
+    <string name="transport_no_places">場所が見つかりませんでした</string>
+    <string name="transport_route_fallback">ルートを取得できないため直線で表示します</string>
+    <string name="transport_font_default">標準</string>
+    <string name="transport_font_serif">明朝</string>
+    <string name="transport_font_sans">ゴシック</string>
+    <string name="transport_font_mono">等幅</string>
+    <string name="transport_shortest_route">最短ルート</string>
+    <string name="transport_via_hint">駅チップをタップして経由線を追加</string>
+</resources>

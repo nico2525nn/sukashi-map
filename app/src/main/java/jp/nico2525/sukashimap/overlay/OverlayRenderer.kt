@@ -47,11 +47,11 @@ class OverlayRenderer(private val context: Context) {
         val location = info.locationDisplay(style.locationMode)?.let { "📍 $it" } ?: ""
         val date = info.formattedDate()
         val lines = listOf(
-            Triple(label, 0.052f, true),
+            Triple(label, 0.042f, true),
             Triple(route, 0.058f, true),
-            Triple(names, 0.030f, false),
-            Triple(location, 0.030f, false),
-            Triple(date, 0.030f, false),
+            Triple(names, 0.026f, false),
+            Triple(location, 0.026f, false),
+            Triple(date, 0.026f, false),
         ).filter { it.first.isNotBlank() }
         if (lines.isEmpty()) return null
 
@@ -70,9 +70,17 @@ class OverlayRenderer(private val context: Context) {
             maxW = maxOf(maxW, paint.measureText(text))
             totalH += sizes[i] * 1.18f
         }
+        // Constrain text block width so it never runs under the map frame.
         val pad = 20f * scale
-        val bmp = Bitmap.createBitmap((maxW + pad * 2).toInt().coerceAtLeast(8), (totalH + pad * 2).toInt().coerceAtLeast(8), Bitmap.Config.ARGB_8888)
+        val maxTextW = imgW * 0.52f
+        val scaleAdjust = if (maxW + pad * 2 > maxTextW) maxTextW / (maxW + pad * 2) else 1f
+        val bmp = Bitmap.createBitmap(
+            ((maxW + pad * 2) * scaleAdjust).toInt().coerceAtLeast(8),
+            ((totalH + pad * 2) * scaleAdjust).toInt().coerceAtLeast(8),
+            Bitmap.Config.ARGB_8888,
+        )
         val canvas = Canvas(bmp)
+        canvas.scale(scaleAdjust, scaleAdjust)
         val leftAligned = style.position == OverlayPosition.TOP_LEFT || style.position == OverlayPosition.BOTTOM_LEFT
         paint.textAlign = if (leftAligned) Paint.Align.LEFT else Paint.Align.RIGHT
         var y = pad
