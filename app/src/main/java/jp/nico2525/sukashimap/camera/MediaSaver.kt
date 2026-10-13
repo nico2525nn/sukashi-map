@@ -10,6 +10,9 @@ import android.os.Environment
 import android.provider.MediaStore
 import androidx.exifinterface.media.ExifInterface
 import androidx.media3.common.MediaItem
+import androidx.media3.effect.BitmapOverlay
+import androidx.media3.effect.OverlayEffect
+import androidx.media3.effect.StaticOverlaySettings
 import androidx.media3.transformer.Composition
 import androidx.media3.transformer.EditedMediaItem
 import androidx.media3.transformer.EditedMediaItemSequence
@@ -88,14 +91,14 @@ class MediaSaver(private val context: Context) {
     }
 
     /**
-     * Export a recorded clip. Overlay burn-in is a future step; for now the
-     * file is passed through Transformer so export always succeeds.
+     * Export a recorded clip with overlay items burned in via OverlayEffect.
+     * [frameW]/[frameH] are the photo-space dimensions the item coordinates use.
      */
-    // TODO: burn overlay + logo into video frames once an OverlayEffect path is wired.
-    suspend fun exportVideo(input: Uri): Uri? {
+    suspend fun exportVideo(input: Uri, overlays: List<OverlayItem>, frameW: Int, frameH: Int): Uri? {
         // Transformer must be created/started on the app main thread.
         val outFile = File(context.cacheDir, "export_${System.currentTimeMillis()}.mp4")
-        val edited = EditedMediaItem.Builder(MediaItem.fromUri(input)).setEffects(Effects.EMPTY).build()
+        val effects = buildOverlayEffects(overlays, frameW, frameH)
+        val edited = EditedMediaItem.Builder(MediaItem.fromUri(input)).setEffects(effects).build()
         val done: Uri? = withContext(Dispatchers.Main) {
             suspendCancellableCoroutine { cont ->
                 val transformer = Transformer.Builder(context).addListener(
@@ -123,6 +126,36 @@ class MediaSaver(private val context: Context) {
             }
         }
         return done
+    }
+
+    private fun buildOverlayEffects(overlays: List<OverlayItem>, frameW: Int, frameH: Int): Effects {
+        if (overlays.isEmpty() || frameW <= 0 || frameH <= 0) return Effects.EMPTY
+        return try {
+            val textureOverlays = overlays.mapNotNull { item ->
+                val bmp = item.bitmap
+                if (bmp.isRecycled || bmp.width <= 0 || bmp.height <= 0) return@mapNotNull null
+                val dw = bmp.width * item.scale
+                val dh = bmp.height * item.scale
+                if (dw <= 0 || dh <= 0) return@mapNotNull null
+                // StaticOverlaySettings anchors: NDC [-1,1] with (-1,-1) at
+                // bottom-left; overlay-frame anchor (-1,1) = overlay top-left.
+                val ax = (item.x / frameW) * 2f - 1f
+                val ay = 1f - (item.y / frameH) * 2f
+                // Scale is relative to the background frame (half-size units).
+                val sx = dw / frameW * 2f
+                val sy = dh / frameH * 2f
+                val settings = StaticOverlaySettings.Builder()
+                    .setBackgroundFrameAnchor(ax, ay)
+                    .setOverlayFrameAnchor(-1f, 1f)
+                    .setScale(sx, sy)
+                    .build()
+                BitmapOverlay.createStaticBitmapOverlay(bmp, settings)
+            }
+            if (textureOverlays.isEmpty()) Effects.EMPTY
+            else Effects(emptyList(), listOf(OverlayEffect(textureOverlays)))
+        } catch (_: Exception) {
+            Effects.EMPTY
+        }
     }
 
     private fun registerExportedVideo(file: File): Uri? {

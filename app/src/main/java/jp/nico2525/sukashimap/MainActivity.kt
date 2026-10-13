@@ -481,8 +481,10 @@ class MainActivity : AppCompatActivity() {
             return
         }
         val photo = vm.photoBitmap.value
-        val w = photo?.width ?: 1080
-        val h = photo?.height ?: 1440
+        val vw = binding.overlayDragView.photoWidth.toInt()
+        val vh = binding.overlayDragView.photoHeight.toInt()
+        val w = photo?.width ?: vw.takeIf { it > 0 } ?: 1080
+        val h = photo?.height ?: vh.takeIf { it > 0 } ?: 1440
         binding.overlayDragView.photoWidth = w.toFloat()
         binding.overlayDragView.photoHeight = h.toFloat()
         lifecycleScope.launch {
@@ -540,6 +542,17 @@ class MainActivity : AppCompatActivity() {
         binding.photoPreview.visibility = View.GONE
         binding.videoPreview.visibility = View.VISIBLE
         binding.videoControls.visibility = View.VISIBLE
+        // Give the overlay layer real video-sized coordinates, then re-render.
+        lifecycleScope.launch(Dispatchers.IO) {
+            val dims = videoDimensions(uri)
+            withContext(Dispatchers.Main) {
+                if (dims != null) {
+                    binding.overlayDragView.photoWidth = dims.first.toFloat()
+                    binding.overlayDragView.photoHeight = dims.second.toFloat()
+                    redrawOverlayItems()
+                }
+            }
+        }
         releasePlayer()
         player = ExoPlayer.Builder(this).build().also { p ->
             binding.videoPreview.player = p
@@ -550,6 +563,21 @@ class MainActivity : AppCompatActivity() {
         }
         uiHandler.post(seekTicker)
         showPostCapture()
+    }
+
+    private fun videoDimensions(uri: Uri): Pair<Int, Int>? {
+        return try {
+            val retriever = android.media.MediaMetadataRetriever()
+            retriever.setDataSource(this, uri)
+            val w = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toIntOrNull()
+            val h = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toIntOrNull()
+            val rot = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION)?.toIntOrNull() ?: 0
+            retriever.release()
+            if (w == null || h == null) null
+            else if (rot == 90 || rot == 270) Pair(h, w) else Pair(w, h)
+        } catch (_: Exception) {
+            null
+        }
     }
 
     private fun showCaptureControls() {
@@ -772,7 +800,10 @@ class MainActivity : AppCompatActivity() {
                 }
             } else if (videoUri != null) {
                 Toast.makeText(this@MainActivity, R.string.video_export_progress_title, Toast.LENGTH_SHORT).show()
-                val out = withContext(Dispatchers.IO) { mediaSaver.exportVideo(videoUri) }
+                val items = binding.overlayDragView.getOverlayItems()
+                val w = binding.overlayDragView.photoWidth.toInt().coerceAtLeast(2)
+                val h = binding.overlayDragView.photoHeight.toInt().coerceAtLeast(2)
+                val out = mediaSaver.exportVideo(videoUri, items, w, h)
                 if (out != null) {
                     Toast.makeText(this@MainActivity, R.string.video_saved, Toast.LENGTH_SHORT).show()
                 } else {
