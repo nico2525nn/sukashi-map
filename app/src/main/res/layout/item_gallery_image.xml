@@ -8,7 +8,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scaleType="centerCrop"
-        android:background="#FF222222" />
+        android:background="?attr/colorSurfaceVariant" />
 
     <TextView
         android:id="@+id/videoBadge"
@@ -16,9 +16,9 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="4dp"
-        android:background="#99000000"
-        android:textColor="#FFFFFFFF"
-        android:textSize="12sp"
+        android:background="?attr/colorSurfaceInverse"
+        android:textColor="?attr/colorOnSurfaceInverse"
+        android:textAppearance="?attr/textAppearanceLabelSmall"
         android:paddingStart="6dp"
         android:paddingEnd="6dp"
         android:paddingTop="2dp"

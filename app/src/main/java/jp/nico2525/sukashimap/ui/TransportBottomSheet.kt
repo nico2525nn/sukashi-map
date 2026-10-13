@@ -437,14 +437,31 @@ class TransportBottomSheet : BottomSheetDialogFragment() {
 
     private fun setupDates() {
         binding.inputDate.setOnClickListener {
-            DatePickerDialog(requireContext(), { _, y, m, d ->
-                date = LocalDate.of(y, m + 1, d); refreshDateTime()
-            }, date.year, date.monthValue - 1, date.dayOfMonth).show()
+            val picker = com.google.android.material.datepicker.MaterialDatePicker.Builder.datePicker()
+                .setTitleText(getString(R.string.hint_date))
+                .setSelection(
+                    date.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli(),
+                )
+                .build()
+            picker.addOnPositiveButtonClickListener { ms ->
+                date = java.time.Instant.ofEpochMilli(ms)
+                    .atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+                refreshDateTime()
+            }
+            picker.show(parentFragmentManager, "date")
         }
         binding.inputTime.setOnClickListener {
-            TimePickerDialog(requireContext(), { _, h, min ->
-                time = LocalTime.of(h, min); refreshDateTime()
-            }, time.hour, time.minute, true).show()
+            val picker = com.google.android.material.timepicker.MaterialTimePicker.Builder()
+                .setTitleText(getString(R.string.hint_time))
+                .setHour(time.hour)
+                .setMinute(time.minute)
+                .setTimeFormat(com.google.android.material.timepicker.TimeFormat.CLOCK_24H)
+                .build()
+            picker.addOnPositiveButtonClickListener {
+                time = LocalTime.of(picker.hour, picker.minute)
+                refreshDateTime()
+            }
+            picker.show(parentFragmentManager, "time")
         }
     }
 

@@ -975,17 +975,11 @@ class TripRecapActivity : AppCompatActivity() {
     // ---------- misc ----------
 
     private fun pickDate(current: Long, done: (Long) -> Unit) {
-        val cal = Calendar.getInstance().apply { if (current > 0) timeInMillis = current }
-        DatePickerDialog(
-            this,
-            { _, y, m, d ->
-                val c = Calendar.getInstance().apply { set(y, m, d, 0, 0, 0) }
-                done(c.timeInMillis)
-            },
-            cal.get(Calendar.YEAR),
-            cal.get(Calendar.MONTH),
-            cal.get(Calendar.DAY_OF_MONTH),
-        ).show()
+        val picker = com.google.android.material.datepicker.MaterialDatePicker.Builder.datePicker()
+            .setSelection(if (current > 0) current else System.currentTimeMillis())
+            .build()
+        picker.addOnPositiveButtonClickListener { ms -> done(ms) }
+        picker.show(supportFragmentManager, "recap_date")
     }
 
     private fun fmtDate(ms: Long): String {

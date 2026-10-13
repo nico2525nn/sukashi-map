@@ -12,7 +12,7 @@ import android.os.Handler
 import android.os.Looper
 import android.view.Surface
 import android.view.View
-import android.widget.SeekBar
+import com.google.android.material.slider.Slider
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -107,7 +107,7 @@ class MainActivity : AppCompatActivity() {
         override fun run() {
             val p = player
             if (p != null && !seeking && p.duration > 0) {
-                binding.seekBar.progress = ((p.currentPosition * 1000 / p.duration).toInt())
+                binding.seekBar.value = (p.currentPosition * 1000f / p.duration)
             }
             uiHandler.postDelayed(this, 250)
         }
@@ -158,7 +158,24 @@ class MainActivity : AppCompatActivity() {
             redrawOverlayItems()
         }
 
+        binding.topAppBar.setNavigationOnClickListener {
+            onBackPressedDispatcher.onBackPressed()
+        }
+        binding.topAppBar.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.action_gallery -> {
+                    runCatching { startActivity(Intent(this, GalleryActivity::class.java)) }
+                    true
+                }
+                R.id.action_settings -> {
+                    runCatching { startActivity(Intent(this, SettingsActivity::class.java)) }
+                    true
+                }
+                else -> false
+            }
+        }
         binding.btnTransportInfo.setOnClickListener { openTransportSheet() }
+        binding.btnEditTransport.setOnClickListener { openTransportSheet() }
         binding.btnCapture.setOnClickListener { onCapture() }
         binding.btnCaptureMode.setOnClickListener { toggleMode() }
         binding.btnFlash.setOnClickListener { toggleFlash() }
@@ -190,14 +207,23 @@ class MainActivity : AppCompatActivity() {
         binding.btnShareIG.setOnClickListener { shareCurrent("com.instagram.android") }
         binding.btnPlayPause.setOnClickListener { togglePlay() }
         binding.btnMute.setOnClickListener { toggleMute() }
-        binding.seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
-                val p = player ?: return
-                if (fromUser && p.duration > 0) p.seekTo(p.duration * progress / 1000)
+        binding.seekBar.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
+            override fun onStartTrackingTouch(slider: Slider) {
+                seeking = true
             }
-            override fun onStartTrackingTouch(sb: SeekBar?) { seeking = true }
-            override fun onStopTrackingTouch(sb: SeekBar?) { seeking = false }
+
+            override fun onStopTrackingTouch(slider: Slider) {
+                seeking = false
+                val p = player ?: return
+                if (p.duration > 0) p.seekTo((p.duration * slider.value / 1000f).toLong())
+            }
         })
+        binding.seekBar.addOnChangeListener { _, value, fromUser ->
+            if (fromUser) {
+                val p = player ?: return@addOnChangeListener
+                if (p.duration > 0 && !p.isPlaying) p.seekTo((p.duration * value / 1000f).toLong())
+            }
+        }
 
 
         lifecycleScope.launch {
@@ -382,15 +408,16 @@ class MainActivity : AppCompatActivity() {
     private fun toggleMode() {
         if (isRecording) return
         videoMode = !videoMode
-        binding.btnCaptureMode.setText(if (videoMode) R.string.mode_switch_to_photo else R.string.mode_switch_to_video)
-        binding.btnCapture.setText(if (videoMode) R.string.main_start_recording else R.string.capture)
+        binding.btnCaptureMode.contentDescription =
+            getString(if (videoMode) R.string.mode_switch_to_photo else R.string.mode_switch_to_video)
+        binding.btnCaptureMode.setIconResource(if (videoMode) R.drawable.ic_camera else R.drawable.ic_videocam)
         startCamera()
     }
 
     private fun toggleFlash() {
         flashMode = if (flashMode == ImageCapture.FLASH_MODE_OFF) ImageCapture.FLASH_MODE_ON else ImageCapture.FLASH_MODE_OFF
         imageCapture?.flashMode = flashMode
-        binding.btnFlash.setImageResource(if (flashMode == ImageCapture.FLASH_MODE_ON) R.drawable.ic_flash_on else R.drawable.ic_flash_off)
+        binding.btnFlash.setIconResource(if (flashMode == ImageCapture.FLASH_MODE_ON) R.drawable.ic_flash_on else R.drawable.ic_flash_off)
     }
 
     private fun onCapture() {
@@ -449,7 +476,7 @@ class MainActivity : AppCompatActivity() {
         isRecording = true
         recSeconds = 0
         binding.tvRecTimer.visibility = View.VISIBLE
-        binding.btnCapture.setText(R.string.main_stop_recording)
+        binding.btnCapture.setImageResource(R.drawable.shutter_rec)
         recJob = lifecycleScope.launch {
             while (isRecording) {
                 binding.tvRecTimer.text = getString(R.string.recording_time_format, recSeconds / 60, recSeconds % 60)
@@ -468,7 +495,7 @@ class MainActivity : AppCompatActivity() {
         isRecording = false
         recJob?.cancel()
         binding.tvRecTimer.visibility = View.GONE
-        binding.btnCapture.setText(R.string.main_start_recording)
+        binding.btnCapture.setImageResource(R.drawable.shutter_idle)
         if (event.hasError()) {
             Toast.makeText(this, R.string.video_recording_failed, Toast.LENGTH_SHORT).show()
             return
@@ -603,27 +630,25 @@ class MainActivity : AppCompatActivity() {
         binding.videoControls.visibility = View.GONE
         binding.postCaptureControls.visibility = View.GONE
         binding.previewControls.visibility = View.VISIBLE
-        binding.btnCaptureMode.visibility = View.VISIBLE
-        binding.btnCropFrame.visibility = View.VISIBLE
         binding.bottomBar.visibility = View.VISIBLE
     }
 
     private fun showPostCapture() {
-        binding.btnCaptureMode.visibility = View.GONE
-        binding.btnCropFrame.visibility = View.GONE
+        binding.previewControls.visibility = View.GONE
         binding.bottomBar.visibility = View.GONE
         binding.postCaptureControls.visibility = View.VISIBLE
-        binding.btnShare.setText(if (vm.photoBitmap.value != null) R.string.chooser_share_image else R.string.chooser_share_video)
+        binding.btnShare.contentDescription =
+            getString(if (vm.photoBitmap.value != null) R.string.chooser_share_image else R.string.chooser_share_video)
     }
 
     private fun togglePlay() {
         val p = player ?: return
         if (p.isPlaying) {
             p.pause()
-            binding.btnPlayPause.setImageResource(R.drawable.ic_play)
+            binding.btnPlayPause.setIconResource(R.drawable.ic_play)
         } else {
             p.play()
-            binding.btnPlayPause.setImageResource(R.drawable.ic_pause)
+            binding.btnPlayPause.setIconResource(R.drawable.ic_pause)
         }
     }
 
@@ -631,7 +656,7 @@ class MainActivity : AppCompatActivity() {
         val p = player ?: return
         val muted = p.volume > 0f
         p.volume = if (muted) 0f else 1f
-        binding.btnMute.setImageResource(if (muted) R.drawable.ic_volume_off else R.drawable.ic_volume_on)
+        binding.btnMute.setIconResource(if (muted) R.drawable.ic_volume_off else R.drawable.ic_volume_on)
     }
 
     private fun releasePlayer() {

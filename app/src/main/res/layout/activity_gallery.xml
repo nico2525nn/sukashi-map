@@ -80,9 +80,10 @@
             android:layout_height="wrap_content"
             android:layout_gravity="top|center_horizontal"
             android:layout_marginTop="8dp"
-            android:background="#CC000000"
+            android:background="?attr/colorSurfaceInverse"
             android:padding="8dp"
-            android:textColor="#FFFFFFFF"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceInverse"
             android:visibility="gone" />
 
     </FrameLayout>

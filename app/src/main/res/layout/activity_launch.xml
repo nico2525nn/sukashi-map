@@ -4,7 +4,7 @@
     android:id="@+id/launchRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/launch_gradient_background">
+    android:background="?attr/colorSurface">
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -25,7 +25,7 @@
                 android:layout_marginTop="72dp"
                 android:text="@string/launch_app_title"
                 android:textAppearance="?attr/textAppearanceDisplayLarge"
-                android:textColor="@android:color/white"
+                android:textColor="?attr/colorOnSurface"
                 android:textStyle="bold" />
 
             <TextView
@@ -35,7 +35,7 @@
                 android:layout_marginTop="8dp"
                 android:text="@string/launch_hero_subtitle"
                 android:textAppearance="?attr/textAppearanceTitleMedium"
-                android:textColor="#B0BEC5" />
+                android:textColor="?attr/colorOnSurfaceVariant" />
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardNewCapture"
@@ -44,7 +44,8 @@
                 android:layout_marginTop="48dp"
                 android:clickable="true"
                 android:focusable="true"
-                app:cardCornerRadius="16dp">
+                app:cardCornerRadius="20dp"
+                app:cardElevation="2dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -76,7 +77,8 @@
                 android:layout_marginTop="16dp"
                 android:clickable="true"
                 android:focusable="true"
-                app:cardCornerRadius="16dp">
+                app:cardCornerRadius="20dp"
+                app:cardElevation="2dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"

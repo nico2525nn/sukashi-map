@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Sukashi Map M3 color tokens. Seed: deep teal #006A60 (travel/map feel). -->
+    <color name="seed">#006A60</color>
+
+    <!-- Light scheme (M3 baseline derived) -->
+    <color name="md_primary">#006A60</color>
+    <color name="md_on_primary">#FFFFFF</color>
+    <color name="md_primary_container">#6FF7E4</color>
+    <color name="md_on_primary_container">#00201C</color>
+    <color name="md_secondary">#4D635E</color>
+    <color name="md_on_secondary">#FFFFFF</color>
+    <color name="md_secondary_container">#CFE9E3</color>
+    <color name="md_on_secondary_container">#09302A</color>
+    <color name="md_tertiary">#456179</color>
+    <color name="md_tertiary_container">#CCE2FA</color>
+    <color name="md_on_tertiary_container">#042738</color>
+    <color name="md_error">#BA1A1A</color>
+    <color name="md_on_error">#FFFFFF</color>
+    <color name="md_error_container">#FFDAD6</color>
+    <color name="md_on_error_container">#410002</color>
+    <color name="md_background">#FAFDFB</color>
+    <color name="md_on_background">#191C1B</color>
+    <color name="md_surface">#FAFDFB</color>
+    <color name="md_on_surface">#191C1B</color>
+    <color name="md_surface_variant">#DAE5E1</color>
+    <color name="md_on_surface_variant">#3F4947</color>
+    <color name="md_outline">#6F7977</color>
+    <color name="md_outline_variant">#BEC9C6</color>
+    <color name="md_scrim">#000000</color>
+    <color name="md_inverse_surface">#2D3130</color>
+    <color name="md_inverse_on_surface">#EFF1EE</color>
+    <color name="md_surface_tint">#006A60</color>
+
+    <!-- Camera scrim overlays (always dark for legibility over photos) -->
+    <color name="cam_scrim_top">#99000000</color>
+    <color name="cam_scrim_bottom">#CC000000</color>
+    <color name="cam_icon">#FFFFFF</color>
+    <color name="cam_icon_bg">#42000000</color>
+    <color name="cam_shutter_ring">#FFFFFF</color>
+    <color name="cam_shutter_fill">#F2F2F2</color>
+    <color name="cam_rec">#FF5252</color>
+</resources>
