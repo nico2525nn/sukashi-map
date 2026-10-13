@@ -275,7 +275,11 @@ class TripRecapActivity : AppCompatActivity() {
     private fun applyMapStyle() {
         val map = libreMap ?: return
         map.setStyle(Style.Builder().fromJson(buildStyleJson(darkMap))) {
+            runCatching {
+                map.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(36.0, 138.0), 4.0))
+            }
             refreshAnnotations()
+            fitAll()
         }
     }
 
@@ -300,7 +304,7 @@ class TripRecapActivity : AppCompatActivity() {
             {"id": "landuse", "type": "fill", "source": "ofm", "source-layer": "landuse", "paint": {"fill-color": "$land"}},
             {"id": "roads", "type": "line", "source": "ofm", "source-layer": "transportation", "paint": {"line-color": "$road", "line-width": 1}},
             {"id": "places", "type": "symbol", "source": "ofm", "source-layer": "place",
-             "layout": {"text-field": ["coalesce", ["get", "name:latin"], ["get", "name"]], "text-size": 11}, "paint": {"text-color": "${if (dark) "#ffffff" else "#111111"}"}}
+             "layout": {"text-field": ["coalesce", ["get", "name:latin"], ["get", "name"]], "text-font": ["Noto Sans Regular"], "text-size": 11}, "paint": {"text-color": "${if (dark) "#ffffff" else "#111111"}"}}
           ]
         }
         """.trimIndent()
