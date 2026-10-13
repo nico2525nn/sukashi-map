@@ -616,7 +616,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showPostCapture() {
-        binding.previewControls.visibility = View.GONE
         binding.bottomBar.visibility = View.GONE
         binding.postCaptureControls.visibility = View.VISIBLE
         binding.btnShare.setText(if (vm.photoBitmap.value != null) R.string.chooser_share_image else R.string.chooser_share_video)
