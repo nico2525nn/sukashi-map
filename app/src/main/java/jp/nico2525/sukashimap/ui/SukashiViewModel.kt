@@ -78,6 +78,8 @@ class SukashiViewModel(application: Application) : AndroidViewModel(application)
     val snackbarEvents = _snackbarEvents.asSharedFlow()
 
     private var routeJob: Job? = null
+    private var mediaJob: Job? = null
+    private var mediaLoadId: Long = 0L
 
     /**
      * Monotonic revision for the committed TransportInfo. Slow map/route jobs capture the
@@ -104,60 +106,74 @@ class SukashiViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun openMediaUri(uri: Uri, fromCamera: Boolean = false, onReady: () -> Unit = {}) {
-        viewModelScope.launch {
+        mediaJob?.cancel()
+        val loadId = ++mediaLoadId
+        mediaJob = viewModelScope.launch {
             _editorState.update { it.copy(isExporting = true, busyMessage = "読み込み中…") }
-            val meta = MediaExporter.extractMediaMetadata(appContext, uri)
-            val rawBmp = if (!meta.isVideo) {
-                MediaExporter.decodeOrientedBitmap(appContext, uri, maxLongEdge = 2400)
-            } else null
+            try {
+                val meta = MediaExporter.extractMediaMetadata(appContext, uri)
+                val rawBmp = if (!meta.isVideo) {
+                    MediaExporter.decodeOrientedBitmap(appContext, uri, maxLongEdge = 2400)
+                } else null
+                if (loadId != mediaLoadId) return@launch
 
-            val cal = Calendar.getInstance()
-            var lat = meta.lat
-            var lon = meta.lon
-            if (lat == null && lon == null && fromCamera && prefsState.value.autoLocationEnabled) {
-                val devLoc = readLastKnownDeviceLocation()
-                if (devLoc != null) {
-                    lat = devLoc.first
-                    lon = devLoc.second
+                val cal = Calendar.getInstance()
+                var lat = meta.lat
+                var lon = meta.lon
+                if (lat == null && lon == null && fromCamera && prefsState.value.autoLocationEnabled) {
+                    val devLoc = readLastKnownDeviceLocation()
+                    if (devLoc != null) {
+                        lat = devLoc.first
+                        lon = devLoc.second
+                    }
+                }
+
+                val geo = if (lat != null && lon != null) {
+                    routingAndPlaceService.reverseGeocode(lat, lon)
+                } else null
+                if (loadId != mediaLoadId) return@launch
+
+                val curInfo = _editorState.value.transportInfo
+                val updatedInfo = curInfo.copy(
+                    year = meta.year ?: cal.get(Calendar.YEAR),
+                    month = meta.month ?: (cal.get(Calendar.MONTH) + 1),
+                    day = meta.day ?: cal.get(Calendar.DAY_OF_MONTH),
+                    hour = meta.hour ?: cal.get(Calendar.HOUR_OF_DAY),
+                    minute = meta.minute ?: cal.get(Calendar.MINUTE),
+                    photoLat = lat,
+                    photoLon = lon,
+                    photoLocationName = geo?.locationLabel.orEmpty(),
+                    photoCountryCode = geo?.countryCode.orEmpty()
+                )
+                val revision = ++infoRevision
+                val slice = OverlayCanvasRenderer.prepareMapSlice(updatedInfo, mapVectorRepository)
+                if (loadId != mediaLoadId) return@launch
+                _editorState.update {
+                    it.copy(
+                        mediaUri = uri,
+                        isVideo = meta.isVideo,
+                        rawBitmap = rawBmp,
+                        stagedBitmap = rawBmp,
+                        mediaWidth = rawBmp?.width ?: meta.width,
+                        mediaHeight = rawBmp?.height ?: meta.height,
+                        transportInfo = updatedInfo,
+                        cropFrame = CropFrameSettings(),
+                        mapSlice = slice,
+                        isExporting = false,
+                        busyMessage = ""
+                    )
+                }
+                recomputeRouteIfNeeded(updatedInfo, revision = revision)
+                onReady()
+            } finally {
+                // Only the newest load owns the busy overlay; a superseded load must not
+                // clear the spinner that the new load is still showing.
+                if (loadId == mediaLoadId) {
+                    _editorState.update {
+                        if (it.isExporting) it.copy(isExporting = false, busyMessage = "") else it
+                    }
                 }
             }
-
-            val geo = if (lat != null && lon != null) {
-                routingAndPlaceService.reverseGeocode(lat, lon)
-            } else null
-
-            val curInfo = _editorState.value.transportInfo
-            val updatedInfo = curInfo.copy(
-                year = meta.year ?: cal.get(Calendar.YEAR),
-                month = meta.month ?: (cal.get(Calendar.MONTH) + 1),
-                day = meta.day ?: cal.get(Calendar.DAY_OF_MONTH),
-                hour = meta.hour ?: cal.get(Calendar.HOUR_OF_DAY),
-                minute = meta.minute ?: cal.get(Calendar.MINUTE),
-                photoLat = lat,
-                photoLon = lon,
-                photoLocationName = geo?.locationLabel.orEmpty(),
-                photoCountryCode = geo?.countryCode.orEmpty()
-            )
-            val revision = ++infoRevision
-            val slice = OverlayCanvasRenderer.prepareMapSlice(updatedInfo, mapVectorRepository)
-            if (revision != infoRevision) return@launch
-            _editorState.update {
-                it.copy(
-                    mediaUri = uri,
-                    isVideo = meta.isVideo,
-                    rawBitmap = rawBmp,
-                    stagedBitmap = rawBmp,
-                    mediaWidth = rawBmp?.width ?: meta.width,
-                    mediaHeight = rawBmp?.height ?: meta.height,
-                    transportInfo = updatedInfo,
-                    cropFrame = CropFrameSettings(),
-                    mapSlice = slice,
-                    isExporting = false,
-                    busyMessage = ""
-                )
-            }
-            recomputeRouteIfNeeded(updatedInfo, revision = revision)
-            onReady()
         }
     }
 
@@ -166,6 +182,7 @@ class SukashiViewModel(application: Application) : AndroidViewModel(application)
         val revision = ++infoRevision
         viewModelScope.launch {
             refreshMapSlice(newInfo, revision)
+            if (revision != infoRevision) return@launch
             recomputeRouteIfNeeded(newInfo, saveToHistory = saveToHistory, revision = revision)
         }
     }
@@ -182,6 +199,7 @@ class SukashiViewModel(application: Application) : AndroidViewModel(application)
         saveToHistory: Boolean = false,
         revision: Long = infoRevision
     ) {
+        if (revision != infoRevision) return
         routeJob?.cancel()
         routeJob = viewModelScope.launch {
             if (revision != infoRevision) return@launch

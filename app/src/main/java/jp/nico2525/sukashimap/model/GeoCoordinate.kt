@@ -44,12 +44,19 @@ object GeoCoordinate {
         val raw = text.trim()
         if (raw.isEmpty()) return null
 
-        val normalized = raw
+        var normalized = raw
             .uppercase(Locale.US)
             .replace('，', ',')
             .replace('　', ' ')
             .replace('−', '-')
             .replace('–', '-')
+
+        // Treat a lone comma as a decimal separator when the input is not sexagesimal.
+        // This also covers forms like `48,8587 N` and `48,8587°N`.
+        val hasSexagesimalMarkers = normalized.any { it in "'\"′″:" }
+        if (!hasSexagesimalMarkers && normalized.count { it == ',' } == 1) {
+            normalized = normalized.replace(',', '.')
+        }
 
         val negativeDirections = if (isLatitude) setOf('S') else setOf('W')
         val positiveDirections = if (isLatitude) setOf('N') else setOf('E')
@@ -64,17 +71,7 @@ object GeoCoordinate {
             }
         }
 
-        val hasDmsMarkers = normalized.any { it in "°'\"′″:" }
-        val numericText = if (!hasDmsMarkers && normalized.count { it == ',' } == 1 &&
-            !normalized.contains(' ')
-        ) {
-            // Accept decimal-comma locales such as `35,6585`.
-            normalized.replace(',', '.')
-        } else {
-            normalized
-        }
-
-        val withoutDirection = numericText
+        val withoutDirection = normalized
             .replace(Regex("[NSEW]"), " ")
             .replace(',', ' ')
             .trim()
@@ -118,12 +115,14 @@ object GeoCoordinate {
         val parts = cleaned.split(' ').filter { it.isNotBlank() }
         if (parts.size !in 1..3) return null
 
-        val degrees = parts.getOrNull(0)?.toDoubleOrNull() ?: return null
+        val degreeToken = parts.getOrNull(0) ?: return null
+        val degrees = degreeToken.toDoubleOrNull() ?: return null
         val minutes = parts.getOrNull(1)?.toDoubleOrNull() ?: 0.0
         val seconds = parts.getOrNull(2)?.toDoubleOrNull() ?: 0.0
         if (minutes < 0.0 || minutes >= 60.0 || seconds < 0.0 || seconds >= 60.0) return null
 
         val magnitude = abs(degrees) + minutes / 60.0 + seconds / 3600.0
-        return if (degrees < 0.0) -magnitude else magnitude
+        // Use the token, not `degrees < 0`: -0.0 compares equal to 0.0 but still means south/west.
+        return if (degreeToken.startsWith("-")) -magnitude else magnitude
     }
 }

@@ -168,6 +168,9 @@ object MediaExporter {
                     fromExif(ExifInterface(pfd.fileDescriptor))
                 }
             }.getOrNull()
+            if (byFd?.lat != null && byFd.lon != null && byFd.dateTimeOriginal != null) {
+                return byFd
+            }
             val byStream = runCatching {
                 context.contentResolver.openInputStream(target)?.use { stream ->
                     fromExif(ExifInterface(stream))
@@ -192,7 +195,12 @@ object MediaExporter {
         runCatching { MediaStore.setRequireOriginal(uri) }.getOrNull()?.let(candidates::add)
         candidates.add(uri)
 
-        val results = candidates.mapNotNull { readFrom(it) }
+        val results = ArrayList<ImageExifInfo>(candidates.size)
+        for (candidate in candidates) {
+            val result = readFrom(candidate) ?: continue
+            results.add(result)
+            if (result.lat != null && result.lon != null && result.dateTimeOriginal != null) break
+        }
         if (results.isEmpty()) return ImageExifInfo(null, null)
         val withGps = results.firstOrNull { it.lat != null && it.lon != null }
         val withDate = results.firstOrNull { it.dateTimeOriginal != null }

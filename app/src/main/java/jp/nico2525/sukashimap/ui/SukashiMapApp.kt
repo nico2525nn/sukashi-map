@@ -88,6 +88,7 @@ fun SukashiMapApp(
             Manifest.permission.ACCESS_MEDIA_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
         if (hasMediaLocationPermission) {
+            pendingSharedUri = null
             openSharedUri(uri)
             onConsumedSharedUri()
         } else {

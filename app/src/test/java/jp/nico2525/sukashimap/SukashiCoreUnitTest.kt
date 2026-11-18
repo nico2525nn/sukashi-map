@@ -132,12 +132,17 @@ class SukashiCoreUnitTest {
         assertEquals(null, GeoCoordinate.parseLongitude("139.7S"))
         assertEquals(null, GeoCoordinate.parseLatitude("35°60'0\"N"))
         assertEquals(null, GeoCoordinate.parseLatitude("35°0'60\"N"))
+        assertEquals(null, GeoCoordinate.parseLatitude("1.2.3"))
+        assertEquals(null, GeoCoordinate.parseLongitude(".."))
     }
 
     @Test
     fun coordinateParserHandlesNegativeDmsDecimalCommaAndBoundaries() {
         assertEquals(-33.8688, GeoCoordinate.parseLatitude("-33°52'7.68\"")!!, 1e-6)
+        assertEquals(-0.5, GeoCoordinate.parseLatitude("-0°30'0\"")!!, 1e-9)
         assertEquals(48.8587, GeoCoordinate.parseLatitude("48,8587")!!, 1e-9)
+        assertEquals(48.8587, GeoCoordinate.parseLatitude("48,8587 N")!!, 1e-9)
+        assertEquals(48.8587, GeoCoordinate.parseLatitude("48,8587°N")!!, 1e-9)
         assertEquals(90.0, GeoCoordinate.parseLatitude("90")!!, 1e-9)
         assertEquals(-180.0, GeoCoordinate.parseLongitude("180W")!!, 1e-9)
         assertEquals(null, GeoCoordinate.parseLongitude("-180.0001"))

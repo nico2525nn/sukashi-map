@@ -1,9 +1,15 @@
 package jp.nico2525.sukashimap.ui.editor
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.graphics.RectF
 import android.net.Uri
+import android.os.Build
 import android.view.ViewGroup
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.core.content.ContextCompat
 import androidx.photopicker.activity.PickVisualMedia
 import androidx.photopicker.activity.PickVisualMediaRequest
 import androidx.compose.animation.core.animateDpAsState
@@ -163,13 +169,39 @@ fun EditorScreen(
 
     // The Android photo picker redacts EXIF GPS by default. The SDK-ext 23 photo picker can
     // ask the user to include location info; when supported, the returned URI keeps GPS.
-    val launchPicker = {
+    val launchMediaPicker = {
         mediaPicker.launch(
             PickVisualMediaRequest.Builder()
                 .setMediaType(PickVisualMedia.ImageAndVideo)
                 .setLocationMetadataAccessRequested(true)
                 .build()
         )
+    }
+
+    // API 29-32 has no location-metadata picker flag. Ask for ACCESS_MEDIA_LOCATION first
+    // so MediaStore/fallback pickers can expose unredacted EXIF.
+    var mediaLocationPermissionAsked by rememberSaveable { mutableStateOf(false) }
+    val mediaLocationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (!granted) {
+            viewModel.emitMessage("写真の位置情報が許可されていないため、撮影地は手動で設定できます")
+        }
+        launchMediaPicker()
+    }
+
+    val launchPicker = {
+        val needsLegacyPermission = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_MEDIA_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        if (needsLegacyPermission && !mediaLocationPermissionAsked) {
+            mediaLocationPermissionAsked = true
+            mediaLocationPermissionLauncher.launch(Manifest.permission.ACCESS_MEDIA_LOCATION)
+        } else {
+            launchMediaPicker()
+        }
     }
 
     val hasCustomLayout = state.overlayStyle.textFreePos != null ||

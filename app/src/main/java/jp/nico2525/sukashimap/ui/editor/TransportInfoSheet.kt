@@ -65,6 +65,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -1202,13 +1203,13 @@ private fun CoordinateInputDialog(
     onDismiss: () -> Unit,
     onConfirm: (Double, Double) -> Unit
 ) {
-    var latText by remember(initialLat) {
+    var latText by rememberSaveable(initialLat) {
         mutableStateOf(initialLat?.let { String.format(Locale.US, "%.6f", it) }.orEmpty())
     }
-    var lonText by remember(initialLon) {
+    var lonText by rememberSaveable(initialLon) {
         mutableStateOf(initialLon?.let { String.format(Locale.US, "%.6f", it) }.orEmpty())
     }
-    var errorText by remember { mutableStateOf<String?>(null) }
+    var errorText by rememberSaveable { mutableStateOf<String?>(null) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
