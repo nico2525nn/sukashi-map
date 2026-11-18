@@ -4,9 +4,11 @@ import android.content.Context
 import android.location.Geocoder
 import android.os.Build
 import jp.nico2525.sukashimap.model.Coord
+import jp.nico2525.sukashimap.model.GeoCoordinate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.HttpURLConnection
@@ -14,7 +16,6 @@ import java.net.URL
 import java.net.URLEncoder
 import java.util.Locale
 import kotlin.coroutines.resume
-import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.hypot
 
@@ -235,9 +236,11 @@ class RoutingAndPlaceService(
             if (Geocoder.isPresent()) {
                 val geocoder = Geocoder(context, activeLocale)
                 val addr = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    suspendCancellableCoroutine { cont ->
-                        geocoder.getFromLocation(lat, lon, 1) { list ->
-                            cont.resume(list.firstOrNull())
+                    withTimeoutOrNull(4_000) {
+                        suspendCancellableCoroutine { cont ->
+                            geocoder.getFromLocation(lat, lon, 1) { list ->
+                                cont.resume(list.firstOrNull())
+                            }
                         }
                     }
                 } else {
@@ -285,11 +288,7 @@ class RoutingAndPlaceService(
     }
 
     companion object {
-        fun formatLatLon(lat: Double, lon: Double): String {
-            val ns = if (lat >= 0) "N" else "S"
-            val ew = if (lon >= 0) "E" else "W"
-            return String.format(Locale.US, "%.2f°%s, %.2f°%s", abs(lat), ns, abs(lon), ew)
-        }
+        fun formatLatLon(lat: Double, lon: Double): String = GeoCoordinate.format(lat, lon)
 
         /**
          * 100% Iterative Ramer-Douglas-Peucker simplification (zero StackOverflowError on 200k+ points!).

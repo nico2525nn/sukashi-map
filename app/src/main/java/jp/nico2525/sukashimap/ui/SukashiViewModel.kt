@@ -79,6 +79,12 @@ class SukashiViewModel(application: Application) : AndroidViewModel(application)
 
     private var routeJob: Job? = null
 
+    /**
+     * Monotonic revision for the committed TransportInfo. Slow map/route jobs capture the
+     * revision they started with and never write results after a newer edit.
+     */
+    private var infoRevision: Long = 0L
+
     init {
         viewModelScope.launch {
             mapVectorRepository.preloadCoreMaps()
@@ -132,7 +138,9 @@ class SukashiViewModel(application: Application) : AndroidViewModel(application)
                 photoLocationName = geo?.locationLabel.orEmpty(),
                 photoCountryCode = geo?.countryCode.orEmpty()
             )
+            val revision = ++infoRevision
             val slice = OverlayCanvasRenderer.prepareMapSlice(updatedInfo, mapVectorRepository)
+            if (revision != infoRevision) return@launch
             _editorState.update {
                 it.copy(
                     mediaUri = uri,
@@ -148,27 +156,35 @@ class SukashiViewModel(application: Application) : AndroidViewModel(application)
                     busyMessage = ""
                 )
             }
-            recomputeRouteIfNeeded(updatedInfo)
+            recomputeRouteIfNeeded(updatedInfo, revision = revision)
             onReady()
         }
     }
 
     fun applyTransportInfo(newInfo: TransportInfo, saveToHistory: Boolean = true) {
         _editorState.update { it.copy(transportInfo = newInfo) }
+        val revision = ++infoRevision
         viewModelScope.launch {
-            refreshMapSlice(newInfo)
-            recomputeRouteIfNeeded(newInfo, saveToHistory = saveToHistory)
+            refreshMapSlice(newInfo, revision)
+            recomputeRouteIfNeeded(newInfo, saveToHistory = saveToHistory, revision = revision)
         }
     }
 
-    private suspend fun refreshMapSlice(info: TransportInfo) {
+    private suspend fun refreshMapSlice(info: TransportInfo, revision: Long = infoRevision) {
         val slice = OverlayCanvasRenderer.prepareMapSlice(info, mapVectorRepository)
-        _editorState.update { it.copy(mapSlice = slice) }
+        if (revision == infoRevision) {
+            _editorState.update { it.copy(mapSlice = slice) }
+        }
     }
 
-    fun recomputeRouteIfNeeded(info: TransportInfo, saveToHistory: Boolean = false) {
+    fun recomputeRouteIfNeeded(
+        info: TransportInfo,
+        saveToHistory: Boolean = false,
+        revision: Long = infoRevision
+    ) {
         routeJob?.cancel()
         routeJob = viewModelScope.launch {
+            if (revision != infoRevision) return@launch
             when (info.mode) {
                 TransportMode.TRAIN -> {
                     if (info.isDomesticJapanRail &&
@@ -189,6 +205,7 @@ class SukashiViewModel(application: Application) : AndroidViewModel(application)
                             selectedViaLines = info.selectedViaLines,
                             isAutoShortest = info.isAutoShortestVia
                         )
+                        if (revision != infoRevision) return@launch
                         val merged = info.copy(
                             routePolylines = res.polylines,
                             candidateViaLines = res.candidateViaLines,
@@ -196,14 +213,20 @@ class SukashiViewModel(application: Application) : AndroidViewModel(application)
                             railwayCompany = info.railwayCompany.ifBlank { res.autoDetectedCompany.orEmpty() }
                         )
                         val slice = OverlayCanvasRenderer.prepareMapSlice(merged, mapVectorRepository)
+                        if (revision != infoRevision) return@launch
                         _editorState.update {
                             it.copy(transportInfo = merged, mapSlice = slice, isComputingRoute = false)
                         }
-                        if (saveToHistory) preferencesRepository.recordHistory(merged)
+                        if (saveToHistory && revision == infoRevision) {
+                            preferencesRepository.recordHistory(merged)
+                        }
                     } else {
+                        if (revision != infoRevision) return@launch
                         val cleaned = info.copy(routePolylines = emptyList(), candidateViaLines = emptyList())
                         _editorState.update { it.copy(transportInfo = cleaned, isComputingRoute = false) }
-                        if (saveToHistory) preferencesRepository.recordHistory(cleaned)
+                        if (saveToHistory && revision == infoRevision) {
+                            preferencesRepository.recordHistory(cleaned)
+                        }
                     }
                 }
 
@@ -222,23 +245,33 @@ class SukashiViewModel(application: Application) : AndroidViewModel(application)
                             viaPhotoLat = info.photoLat,
                             viaPhotoLon = info.photoLon
                         )
+                        if (revision != infoRevision) return@launch
                         val merged = info.copy(routePolylines = road)
                         val slice = OverlayCanvasRenderer.prepareMapSlice(merged, mapVectorRepository)
+                        if (revision != infoRevision) return@launch
                         _editorState.update {
                             it.copy(transportInfo = merged, mapSlice = slice, isComputingRoute = false)
                         }
-                        if (saveToHistory) preferencesRepository.recordHistory(merged)
+                        if (saveToHistory && revision == infoRevision) {
+                            preferencesRepository.recordHistory(merged)
+                        }
                     } else {
+                        if (revision != infoRevision) return@launch
                         _editorState.update { it.copy(isComputingRoute = false) }
-                        if (saveToHistory) preferencesRepository.recordHistory(info)
+                        if (saveToHistory && revision == infoRevision) {
+                            preferencesRepository.recordHistory(info)
+                        }
                     }
                 }
 
                 TransportMode.AIRPLANE, TransportMode.SPOT -> {
                     val cleaned = info.copy(routePolylines = emptyList())
                     val slice = OverlayCanvasRenderer.prepareMapSlice(cleaned, mapVectorRepository)
+                    if (revision != infoRevision) return@launch
                     _editorState.update { it.copy(transportInfo = cleaned, mapSlice = slice, isComputingRoute = false) }
-                    if (saveToHistory) preferencesRepository.recordHistory(cleaned)
+                    if (saveToHistory && revision == infoRevision) {
+                        preferencesRepository.recordHistory(cleaned)
+                    }
                 }
             }
         }
@@ -388,6 +421,13 @@ class SukashiViewModel(application: Application) : AndroidViewModel(application)
         val s = _editorState.value.transportInfo
         return routingAndPlaceService.searchPlaces(query, s.photoLat, s.photoLon)
     }
+
+    /** Resolves a display label for a manually entered / device GPS coordinate. */
+    suspend fun reverseGeocodeLocation(lat: Double, lon: Double) =
+        routingAndPlaceService.reverseGeocode(lat, lon)
+
+    /** Last known device position; callers must hold a location runtime permission. */
+    suspend fun lastKnownDeviceLocation(): Pair<Double, Double>? = readLastKnownDeviceLocation()
 
     fun setThemeMode(mode: ThemeMode) {
         viewModelScope.launch { preferencesRepository.updateThemeMode(mode) }

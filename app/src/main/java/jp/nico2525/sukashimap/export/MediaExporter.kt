@@ -36,8 +36,10 @@ import jp.nico2525.sukashimap.model.TransportInfo
 import jp.nico2525.sukashimap.render.MapDatasetSlice
 import jp.nico2525.sukashimap.render.OverlayCanvasRenderer
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -58,8 +60,12 @@ data class MediaMetadataExtract(
     val minute: Int?,
     val isVideo: Boolean,
     val width: Int,
-    val height: Int
+    val height: Int,
+    val durationMs: Long? = null
 )
+
+private class VideoExportTimeoutException :
+    Exception("動画の書き出しがタイムアウトしました")
 
 object MediaExporter {
 
@@ -75,9 +81,13 @@ object MediaExporter {
                 val h = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toIntOrNull() ?: 1080
                 val rot = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION)?.toIntOrNull() ?: 0
                 val (effW, effH) = if (rot == 90 || rot == 270) h to w else w to h
+                val durationMs = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+                    ?.toLongOrNull()
                 val locStr = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_LOCATION)
                 val (lat, lon) = parseIso6709Location(locStr)
-                return@withContext MediaMetadataExtract(lat, lon, null, null, null, null, null, true, effW, effH)
+                return@withContext MediaMetadataExtract(
+                    lat, lon, null, null, null, null, null, true, effW, effH, durationMs
+                )
             } catch (_: Exception) {
                 return@withContext MediaMetadataExtract(null, null, null, null, null, null, null, true, 1920, 1080)
             } finally {
@@ -102,30 +112,99 @@ object MediaExporter {
                 imgW = opts.outWidth
                 imgH = opts.outHeight
             }
-            context.contentResolver.openInputStream(uri)?.use { stream ->
-                val exif = ExifInterface(stream)
-                exif.latLong?.let {
-                    lat = it[0]
-                    lon = it[1]
-                }
-                val orient = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
-                if (orient == ExifInterface.ORIENTATION_ROTATE_90 || orient == ExifInterface.ORIENTATION_ROTATE_270) {
-                    val tmp = imgW; imgW = imgH; imgH = tmp
-                }
-                val dt = exif.getAttribute(ExifInterface.TAG_DATETIME_ORIGINAL)
-                    ?: exif.getAttribute(ExifInterface.TAG_DATETIME)
-                if (!dt.isNullOrBlank() && dt.length >= 16) {
-                    yr = dt.substring(0, 4).toIntOrNull()
-                    mo = dt.substring(5, 7).toIntOrNull()
-                    dy = dt.substring(8, 10).toIntOrNull()
-                    hr = dt.substring(11, 13).toIntOrNull()
-                    mn = dt.substring(14, 16).toIntOrNull()
-                }
-            }
         } catch (_: Exception) {
         }
 
+        val exif = readImageExif(context, uri)
+        lat = exif.lat
+        lon = exif.lon
+        if (exif.orientation == ExifInterface.ORIENTATION_ROTATE_90 ||
+            exif.orientation == ExifInterface.ORIENTATION_ROTATE_270
+        ) {
+            val tmp = imgW; imgW = imgH; imgH = tmp
+        }
+        val dt = exif.dateTimeOriginal
+        if (!dt.isNullOrBlank() && dt.length >= 16) {
+            yr = dt.substring(0, 4).toIntOrNull()
+            mo = dt.substring(5, 7).toIntOrNull()
+            dy = dt.substring(8, 10).toIntOrNull()
+            hr = dt.substring(11, 13).toIntOrNull()
+            mn = dt.substring(14, 16).toIntOrNull()
+        }
+
         MediaMetadataExtract(lat, lon, yr, mo, dy, hr, mn, false, imgW, imgH)
+    }
+
+    internal data class ImageExifInfo(
+        val lat: Double?,
+        val lon: Double?,
+        val orientation: Int = ExifInterface.ORIENTATION_NORMAL,
+        val dateTimeOriginal: String? = null
+    )
+
+    /**
+     * Reads EXIF through a file descriptor first. Photo-picker/content-provider URIs can hand out
+     * non-seekable streams where [ExifInterface] silently loses the GPS IFD; the descriptor path
+     * is the reliable one on those providers.
+     */
+    internal fun readImageExif(context: Context, uri: Uri): ImageExifInfo {
+        fun fromExif(exif: ExifInterface): ImageExifInfo {
+            val ll = runCatching { exif.latLong }.getOrNull()
+            return ImageExifInfo(
+                lat = ll?.getOrNull(0),
+                lon = ll?.getOrNull(1),
+                orientation = exif.getAttributeInt(
+                    ExifInterface.TAG_ORIENTATION,
+                    ExifInterface.ORIENTATION_NORMAL
+                ),
+                dateTimeOriginal = exif.getAttribute(ExifInterface.TAG_DATETIME_ORIGINAL)
+                    ?: exif.getAttribute(ExifInterface.TAG_DATETIME)
+            )
+        }
+
+        fun readFrom(target: Uri): ImageExifInfo? {
+            val byFd = runCatching {
+                context.contentResolver.openFileDescriptor(target, "r")?.use { pfd ->
+                    fromExif(ExifInterface(pfd.fileDescriptor))
+                }
+            }.getOrNull()
+            val byStream = runCatching {
+                context.contentResolver.openInputStream(target)?.use { stream ->
+                    fromExif(ExifInterface(stream))
+                }
+            }.getOrNull()
+            return byFd?.let { fd ->
+                if (fd.lat != null && fd.lon != null) fd
+                else listOfNotNull(fd, byStream).firstOrNull { it.lat != null && it.lon != null }
+                    ?: byStream ?: fd
+            } ?: byStream
+        }
+
+        // Android 13+ photo-picker URIs keep GPS redacted even with ACCESS_MEDIA_LOCATION.
+        // Resolve the underlying MediaStore URI, then ask for its unredacted original.
+        val candidates = LinkedHashSet<Uri>()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            runCatching { MediaStore.getMediaUri(context, uri) }.getOrNull()?.let { mediaUri ->
+                runCatching { MediaStore.setRequireOriginal(mediaUri) }.getOrNull()?.let(candidates::add)
+                candidates.add(mediaUri)
+            }
+        }
+        runCatching { MediaStore.setRequireOriginal(uri) }.getOrNull()?.let(candidates::add)
+        candidates.add(uri)
+
+        val results = candidates.mapNotNull { readFrom(it) }
+        if (results.isEmpty()) return ImageExifInfo(null, null)
+        val withGps = results.firstOrNull { it.lat != null && it.lon != null }
+        val withDate = results.firstOrNull { it.dateTimeOriginal != null }
+        val orientation = results.firstOrNull {
+            it.orientation != ExifInterface.ORIENTATION_NORMAL
+        }?.orientation ?: results.first().orientation
+        return ImageExifInfo(
+            lat = withGps?.lat,
+            lon = withGps?.lon,
+            orientation = orientation,
+            dateTimeOriginal = withDate?.dateTimeOriginal
+        )
     }
 
     internal fun computeSourceCropRect(srcW: Int, srcH: Int, settings: CropFrameSettings): Rect {
@@ -444,37 +523,47 @@ object MediaExporter {
 
         val stamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
         val outFile = File(File(context.cacheDir, "exports").apply { mkdirs() }, "SukashiMap_$stamp.mp4")
+        // A broken/unsupported device encoder can silently never call Transformer.Listener.onError.
+        // Bound each attempt so the UI cannot stay on "書き出し中" forever.
+        val exportTimeoutMs = ((meta.durationMs ?: 0L) * 3L + 20_000L)
+            .coerceIn(25_000L, 240_000L)
 
-        suspend fun runTransform(hdrMode: Int) = withContext(Dispatchers.Main) {
-            suspendCancellableCoroutine<Unit> { cont ->
-                val bitmapOverlay = BitmapOverlay.createStaticBitmapOverlay(overlayBitmap)
-                val overlayEffect = OverlayEffect(listOf<TextureOverlay>(bitmapOverlay))
-                val effects = Effects(emptyList(), listOf<Effect>(overlayEffect))
-                val editedItem = EditedMediaItem.Builder(MediaItem.fromUri(sourceVideoUri))
-                    .setEffects(effects)
-                    .build()
-                val composition = Composition.Builder(EditedMediaItemSequenceCompat.single(editedItem))
-                    .setHdrMode(hdrMode)
-                    .build()
+        suspend fun runTransform(hdrMode: Int, timeoutMs: Long) = withContext(Dispatchers.Main) {
+            try {
+                withTimeout(timeoutMs) {
+                    suspendCancellableCoroutine<Unit> { cont ->
+                        val bitmapOverlay = BitmapOverlay.createStaticBitmapOverlay(overlayBitmap)
+                        val overlayEffect = OverlayEffect(listOf<TextureOverlay>(bitmapOverlay))
+                        val effects = Effects(emptyList(), listOf<Effect>(overlayEffect))
+                        val editedItem = EditedMediaItem.Builder(MediaItem.fromUri(sourceVideoUri))
+                            .setEffects(effects)
+                            .build()
+                        val composition = Composition.Builder(EditedMediaItemSequenceCompat.single(editedItem))
+                            .setHdrMode(hdrMode)
+                            .build()
 
-                val transformer = Transformer.Builder(context)
-                    .addListener(object : Transformer.Listener {
-                        override fun onCompleted(composition: Composition, exportResult: ExportResult) {
-                            if (cont.isActive) cont.resume(Unit)
-                        }
+                        val transformer = Transformer.Builder(context)
+                            .addListener(object : Transformer.Listener {
+                                override fun onCompleted(composition: Composition, exportResult: ExportResult) {
+                                    if (cont.isActive) cont.resume(Unit)
+                                }
 
-                        override fun onError(
-                            composition: Composition,
-                            exportResult: ExportResult,
-                            exportException: ExportException
-                        ) {
-                            if (cont.isActive) cont.resumeWithException(exportException)
-                        }
-                    })
-                    .build()
+                                override fun onError(
+                                    composition: Composition,
+                                    exportResult: ExportResult,
+                                    exportException: ExportException
+                                ) {
+                                    if (cont.isActive) cont.resumeWithException(exportException)
+                                }
+                            })
+                            .build()
 
-                transformer.start(composition, outFile.absolutePath)
-                cont.invokeOnCancellation { transformer.cancel() }
+                        transformer.start(composition, outFile.absolutePath)
+                        cont.invokeOnCancellation { transformer.cancel() }
+                    }
+                }
+            } catch (timeout: TimeoutCancellationException) {
+                throw VideoExportTimeoutException()
             }
         }
 
@@ -485,11 +574,12 @@ object MediaExporter {
                 Composition.HDR_MODE_TONE_MAP_HDR_TO_SDR_USING_OPEN_GL
             }
             try {
-                runTransform(primaryHdrMode)
+                runTransform(primaryHdrMode, exportTimeoutMs)
             } catch (hdrErr: Exception) {
+                if (hdrErr is VideoExportTimeoutException) throw hdrErr
                 if (preserveHdr) {
                     outFile.delete()
-                    runTransform(Composition.HDR_MODE_TONE_MAP_HDR_TO_SDR_USING_OPEN_GL)
+                    runTransform(Composition.HDR_MODE_TONE_MAP_HDR_TO_SDR_USING_OPEN_GL, exportTimeoutMs)
                 } else {
                     throw hdrErr
                 }

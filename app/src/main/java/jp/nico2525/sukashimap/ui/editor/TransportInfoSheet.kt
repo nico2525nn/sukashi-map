@@ -1,5 +1,9 @@
 package jp.nico2525.sukashimap.ui.editor
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -16,14 +20,17 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CalendarToday
 import androidx.compose.material.icons.rounded.Clear
 import androidx.compose.material.icons.rounded.DirectionsCar
+import androidx.compose.material.icons.rounded.EditLocationAlt
 import androidx.compose.material.icons.rounded.FlightLand
 import androidx.compose.material.icons.rounded.FlightTakeoff
 import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.MyLocation
 import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material.icons.rounded.Search
@@ -63,9 +70,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import jp.nico2525.sukashimap.data.AirlineEntry
 import jp.nico2525.sukashimap.data.AirportRecord
 import jp.nico2525.sukashimap.data.PlaceCandidate
@@ -73,6 +83,7 @@ import jp.nico2525.sukashimap.data.RailwayLineEntry
 import jp.nico2525.sukashimap.data.RailwayRepository
 import jp.nico2525.sukashimap.data.StationRecord
 import jp.nico2525.sukashimap.model.DateTimeDisplayMode
+import jp.nico2525.sukashimap.model.GeoCoordinate
 import jp.nico2525.sukashimap.model.LocationDisplayMode
 import jp.nico2525.sukashimap.model.OverlayCorner
 import jp.nico2525.sukashimap.model.OverlayStyle
@@ -95,7 +106,8 @@ private enum class SearchDialogKind {
     DEP_STATION,
     ARR_STATION,
     DEP_PLACE,
-    DEST_PLACE
+    DEST_PLACE,
+    PHOTO_LOCATION
 }
 
 @Composable
@@ -104,17 +116,88 @@ fun TransportInfoSheet(
     initialInfo: TransportInfo,
     currentStyle: OverlayStyle,
     recentHistory: List<TransportInfo>,
+    mediaKey: Any? = null,
     onDismiss: () -> Unit,
     onApply: (TransportInfo, OverlayStyle) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val coroutineScope = rememberCoroutineScope()
 
-    var draft by remember(initialInfo) { mutableStateOf(initialInfo) }
-    var styleDraft by remember(currentStyle) { mutableStateOf(currentStyle) }
+    // The editor is the source of truth while the sheet is open. Background map/route
+    // recomputation can emit a new TransportInfo instance; keying `remember` on it used to
+    // silently discard the user's freshly edited coordinates. A new media item still resets.
+    var draft by remember(mediaKey) { mutableStateOf(initialInfo) }
+    var styleDraft by remember { mutableStateOf(currentStyle) }
     var activeSearchKind by remember { mutableStateOf<SearchDialogKind?>(null) }
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
+    var showCoordinateDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    fun setDraftCoordinates(lat: Double, lon: Double, resolveName: Boolean) {
+        draft = draft.copy(
+            photoLat = lat,
+            photoLon = lon,
+            photoCountryCode = "",
+            photoLocationName = if (resolveName) GeoCoordinate.format(lat, lon) else draft.photoLocationName
+        )
+        if (resolveName) {
+            coroutineScope.launch {
+                val geo = viewModel.reverseGeocodeLocation(lat, lon)
+                // Ignore a slow result if the user already picked another coordinate.
+                if (draft.photoLat == lat && draft.photoLon == lon) {
+                    draft = draft.copy(
+                        photoLocationName = geo.locationLabel.ifBlank { GeoCoordinate.format(lat, lon) },
+                        photoCountryCode = geo.countryCode
+                    )
+                }
+            }
+        }
+    }
+
+    fun applyDeviceLocation() {
+        coroutineScope.launch {
+            val loc = viewModel.lastKnownDeviceLocation()
+            if (loc == null) {
+                viewModel.emitMessage("現在地を取得できませんでした。座標を手入力してください")
+            } else {
+                setDraftCoordinates(loc.first, loc.second, resolveName = true)
+            }
+        }
+    }
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { result ->
+        val granted = result[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+            result[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        if (granted) {
+            applyDeviceLocation()
+        } else {
+            viewModel.emitMessage("現在地を使うには位置情報の権限が必要です")
+        }
+    }
+
+    fun useCurrentDeviceLocation() {
+        val fineGranted = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        val coarseGranted = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        if (fineGranted || coarseGranted) {
+            applyDeviceLocation()
+        } else {
+            locationPermissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
+    }
 
     // Live-compute candidate via lines when Japanese rail stations change
     LaunchedEffect(
@@ -165,12 +248,11 @@ fun TransportInfoSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 4.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -187,465 +269,492 @@ fun TransportInfoSheet(
                 }
             }
 
-            ExpressiveConnectedSegmentedRow(
-                options = TransportMode.entries,
-                selected = draft.mode,
-                onSelect = { draft = draft.copy(mode = it) },
-                labelProvider = {
-                    when (it) {
-                        TransportMode.AIRPLANE -> "フライト"
-                        TransportMode.TRAIN -> "鉄道"
-                        TransportMode.OTHER -> "移動"
-                        TransportMode.SPOT -> "スポット"
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp, vertical = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                ExpressiveConnectedSegmentedRow(
+                    options = TransportMode.entries,
+                    selected = draft.mode,
+                    onSelect = { draft = draft.copy(mode = it) },
+                    labelProvider = {
+                        when (it) {
+                            TransportMode.AIRPLANE -> "フライト"
+                            TransportMode.TRAIN -> "鉄道"
+                            TransportMode.OTHER -> "移動"
+                            TransportMode.SPOT -> "スポット"
+                        }
+                    },
+                    iconProvider = {
+                        when (it) {
+                            TransportMode.AIRPLANE -> Icons.Rounded.FlightTakeoff
+                            TransportMode.TRAIN -> Icons.Rounded.Train
+                            TransportMode.OTHER -> Icons.Rounded.DirectionsCar
+                            TransportMode.SPOT -> Icons.Rounded.Place
+                        }
                     }
-                },
-                iconProvider = {
-                    when (it) {
-                        TransportMode.AIRPLANE -> Icons.Rounded.FlightTakeoff
-                        TransportMode.TRAIN -> Icons.Rounded.Train
-                        TransportMode.OTHER -> Icons.Rounded.DirectionsCar
-                        TransportMode.SPOT -> Icons.Rounded.Place
-                    }
-                }
-            )
+                )
 
-            if (modeHistory.isNotEmpty()) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    modeHistory.forEach { h ->
-                        AssistChip(
-                            onClick = {
-                                draft = h.copy(
-                                    year = draft.year,
-                                    month = draft.month,
-                                    day = draft.day,
-                                    hour = draft.hour,
-                                    minute = draft.minute,
-                                    photoLat = draft.photoLat,
-                                    photoLon = draft.photoLon,
-                                    photoLocationName = draft.photoLocationName,
-                                    photoCountryCode = draft.photoCountryCode
-                                )
-                            },
-                            leadingIcon = {
-                                Icon(Icons.Rounded.History, contentDescription = null, modifier = Modifier.size(16.dp))
-                            },
-                            label = { Text(h.summaryLabel(), maxLines = 1) }
-                        )
-                    }
-                }
-            }
-
-            when (draft.mode) {
-                TransportMode.AIRPLANE -> {
-                    ExpressiveSectionCard(
-                        title = "フライト情報",
-                        trailingHeader = {
-                            IconButton(
+                if (modeHistory.isNotEmpty()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        modeHistory.forEach { h ->
+                            AssistChip(
                                 onClick = {
-                                    draft = draft.copy(
-                                        departureAirportCode = draft.arrivalAirportCode,
-                                        departureAirportName = draft.arrivalAirportName,
-                                        departureAirportCity = draft.arrivalAirportCity,
-                                        departureAirportCountry = draft.arrivalAirportCountry,
-                                        departureLat = draft.arrivalLat,
-                                        departureLon = draft.arrivalLon,
-                                        arrivalAirportCode = draft.departureAirportCode,
-                                        arrivalAirportName = draft.departureAirportName,
-                                        arrivalAirportCity = draft.departureAirportCity,
-                                        arrivalAirportCountry = draft.departureAirportCountry,
-                                        arrivalLat = draft.departureLat,
-                                        arrivalLon = draft.departureLon
+                                    draft = h.copy(
+                                        year = draft.year,
+                                        month = draft.month,
+                                        day = draft.day,
+                                        hour = draft.hour,
+                                        minute = draft.minute,
+                                        photoLat = draft.photoLat,
+                                        photoLon = draft.photoLon,
+                                        photoLocationName = draft.photoLocationName,
+                                        photoCountryCode = draft.photoCountryCode
                                     )
                                 },
-                                shapes = IconButtonDefaults.shapes()
-                            ) {
-                                Icon(Icons.Rounded.SwapVert, contentDescription = "出発・到着を入れ替え")
-                            }
-                        }
-                    ) {
-                        PickerFieldCard(
-                            label = "出発空港",
-                            value = if (draft.departureAirportCode.isNotBlank()) {
-                                "${draft.departureAirportCode} · ${draft.departureAirportName}"
-                            } else "",
-                            placeholder = "空港を検索 (例: HND, KIX)",
-                            icon = Icons.Rounded.FlightTakeoff,
-                            onClick = { activeSearchKind = SearchDialogKind.DEP_AIRPORT }
-                        )
-
-                        PickerFieldCard(
-                            label = "到着空港",
-                            value = if (draft.arrivalAirportCode.isNotBlank()) {
-                                "${draft.arrivalAirportCode} · ${draft.arrivalAirportName}"
-                            } else "",
-                            placeholder = "空港を検索 (例: OKA,CTS)",
-                            icon = Icons.Rounded.FlightLand,
-                            onClick = { activeSearchKind = SearchDialogKind.ARR_AIRPORT }
-                        )
-
-                        PickerFieldCard(
-                            label = "航空会社",
-                            value = if (draft.airlineCode.isNotBlank()) {
-                                "${draft.airlineCode} · ${draft.airlineDisplayName}".trimEnd(' ', '·')
-                            } else "",
-                            placeholder = "航空会社を選択 (任意)",
-                            icon = Icons.Rounded.Search,
-                            onClick = { activeSearchKind = SearchDialogKind.AIRLINE },
-                            onClear = if (draft.airlineCode.isNotBlank()) {
-                                { draft = draft.copy(airlineCode = "", airlineDisplayName = "") }
-                            } else null
-                        )
-
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            OutlinedTextField(
-                                value = draft.flightNumber,
-                                onValueChange = { draft = draft.copy(flightNumber = it) },
-                                label = { Text("便名") },
-                                placeholder = { Text("1731") },
-                                singleLine = true,
-                                modifier = Modifier.weight(1f)
-                            )
-                            OutlinedTextField(
-                                value = draft.registrationNumber,
-                                onValueChange = { draft = draft.copy(registrationNumber = it.uppercase()) },
-                                label = { Text("機体記号 (任意)") },
-                                placeholder = { Text("JA812A") },
-                                singleLine = true,
-                                modifier = Modifier.weight(1f)
+                                leadingIcon = {
+                                    Icon(Icons.Rounded.History, contentDescription = null, modifier = Modifier.size(16.dp))
+                                },
+                                label = { Text(h.summaryLabel(), maxLines = 1) }
                             )
                         }
                     }
                 }
 
-                TransportMode.TRAIN -> {
-                    ExpressiveSectionCard(
-                        title = "列車・路線情報",
-                        trailingHeader = {
-                            IconButton(
-                                onClick = {
-                                    draft = draft.copy(
-                                        departureStationName = draft.arrivalStationName,
-                                        departureStationGroupCode = draft.arrivalStationGroupCode,
-                                        departureStationLat = draft.arrivalStationLat,
-                                        departureStationLon = draft.arrivalStationLon,
-                                        departureStationCountry = draft.arrivalStationCountry,
-                                        arrivalStationName = draft.departureStationName,
-                                        arrivalStationGroupCode = draft.departureStationGroupCode,
-                                        arrivalStationLat = draft.departureStationLat,
-                                        arrivalStationLon = draft.departureStationLon,
-                                        arrivalStationCountry = draft.departureStationCountry
-                                    )
-                                },
-                                shapes = IconButtonDefaults.shapes()
-                            ) {
-                                Icon(Icons.Rounded.SwapVert, contentDescription = "発着駅を入れ替え")
+                when (draft.mode) {
+                    TransportMode.AIRPLANE -> {
+                        ExpressiveSectionCard(
+                            title = "フライト情報",
+                            trailingHeader = {
+                                IconButton(
+                                    onClick = {
+                                        draft = draft.copy(
+                                            departureAirportCode = draft.arrivalAirportCode,
+                                            departureAirportName = draft.arrivalAirportName,
+                                            departureAirportCity = draft.arrivalAirportCity,
+                                            departureAirportCountry = draft.arrivalAirportCountry,
+                                            departureLat = draft.arrivalLat,
+                                            departureLon = draft.arrivalLon,
+                                            arrivalAirportCode = draft.departureAirportCode,
+                                            arrivalAirportName = draft.departureAirportName,
+                                            arrivalAirportCity = draft.departureAirportCity,
+                                            arrivalAirportCountry = draft.departureAirportCountry,
+                                            arrivalLat = draft.departureLat,
+                                            arrivalLon = draft.departureLon
+                                        )
+                                    },
+                                    shapes = IconButtonDefaults.shapes()
+                                ) {
+                                    Icon(Icons.Rounded.SwapVert, contentDescription = "出発・到着を入れ替え")
+                                }
                             }
-                        }
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("日本の鉄道路線・駅DBを使用", style = MaterialTheme.typography.bodyMediumEmphasized)
-                            Switch(
-                                checked = draft.isDomesticJapanRail,
-                                onCheckedChange = { draft = draft.copy(isDomesticJapanRail = it) }
-                            )
-                        }
-
-                        if (draft.isDomesticJapanRail) {
                             PickerFieldCard(
-                                label = "路線名",
-                                value = draft.railwayLineName,
-                                placeholder = "路線を検索（駅選択で自動判定も可）",
-                                icon = Icons.Rounded.Train,
-                                onClick = { activeSearchKind = SearchDialogKind.RAILWAY_LINE },
-                                onClear = if (draft.railwayLineName.isNotBlank()) {
-                                    { draft = draft.copy(railwayLineName = "", railwayCompany = "") }
+                                label = "出発空港",
+                                value = if (draft.departureAirportCode.isNotBlank()) {
+                                    "${draft.departureAirportCode} · ${draft.departureAirportName}"
+                                } else "",
+                                placeholder = "空港を検索 (例: HND, KIX)",
+                                icon = Icons.Rounded.FlightTakeoff,
+                                onClick = { activeSearchKind = SearchDialogKind.DEP_AIRPORT }
+                            )
+
+                            PickerFieldCard(
+                                label = "到着空港",
+                                value = if (draft.arrivalAirportCode.isNotBlank()) {
+                                    "${draft.arrivalAirportCode} · ${draft.arrivalAirportName}"
+                                } else "",
+                                placeholder = "空港を検索 (例: OKA,CTS)",
+                                icon = Icons.Rounded.FlightLand,
+                                onClick = { activeSearchKind = SearchDialogKind.ARR_AIRPORT }
+                            )
+
+                            PickerFieldCard(
+                                label = "航空会社",
+                                value = if (draft.airlineCode.isNotBlank()) {
+                                    "${draft.airlineCode} · ${draft.airlineDisplayName}".trimEnd(' ', '·')
+                                } else "",
+                                placeholder = "航空会社を選択 (任意)",
+                                icon = Icons.Rounded.Search,
+                                onClick = { activeSearchKind = SearchDialogKind.AIRLINE },
+                                onClear = if (draft.airlineCode.isNotBlank()) {
+                                    { draft = draft.copy(airlineCode = "", airlineDisplayName = "") }
                                 } else null
                             )
-                            PickerFieldCard(
-                                label = "出発駅",
-                                value = draft.departureStationName,
-                                placeholder = "駅を検索",
-                                icon = Icons.Rounded.Place,
-                                onClick = { activeSearchKind = SearchDialogKind.DEP_STATION }
-                            )
-                            PickerFieldCard(
-                                label = "到着駅",
-                                value = draft.arrivalStationName,
-                                placeholder = "駅を検索",
-                                icon = Icons.Rounded.Place,
-                                onClick = { activeSearchKind = SearchDialogKind.ARR_STATION }
-                            )
-                        } else {
+
+                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                OutlinedTextField(
+                                    value = draft.flightNumber,
+                                    onValueChange = { draft = draft.copy(flightNumber = it) },
+                                    label = { Text("便名") },
+                                    placeholder = { Text("1731") },
+                                    singleLine = true,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                OutlinedTextField(
+                                    value = draft.registrationNumber,
+                                    onValueChange = { draft = draft.copy(registrationNumber = it.uppercase()) },
+                                    label = { Text("機体記号 (任意)") },
+                                    placeholder = { Text("JA812A") },
+                                    singleLine = true,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
+                    }
+
+                    TransportMode.TRAIN -> {
+                        ExpressiveSectionCard(
+                            title = "列車・路線情報",
+                            trailingHeader = {
+                                IconButton(
+                                    onClick = {
+                                        draft = draft.copy(
+                                            departureStationName = draft.arrivalStationName,
+                                            departureStationGroupCode = draft.arrivalStationGroupCode,
+                                            departureStationLat = draft.arrivalStationLat,
+                                            departureStationLon = draft.arrivalStationLon,
+                                            departureStationCountry = draft.arrivalStationCountry,
+                                            arrivalStationName = draft.departureStationName,
+                                            arrivalStationGroupCode = draft.departureStationGroupCode,
+                                            arrivalStationLat = draft.departureStationLat,
+                                            arrivalStationLon = draft.departureStationLon,
+                                            arrivalStationCountry = draft.departureStationCountry
+                                        )
+                                    },
+                                    shapes = IconButtonDefaults.shapes()
+                                ) {
+                                    Icon(Icons.Rounded.SwapVert, contentDescription = "発着駅を入れ替え")
+                                }
+                            }
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text("日本の鉄道路線・駅DBを使用", style = MaterialTheme.typography.bodyMediumEmphasized)
+                                Switch(
+                                    checked = draft.isDomesticJapanRail,
+                                    onCheckedChange = { draft = draft.copy(isDomesticJapanRail = it) }
+                                )
+                            }
+
+                            if (draft.isDomesticJapanRail) {
+                                PickerFieldCard(
+                                    label = "路線名",
+                                    value = draft.railwayLineName,
+                                    placeholder = "路線を検索（駅選択で自動判定も可）",
+                                    icon = Icons.Rounded.Train,
+                                    onClick = { activeSearchKind = SearchDialogKind.RAILWAY_LINE },
+                                    onClear = if (draft.railwayLineName.isNotBlank()) {
+                                        { draft = draft.copy(railwayLineName = "", railwayCompany = "") }
+                                    } else null
+                                )
+                                PickerFieldCard(
+                                    label = "出発駅",
+                                    value = draft.departureStationName,
+                                    placeholder = "駅を検索",
+                                    icon = Icons.Rounded.Place,
+                                    onClick = { activeSearchKind = SearchDialogKind.DEP_STATION }
+                                )
+                                PickerFieldCard(
+                                    label = "到着駅",
+                                    value = draft.arrivalStationName,
+                                    placeholder = "駅を検索",
+                                    icon = Icons.Rounded.Place,
+                                    onClick = { activeSearchKind = SearchDialogKind.ARR_STATION }
+                                )
+                            } else {
+                                OutlinedTextField(
+                                    value = draft.railwayLineName,
+                                    onValueChange = { draft = draft.copy(railwayLineName = it) },
+                                    label = { Text("路線名") },
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                PickerFieldCard(
+                                    label = "出発駅",
+                                    value = draft.departureStationName,
+                                    placeholder = "駅・都市名を検索",
+                                    icon = Icons.Rounded.Place,
+                                    onClick = { activeSearchKind = SearchDialogKind.DEP_PLACE }
+                                )
+                                PickerFieldCard(
+                                    label = "到着駅",
+                                    value = draft.arrivalStationName,
+                                    placeholder = "駅・都市名を検索",
+                                    icon = Icons.Rounded.Place,
+                                    onClick = { activeSearchKind = SearchDialogKind.DEST_PLACE }
+                                )
+                            }
+
+                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                OutlinedTextField(
+                                    value = draft.trainName,
+                                    onValueChange = { draft = draft.copy(trainName = it) },
+                                    label = { Text("列車名 (任意)") },
+                                    placeholder = { Text("はくたか 570") },
+                                    singleLine = true,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                OutlinedTextField(
+                                    value = draft.vehicleModel,
+                                    onValueChange = { draft = draft.copy(vehicleModel = it) },
+                                    label = { Text("車両型式 (任意)") },
+                                    placeholder = { Text("E7系") },
+                                    singleLine = true,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+
+                            if (draft.isDomesticJapanRail && draft.candidateViaLines.isNotEmpty()) {
+                                Text("経由路線", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .horizontalScroll(rememberScrollState()),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    FilterChip(
+                                        selected = draft.isAutoShortestVia,
+                                        onClick = { draft = draft.copy(isAutoShortestVia = true, selectedViaLines = emptyList()) },
+                                        label = { Text("自動（最短）") }
+                                    )
+                                    draft.candidateViaLines.forEach { key ->
+                                        val selected = !draft.isAutoShortestVia && key in draft.selectedViaLines
+                                        FilterChip(
+                                            selected = selected,
+                                            onClick = {
+                                                val cur = draft.selectedViaLines.toMutableSet()
+                                                if (selected) cur.remove(key) else cur.add(key)
+                                                draft = draft.copy(
+                                                    isAutoShortestVia = cur.isEmpty(),
+                                                    selectedViaLines = cur.toList()
+                                                )
+                                            },
+                                            label = { Text(RailwayRepository.formatViaChipLabel(key)) }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    TransportMode.OTHER -> {
+                        ExpressiveSectionCard(
+                            title = "移動ルート情報",
+                            trailingHeader = {
+                                IconButton(
+                                    onClick = {
+                                        draft = draft.copy(
+                                            departurePlaceName = draft.destinationPlaceName,
+                                            departurePlaceLat = draft.destinationPlaceLat,
+                                            departurePlaceLon = draft.destinationPlaceLon,
+                                            departurePlaceCountry = draft.destinationPlaceCountry,
+                                            destinationPlaceName = draft.departurePlaceName,
+                                            destinationPlaceLat = draft.departurePlaceLat,
+                                            destinationPlaceLon = draft.departurePlaceLon,
+                                            destinationPlaceCountry = draft.departurePlaceCountry
+                                        )
+                                    },
+                                    shapes = IconButtonDefaults.shapes()
+                                ) {
+                                    Icon(Icons.Rounded.SwapVert, contentDescription = "出発・目的地を入れ替え")
+                                }
+                            }
+                        ) {
                             OutlinedTextField(
-                                value = draft.railwayLineName,
-                                onValueChange = { draft = draft.copy(railwayLineName = it) },
-                                label = { Text("路線名") },
+                                value = draft.transportName,
+                                onValueChange = { draft = draft.copy(transportName = it) },
+                                label = { Text("移動手段・タイトル (任意)") },
+                                placeholder = { Text("Road Trip / Ferry") },
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth()
                             )
                             PickerFieldCard(
-                                label = "出発駅",
-                                value = draft.departureStationName,
-                                placeholder = "駅・都市名を検索",
+                                label = "出発地",
+                                value = draft.departurePlaceName,
+                                placeholder = "場所を検索",
                                 icon = Icons.Rounded.Place,
                                 onClick = { activeSearchKind = SearchDialogKind.DEP_PLACE }
                             )
                             PickerFieldCard(
-                                label = "到着駅",
-                                value = draft.arrivalStationName,
-                                placeholder = "駅・都市名を検索",
+                                label = "目的地",
+                                value = draft.destinationPlaceName,
+                                placeholder = "場所を検索",
                                 icon = Icons.Rounded.Place,
                                 onClick = { activeSearchKind = SearchDialogKind.DEST_PLACE }
                             )
                         }
+                    }
 
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    TransportMode.SPOT -> {
+                        ExpressiveSectionCard(title = "スポットテキスト") {
                             OutlinedTextField(
-                                value = draft.trainName,
-                                onValueChange = { draft = draft.copy(trainName = it) },
-                                label = { Text("列車名 (任意)") },
-                                placeholder = { Text("はくたか 570") },
+                                value = draft.spotLine1,
+                                onValueChange = { draft = draft.copy(spotLine1 = it) },
+                                label = { Text("1行目（メイン見出し）") },
                                 singleLine = true,
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.fillMaxWidth()
                             )
                             OutlinedTextField(
-                                value = draft.vehicleModel,
-                                onValueChange = { draft = draft.copy(vehicleModel = it) },
-                                label = { Text("車両型式 (任意)") },
-                                placeholder = { Text("E7系") },
+                                value = draft.spotLine2,
+                                onValueChange = { draft = draft.copy(spotLine2 = it) },
+                                label = { Text("2行目（サブ見出し・任意）") },
                                 singleLine = true,
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            OutlinedTextField(
+                                value = draft.spotLine3,
+                                onValueChange = { draft = draft.copy(spotLine3 = it) },
+                                label = { Text("3行目（補足・任意）") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth()
                             )
                         }
-
-                        if (draft.isDomesticJapanRail && draft.candidateViaLines.isNotEmpty()) {
-                            Text("経由路線", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .horizontalScroll(rememberScrollState()),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                FilterChip(
-                                    selected = draft.isAutoShortestVia,
-                                    onClick = { draft = draft.copy(isAutoShortestVia = true, selectedViaLines = emptyList()) },
-                                    label = { Text("自動（最短）") }
-                                )
-                                draft.candidateViaLines.forEach { key ->
-                                    val selected = !draft.isAutoShortestVia && key in draft.selectedViaLines
-                                    FilterChip(
-                                        selected = selected,
-                                        onClick = {
-                                            val cur = draft.selectedViaLines.toMutableSet()
-                                            if (selected) cur.remove(key) else cur.add(key)
-                                            draft = draft.copy(
-                                                isAutoShortestVia = cur.isEmpty(),
-                                                selectedViaLines = cur.toList()
-                                            )
-                                        },
-                                        label = { Text(RailwayRepository.formatViaChipLabel(key)) }
-                                    )
-                                }
-                            }
-                        }
                     }
                 }
 
-                TransportMode.OTHER -> {
-                    ExpressiveSectionCard(
-                        title = "移動ルート情報",
-                        trailingHeader = {
-                            IconButton(
-                                onClick = {
-                                    draft = draft.copy(
-                                        departurePlaceName = draft.destinationPlaceName,
-                                        departurePlaceLat = draft.destinationPlaceLat,
-                                        departurePlaceLon = draft.destinationPlaceLon,
-                                        departurePlaceCountry = draft.destinationPlaceCountry,
-                                        destinationPlaceName = draft.departurePlaceName,
-                                        destinationPlaceLat = draft.departurePlaceLat,
-                                        destinationPlaceLon = draft.departurePlaceLon,
-                                        destinationPlaceCountry = draft.departurePlaceCountry
-                                    )
-                                },
-                                shapes = IconButtonDefaults.shapes()
-                            ) {
-                                Icon(Icons.Rounded.SwapVert, contentDescription = "出発・目的地を入れ替え")
+                ExpressiveSectionCard(title = "日時・撮影地") {
+                    ExpressiveConnectedSegmentedRow(
+                        options = DateTimeDisplayMode.entries,
+                        selected = draft.dateTimeDisplayMode,
+                        onSelect = { draft = draft.copy(dateTimeDisplayMode = it) },
+                        labelProvider = {
+                            when (it) {
+                                DateTimeDisplayMode.DATE_ONLY -> "日付のみ"
+                                DateTimeDisplayMode.DATE_AND_TIME -> "日時"
+                                DateTimeDisplayMode.NONE -> "非表示"
                             }
                         }
-                    ) {
-                        OutlinedTextField(
-                            value = draft.transportName,
-                            onValueChange = { draft = draft.copy(transportName = it) },
-                            label = { Text("移動手段・タイトル (任意)") },
-                            placeholder = { Text("Road Trip / Ferry") },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        PickerFieldCard(
-                            label = "出発地",
-                            value = draft.departurePlaceName,
-                            placeholder = "場所を検索",
-                            icon = Icons.Rounded.Place,
-                            onClick = { activeSearchKind = SearchDialogKind.DEP_PLACE }
-                        )
-                        PickerFieldCard(
-                            label = "目的地",
-                            value = draft.destinationPlaceName,
-                            placeholder = "場所を検索",
-                            icon = Icons.Rounded.Place,
-                            onClick = { activeSearchKind = SearchDialogKind.DEST_PLACE }
-                        )
-                    }
-                }
+                    )
 
-                TransportMode.SPOT -> {
-                    ExpressiveSectionCard(title = "スポットテキスト") {
-                        OutlinedTextField(
-                            value = draft.spotLine1,
-                            onValueChange = { draft = draft.copy(spotLine1 = it) },
-                            label = { Text("1行目（メイン見出し）") },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        OutlinedTextField(
-                            value = draft.spotLine2,
-                            onValueChange = { draft = draft.copy(spotLine2 = it) },
-                            label = { Text("2行目（サブ見出し・任意）") },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        OutlinedTextField(
-                            value = draft.spotLine3,
-                            onValueChange = { draft = draft.copy(spotLine3 = it) },
-                            label = { Text("3行目（補足・任意）") },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
-            }
-
-            ExpressiveSectionCard(title = "日時・撮影地") {
-                ExpressiveConnectedSegmentedRow(
-                    options = DateTimeDisplayMode.entries,
-                    selected = draft.dateTimeDisplayMode,
-                    onSelect = { draft = draft.copy(dateTimeDisplayMode = it) },
-                    labelProvider = {
-                        when (it) {
-                            DateTimeDisplayMode.DATE_ONLY -> "日付のみ"
-                            DateTimeDisplayMode.DATE_AND_TIME -> "日時"
-                            DateTimeDisplayMode.NONE -> "非表示"
-                        }
-                    }
-                )
-
-                if (draft.dateTimeDisplayMode != DateTimeDisplayMode.NONE) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        AssistChip(
-                            onClick = { showDatePicker = true },
-                            leadingIcon = {
-                                Icon(Icons.Rounded.CalendarToday, contentDescription = null, modifier = Modifier.size(16.dp))
-                            },
-                            label = {
-                                Text(String.format(Locale.US, "%04d/%02d/%02d", draft.year, draft.month, draft.day))
-                            }
-                        )
-                        if (draft.dateTimeDisplayMode == DateTimeDisplayMode.DATE_AND_TIME) {
+                    if (draft.dateTimeDisplayMode != DateTimeDisplayMode.NONE) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
                             AssistChip(
-                                onClick = { showTimePicker = true },
+                                onClick = { showDatePicker = true },
                                 leadingIcon = {
-                                    Icon(Icons.Rounded.Schedule, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Icon(Icons.Rounded.CalendarToday, contentDescription = null, modifier = Modifier.size(16.dp))
                                 },
                                 label = {
-                                    Text(String.format(Locale.US, "%02d:%02d", draft.hour, draft.minute))
+                                    Text(String.format(Locale.US, "%04d/%02d/%02d", draft.year, draft.month, draft.day))
                                 }
                             )
+                            if (draft.dateTimeDisplayMode == DateTimeDisplayMode.DATE_AND_TIME) {
+                                AssistChip(
+                                    onClick = { showTimePicker = true },
+                                    leadingIcon = {
+                                        Icon(Icons.Rounded.Schedule, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    },
+                                    label = {
+                                        Text(String.format(Locale.US, "%02d:%02d", draft.hour, draft.minute))
+                                    }
+                                )
+                            }
                         }
                     }
-                }
 
-                Text("撮影地ラベル", style = MaterialTheme.typography.bodyMediumEmphasized)
-                ExpressiveConnectedSegmentedRow(
-                    options = LocationDisplayMode.entries,
-                    selected = draft.locationDisplayMode,
-                    onSelect = { draft = draft.copy(locationDisplayMode = it) },
-                    labelProvider = {
-                        when (it) {
-                            LocationDisplayMode.NAME -> "地名"
-                            LocationDisplayMode.COORDINATES -> "緯度・経度"
-                            LocationDisplayMode.NONE -> "非表示"
+                    Text("撮影地", style = MaterialTheme.typography.bodyMediumEmphasized)
+                    PhotoLocationSummaryCard(
+                        cityOrPlace = draft.photoLocationName,
+                        latitude = draft.photoLat,
+                        longitude = draft.photoLon,
+                        onSearch = { activeSearchKind = SearchDialogKind.PHOTO_LOCATION },
+                        onEditCoordinates = { showCoordinateDialog = true },
+                        onUseCurrentLocation = { useCurrentDeviceLocation() },
+                        onClear = {
+                            draft = draft.copy(
+                                photoLat = null,
+                                photoLon = null,
+                                photoLocationName = "",
+                                photoCountryCode = ""
+                            )
                         }
-                    }
-                )
-                if (draft.locationDisplayMode == LocationDisplayMode.NAME) {
-                    OutlinedTextField(
-                        value = draft.photoLocationName,
-                        onValueChange = { draft = draft.copy(photoLocationName = it) },
-                        label = { Text("表示する地名") },
-                        placeholder = { Text("Osaka, Japan") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
                     )
-                }
-            }
 
-            ExpressiveSectionCard(title = "配置と地図") {
-                Text("テキストの基準位置", style = MaterialTheme.typography.bodyMediumEmphasized)
-                ExpressiveConnectedSegmentedRow(
-                    options = OverlayCorner.entries,
-                    selected = styleDraft.textCorner,
-                    onSelect = { corner ->
-                        val opposite = when (corner) {
-                            OverlayCorner.BOTTOM_RIGHT -> OverlayCorner.BOTTOM_LEFT
-                            OverlayCorner.BOTTOM_LEFT -> OverlayCorner.BOTTOM_RIGHT
-                            OverlayCorner.TOP_RIGHT -> OverlayCorner.TOP_LEFT
-                            OverlayCorner.TOP_LEFT -> OverlayCorner.TOP_RIGHT
+                    Text("撮影地ラベルの表示", style = MaterialTheme.typography.bodyMediumEmphasized)
+                    ExpressiveConnectedSegmentedRow(
+                        options = LocationDisplayMode.entries,
+                        selected = draft.locationDisplayMode,
+                        onSelect = { draft = draft.copy(locationDisplayMode = it) },
+                        labelProvider = {
+                            when (it) {
+                                LocationDisplayMode.NAME -> "地名"
+                                LocationDisplayMode.COORDINATES -> "緯度・経度"
+                                LocationDisplayMode.NONE -> "非表示"
+                            }
                         }
-                        styleDraft = styleDraft.copy(
-                            textCorner = corner,
-                            mapCorner = opposite,
-                            textFreePos = null,
-                            mapFreePos = null
+                    )
+                    if (draft.locationDisplayMode == LocationDisplayMode.NAME) {
+                        OutlinedTextField(
+                            value = draft.photoLocationName,
+                            onValueChange = { draft = draft.copy(photoLocationName = it) },
+                            label = { Text("表示する地名") },
+                            placeholder = { Text("Osaka, Japan") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
                         )
-                    },
-                    labelProvider = {
-                        when (it) {
-                            OverlayCorner.TOP_LEFT -> "左上"
-                            OverlayCorner.TOP_RIGHT -> "右上"
-                            OverlayCorner.BOTTOM_LEFT -> "左下"
-                            OverlayCorner.BOTTOM_RIGHT -> "右下"
-                        }
                     }
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text("地図透かしを表示", style = MaterialTheme.typography.bodyMediumEmphasized)
-                    Switch(
-                        checked = styleDraft.showMap,
-                        onCheckedChange = { styleDraft = styleDraft.copy(showMap = it) }
-                    )
                 }
-            }
 
-            Spacer(Modifier.height(12.dp))
+                ExpressiveSectionCard(title = "配置と地図") {
+                    Text("テキストの基準位置", style = MaterialTheme.typography.bodyMediumEmphasized)
+                    ExpressiveConnectedSegmentedRow(
+                        options = OverlayCorner.entries,
+                        selected = styleDraft.textCorner,
+                        onSelect = { corner ->
+                            val opposite = when (corner) {
+                                OverlayCorner.BOTTOM_RIGHT -> OverlayCorner.BOTTOM_LEFT
+                                OverlayCorner.BOTTOM_LEFT -> OverlayCorner.BOTTOM_RIGHT
+                                OverlayCorner.TOP_RIGHT -> OverlayCorner.TOP_LEFT
+                                OverlayCorner.TOP_LEFT -> OverlayCorner.TOP_RIGHT
+                            }
+                            styleDraft = styleDraft.copy(
+                                textCorner = corner,
+                                mapCorner = opposite,
+                                textFreePos = null,
+                                mapFreePos = null
+                            )
+                        },
+                        labelProvider = {
+                            when (it) {
+                                OverlayCorner.TOP_LEFT -> "左上"
+                                OverlayCorner.TOP_RIGHT -> "右上"
+                                OverlayCorner.BOTTOM_LEFT -> "左下"
+                                OverlayCorner.BOTTOM_RIGHT -> "右下"
+                            }
+                        }
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("地図透かしを表示", style = MaterialTheme.typography.bodyMediumEmphasized)
+                        Switch(
+                            checked = styleDraft.showMap,
+                            onCheckedChange = { styleDraft = styleDraft.copy(showMap = it) }
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(12.dp))
+            }
         }
     }
 
@@ -716,6 +825,18 @@ fun TransportInfoSheet(
         )
     }
 
+    if (showCoordinateDialog) {
+        CoordinateInputDialog(
+            initialLat = draft.photoLat,
+            initialLon = draft.photoLon,
+            onDismiss = { showCoordinateDialog = false },
+            onConfirm = { lat, lon ->
+                showCoordinateDialog = false
+                setDraftCoordinates(lat, lon, resolveName = true)
+            }
+        )
+    }
+
     activeSearchKind?.let { kind ->
         SearchEntitySheet(
             viewModel = viewModel,
@@ -774,6 +895,19 @@ fun TransportInfoSheet(
                         railwayCompany = draft.railwayCompany.ifBlank { st.companyName }
                     )
                 }
+                activeSearchKind = null
+            },
+            onSelectPhotoLocation = { pl ->
+                val placeLabel = listOf(pl.name, pl.subtitle)
+                    .filter { it.isNotBlank() }
+                    .distinct()
+                    .joinToString(", ")
+                draft = draft.copy(
+                    photoLat = pl.latitude,
+                    photoLon = pl.longitude,
+                    photoLocationName = placeLabel,
+                    photoCountryCode = pl.countryCode
+                )
                 activeSearchKind = null
             },
             onSelectPlace = { pl, isDep ->
@@ -898,6 +1032,7 @@ fun TransportInfoSheet(
                         }
                         SearchDialogKind.RAILWAY_LINE -> draft.copy(railwayLineName = freeText)
                         SearchDialogKind.AIRLINE -> draft.copy(airlineCode = freeText.uppercase())
+                        SearchDialogKind.PHOTO_LOCATION -> draft.copy(photoLocationName = freeText)
                     }
                     activeSearchKind = null
                 }
@@ -961,6 +1096,189 @@ private fun PickerFieldCard(
 }
 
 @Composable
+private fun PhotoLocationSummaryCard(
+    cityOrPlace: String,
+    latitude: Double?,
+    longitude: Double?,
+    onSearch: () -> Unit,
+    onEditCoordinates: () -> Unit,
+    onUseCurrentLocation: () -> Unit,
+    onClear: () -> Unit
+) {
+    val hasCoordinates = latitude != null && longitude != null
+    OutlinedCard(
+        shape = MaterialTheme.shapes.medium,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Rounded.Place,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(22.dp)
+                )
+                Spacer(Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "撮影地",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = cityOrPlace.ifBlank {
+                            if (hasCoordinates) "座標から設定" else "未設定"
+                        },
+                        style = MaterialTheme.typography.bodyLargeEmphasized,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = if (hasCoordinates) {
+                            GeoCoordinate.format(latitude!!, longitude!!)
+                        } else {
+                            "座標が未設定 — 検索・座標入力・現在地から設定できます"
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (hasCoordinates) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                AssistChip(
+                    onClick = onSearch,
+                    leadingIcon = {
+                        Icon(Icons.Rounded.Search, contentDescription = null, modifier = Modifier.size(16.dp))
+                    },
+                    label = { Text("場所を検索") }
+                )
+                AssistChip(
+                    onClick = onEditCoordinates,
+                    leadingIcon = {
+                        Icon(Icons.Rounded.EditLocationAlt, contentDescription = null, modifier = Modifier.size(16.dp))
+                    },
+                    label = { Text("座標入力") }
+                )
+                AssistChip(
+                    onClick = onUseCurrentLocation,
+                    leadingIcon = {
+                        Icon(Icons.Rounded.MyLocation, contentDescription = null, modifier = Modifier.size(16.dp))
+                    },
+                    label = { Text("現在地") }
+                )
+                if (hasCoordinates || cityOrPlace.isNotBlank()) {
+                    AssistChip(
+                        onClick = onClear,
+                        leadingIcon = {
+                            Icon(Icons.Rounded.Clear, contentDescription = null, modifier = Modifier.size(16.dp))
+                        },
+                        label = { Text("クリア") }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CoordinateInputDialog(
+    initialLat: Double?,
+    initialLon: Double?,
+    onDismiss: () -> Unit,
+    onConfirm: (Double, Double) -> Unit
+) {
+    var latText by remember(initialLat) {
+        mutableStateOf(initialLat?.let { String.format(Locale.US, "%.6f", it) }.orEmpty())
+    }
+    var lonText by remember(initialLon) {
+        mutableStateOf(initialLon?.let { String.format(Locale.US, "%.6f", it) }.orEmpty())
+    }
+    var errorText by remember { mutableStateOf<String?>(null) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("緯度・経度を入力") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    text = "小数の度（例: 35.65858 / 139.74543）または度分秒で入力できます。",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                OutlinedTextField(
+                    value = latText,
+                    onValueChange = {
+                        latText = it
+                        errorText = null
+                    },
+                    label = { Text("緯度（-90〜90）") },
+                    placeholder = { Text("35.65858") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                    isError = errorText != null,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = lonText,
+                    onValueChange = {
+                        lonText = it
+                        errorText = null
+                    },
+                    label = { Text("経度（-180〜180）") },
+                    placeholder = { Text("139.74543") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                    isError = errorText != null,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                errorText?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    val lat = GeoCoordinate.parseLatitude(latText)
+                    val lon = GeoCoordinate.parseLongitude(lonText)
+                    if (lat == null || lon == null) {
+                        errorText = "緯度は -90〜90、経度は -180〜180 の範囲で入力してください"
+                    } else {
+                        onConfirm(lat, lon)
+                    }
+                },
+                shapes = ButtonDefaults.shapes()
+            ) { Text("決定") }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                shapes = ButtonDefaults.shapes()
+            ) { Text("キャンセル") }
+        }
+    )
+}
+
+@Composable
 private fun SearchEntitySheet(
     viewModel: SukashiViewModel,
     kind: SearchDialogKind,
@@ -971,6 +1289,7 @@ private fun SearchEntitySheet(
     onSelectLine: (RailwayLineEntry) -> Unit,
     onSelectStation: (StationRecord, Boolean) -> Unit,
     onSelectPlace: (PlaceCandidate, Boolean) -> Unit,
+    onSelectPhotoLocation: (PlaceCandidate) -> Unit,
     onFreeTextConfirm: (String) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -990,7 +1309,8 @@ private fun SearchEntitySheet(
             SearchDialogKind.DEP_STATION, SearchDialogKind.ARR_STATION -> {
                 stations = viewModel.searchStations(query, currentLineFilter)
             }
-            SearchDialogKind.DEP_PLACE, SearchDialogKind.DEST_PLACE -> places = viewModel.searchPlaces(query)
+            SearchDialogKind.DEP_PLACE, SearchDialogKind.DEST_PLACE,
+            SearchDialogKind.PHOTO_LOCATION -> places = viewModel.searchPlaces(query)
         }
     }
 
@@ -1003,6 +1323,7 @@ private fun SearchEntitySheet(
         SearchDialogKind.ARR_STATION -> "到着駅を検索"
         SearchDialogKind.DEP_PLACE -> "出発地を検索"
         SearchDialogKind.DEST_PLACE -> "目的地を検索"
+        SearchDialogKind.PHOTO_LOCATION -> "撮影地を検索"
     }
 
     ModalBottomSheet(
@@ -1036,7 +1357,7 @@ private fun SearchEntitySheet(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            if (query.isNotBlank()) {
+            if (query.isNotBlank() && kind != SearchDialogKind.PHOTO_LOCATION) {
                 TextButton(
                     onClick = { onFreeTextConfirm(query.trim()) },
                     shapes = ButtonDefaults.shapes(),
@@ -1094,6 +1415,21 @@ private fun SearchEntitySheet(
                             modifier = Modifier.clickable {
                                 onSelectPlace(pl, kind == SearchDialogKind.DEP_PLACE)
                             }
+                        ) {
+                            Text(pl.name, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    SearchDialogKind.PHOTO_LOCATION -> items(places) { pl ->
+                        ListItem(
+                            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                            supportingContent = {
+                                Text(
+                                    listOf(pl.subtitle, GeoCoordinate.format(pl.latitude, pl.longitude))
+                                        .filter { it.isNotBlank() }
+                                        .joinToString(" · ")
+                                )
+                            },
+                            modifier = Modifier.clickable { onSelectPhotoLocation(pl) }
                         ) {
                             Text(pl.name, fontWeight = FontWeight.Bold)
                         }

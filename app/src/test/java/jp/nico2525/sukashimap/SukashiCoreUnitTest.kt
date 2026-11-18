@@ -6,6 +6,7 @@ import jp.nico2525.sukashimap.data.RoutingAndPlaceService
 import jp.nico2525.sukashimap.model.Coord
 import jp.nico2525.sukashimap.model.CropAspectPreset
 import jp.nico2525.sukashimap.model.CropFrameSettings
+import jp.nico2525.sukashimap.model.GeoCoordinate
 import jp.nico2525.sukashimap.model.TransportInfo
 import jp.nico2525.sukashimap.render.MapProjectionEngine
 import jp.nico2525.sukashimap.render.ProjectionKind
@@ -100,6 +101,54 @@ class SukashiCoreUnitTest {
 
         val freeCustom = CropFrameSettings(aspectPreset = CropAspectPreset.FREE, freeAspectRatio = 1.6f)
         assertEquals(1.6f, freeCustom.effectiveAspect(1920, 1080), 1e-4f)
+    }
+
+    @Test
+    fun coordinateFormattingUsesPreciseDecimalsAndHemispheres() {
+        assertEquals("35.65850°N, 139.70220°E", GeoCoordinate.format(35.6585, 139.7022))
+        assertEquals("39.23726°N, 123.15003°W", GeoCoordinate.format(39.237255, -123.15003166666666))
+        assertEquals("33.86880°S, 151.20930°W", GeoCoordinate.format(-33.8688, -151.2093))
+        assertEquals("0.00000°N, 0.00000°E", GeoCoordinate.format(0.0, 0.0))
+    }
+
+    @Test
+    fun coordinateParserAcceptsDecimalAndDmsForms() {
+        assertEquals(35.6585, GeoCoordinate.parseLatitude("35.6585")!!, 1e-9)
+        assertEquals(-33.8688, GeoCoordinate.parseLatitude("33°52'7.68\"S")!!, 1e-6)
+        assertEquals(35.6585, GeoCoordinate.parseLatitude("N 35.6585")!!, 1e-9)
+        assertEquals(139.7022, GeoCoordinate.parseLongitude("E139.7022")!!, 1e-9)
+        assertEquals(-123.15003, GeoCoordinate.parseLongitude("123°9'0.11\"W")!!, 1e-5)
+        assertEquals(-123.15, GeoCoordinate.parseLongitude("-123.15")!!, 1e-9)
+    }
+
+    @Test
+    fun coordinateParserRejectsOutOfRangeAndGarbage() {
+        assertEquals(null, GeoCoordinate.parseLatitude("91"))
+        assertEquals(null, GeoCoordinate.parseLatitude("-90.0001"))
+        assertEquals(null, GeoCoordinate.parseLongitude("180.5"))
+        assertEquals(null, GeoCoordinate.parseLongitude("not a coordinate"))
+        assertEquals(null, GeoCoordinate.parseLatitude(""))
+        assertEquals(null, GeoCoordinate.parseLatitude("35.6W"))
+        assertEquals(null, GeoCoordinate.parseLongitude("139.7S"))
+        assertEquals(null, GeoCoordinate.parseLatitude("35°60'0\"N"))
+        assertEquals(null, GeoCoordinate.parseLatitude("35°0'60\"N"))
+    }
+
+    @Test
+    fun coordinateParserHandlesNegativeDmsDecimalCommaAndBoundaries() {
+        assertEquals(-33.8688, GeoCoordinate.parseLatitude("-33°52'7.68\"")!!, 1e-6)
+        assertEquals(48.8587, GeoCoordinate.parseLatitude("48,8587")!!, 1e-9)
+        assertEquals(90.0, GeoCoordinate.parseLatitude("90")!!, 1e-9)
+        assertEquals(-180.0, GeoCoordinate.parseLongitude("180W")!!, 1e-9)
+        assertEquals(null, GeoCoordinate.parseLongitude("-180.0001"))
+    }
+
+    @Test
+    fun spotModeUsesPhotoCoordinateForMapPin() {
+        val info = TransportInfo(mode = jp.nico2525.sukashimap.model.TransportMode.SPOT, photoLat = 35.6585, photoLon = 139.7022)
+        assertEquals(Coord(139.7022, 35.6585), info.currentGpsCoord())
+        assertEquals(null, info.startCoord())
+        assertEquals(null, info.endCoord())
     }
 
     @Test

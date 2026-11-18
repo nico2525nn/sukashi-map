@@ -6,6 +6,7 @@ Material Design 3 Expressive (`androidx.compose.material3:material3:1.5.0-rc01`)
 ## 機能
 
 - **4つの透かしモード**: フライト（オフライン空港DB・大圏航路アーク）、鉄道（国土数値情報 N02 駅・軌道DB）、移動ルート（OSRM 道路経路）、スポット（3行テキスト・地図ピン）
+- **撮影地の設定**: 写真の EXIF GPS を自動読み取り。地名検索・度分秒/小数の緯度経度入力・端末の現在地から後付け設定も可能。地名 / 緯度・経度 / 非表示を切り替え
 - **インタラクティブ配置**: テキスト・地図の自由ドラッグ移動、角ハンドル拡大縮小 (`0.5×–2.5×`)、2本指地図ズーム・パン (`0.5×–5.0×`)
 - **スタイル調整**: 文字色・ルート線色・海岸線色（プリセット・カスタムHSV/HEX・写真スポイト）、7種のフォント、切り抜き・余白枠
 - **高画質保存・カメラ撮影**: 写真（JPEG / PNG、Android 14+ Ultra HDR 保持）、動画（Media3 Transformer 元解像度オーバーレイ書き出し）、CameraX ライブ透過プレビュー撮影
@@ -15,6 +16,10 @@ Material Design 3 Expressive (`androidx.compose.material3:material3:1.5.0-rc01`)
 ```bash
 ./gradlew :app:testDebugUnitTest :app:assembleDebug
 ```
+
+## 位置情報について
+
+Android 10 以降は `ACCESS_MEDIA_LOCATION` がないと写真の EXIF GPS が伏字になります。本アプリは共有された写真でこの権限を要求し、対応端末の Photo Picker では位置情報の共有可否を選択できます。許可しない場合でも、透かし情報シートの「撮影地」から地名検索・座標入力・現在地で設定できます。
 
 ## データ出典
 

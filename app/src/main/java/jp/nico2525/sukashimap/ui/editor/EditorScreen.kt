@@ -4,8 +4,8 @@ import android.graphics.RectF
 import android.net.Uri
 import android.view.ViewGroup
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.photopicker.activity.PickVisualMedia
+import androidx.photopicker.activity.PickVisualMediaRequest
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -154,16 +154,21 @@ fun EditorScreen(
     val latestState by rememberUpdatedState(state)
 
     val mediaPicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia()
+        contract = PickVisualMedia()
     ) { uri ->
         if (uri != null) {
             viewModel.openMediaUri(uri)
         }
     }
 
+    // The Android photo picker redacts EXIF GPS by default. The SDK-ext 23 photo picker can
+    // ask the user to include location info; when supported, the returned URI keeps GPS.
     val launchPicker = {
         mediaPicker.launch(
-            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
+            PickVisualMediaRequest.Builder()
+                .setMediaType(PickVisualMedia.ImageAndVideo)
+                .setLocationMetadataAccessRequested(true)
+                .build()
         )
     }
 
@@ -650,6 +655,7 @@ fun EditorScreen(
             initialInfo = state.transportInfo,
             currentStyle = state.overlayStyle,
             recentHistory = prefs.recentHistory,
+            mediaKey = state.mediaUri,
             onDismiss = { showInfoSheet = false },
             onApply = { newInfo, newStyle ->
                 viewModel.updateOverlayStyle({ newStyle })

@@ -1,8 +1,12 @@
 package jp.nico2525.sukashimap.ui
 
+import android.Manifest
 import android.app.Activity
+import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.SnackbarHostState
@@ -15,7 +19,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import jp.nico2525.sukashimap.ui.camera.CameraOverlayScreen
 import jp.nico2525.sukashimap.ui.editor.EditorScreen
@@ -35,6 +41,28 @@ fun SukashiMapApp(
     var route by rememberSaveable { mutableStateOf(ScreenRoute.EDITOR) }
     val snackbarHostState = remember { SnackbarHostState() }
     val prefs by viewModel.prefsState.collectAsState()
+    val context = LocalContext.current
+    var pendingSharedUri by rememberSaveable { mutableStateOf<String?>(null) }
+
+    fun openSharedUri(uri: Uri) {
+        viewModel.openMediaUri(uri) {
+            route = ScreenRoute.EDITOR
+        }
+    }
+
+    val sharedLocationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (!granted) {
+            viewModel.emitMessage("写真の位置情報が許可されていないため、撮影地は手動で設定できます")
+        }
+        val pending = pendingSharedUri
+        pendingSharedUri = null
+        if (pending != null) {
+            openSharedUri(Uri.parse(pending))
+            onConsumedSharedUri()
+        }
+    }
     val systemDark = isSystemInDarkTheme()
     val isAppDark = when (prefs.themeMode) {
         ThemeMode.SYSTEM -> systemDark
@@ -54,11 +82,17 @@ fun SukashiMapApp(
     }
 
     LaunchedEffect(incomingSharedUri) {
-        if (incomingSharedUri != null) {
-            viewModel.openMediaUri(incomingSharedUri) {
-                route = ScreenRoute.EDITOR
-            }
+        val uri = incomingSharedUri ?: return@LaunchedEffect
+        val hasMediaLocationPermission = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_MEDIA_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        if (hasMediaLocationPermission) {
+            openSharedUri(uri)
             onConsumedSharedUri()
+        } else {
+            pendingSharedUri = uri.toString()
+            sharedLocationPermissionLauncher.launch(Manifest.permission.ACCESS_MEDIA_LOCATION)
         }
     }
 

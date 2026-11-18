@@ -922,9 +922,11 @@ object OverlayCanvasRenderer {
                 } else null
             }
             LocationDisplayMode.COORDINATES -> {
+                // Never fall back to the place name here: the user explicitly asked for
+                // coordinates, so stale/missing GPS must not render a city name instead.
                 if (info.photoLat != null && info.photoLon != null) {
-                    RoutingAndPlaceService.formatLatLon(info.photoLat, info.photoLon)
-                } else info.photoLocationName.trim().ifBlank { null }
+                    RoutingAndPlaceService.formatLatLon(info.photoLat!!, info.photoLon!!)
+                } else null
             }
         }
         if (!locText.isNullOrBlank()) {
