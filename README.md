@@ -1,6 +1,9 @@
 # Sukashi Map
 
-写真・動画にフライト・鉄道・移動ルートと地図の透かしを合成するオープンソース Android アプリです。
+写真・動画にフライト・鉄道・移動ルートと地図の透かしを合成するオープンソースアプリです。Android アプリに加え、同じ UX の Web UI (`web/`) を GitHub Pages で公開しています。
+
+- Web UI: https://nico2525nn.github.io/sukashi-map/
+- Web UI の開発手順: [web/README.md](web/README.md)
 Material Design 3 Expressive (`androidx.compose.material3:material3:1.5.0-rc01`) 準拠のシンプルな単一ワークスペースで構成されています。
 
 ## 機能

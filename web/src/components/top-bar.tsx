@@ -15,7 +15,13 @@ export function TopBar({ onPick, onCamera }: TopBarProps) {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/50 bg-background/80 pt-[env(safe-area-inset-top)] backdrop-blur-xl">
-      <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between px-3 sm:h-16 sm:px-6">
+      <div
+        className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between sm:h-16 sm:px-6"
+        style={{
+          paddingLeft: 'max(0.75rem, env(safe-area-inset-left))',
+          paddingRight: 'max(0.75rem, env(safe-area-inset-right))',
+        }}
+      >
         <div className="flex min-w-0 flex-1 items-center gap-1">
           {media && (
             <>
@@ -39,7 +45,7 @@ export function TopBar({ onPick, onCamera }: TopBarProps) {
           )}
         </div>
         <div className="flex flex-1 items-center justify-center">
-          <span className="text-lg font-bold tracking-tight sm:text-xl">Sukashi Map</span>
+          <h1 className="whitespace-nowrap text-base font-bold tracking-tight sm:text-xl">Sukashi Map</h1>
         </div>
         <div className="flex flex-1 items-center justify-end">
           <Tooltip>

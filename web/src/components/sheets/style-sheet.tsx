@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Slider } from '@/components/ui/slider'
 import {
   Select,
   SelectContent,
@@ -50,6 +51,7 @@ export function StyleSheet() {
         onOpenChange={(next) => (next ? undefined : closeSheet())}
         title="スタイル"
         description="文字・ルート・地図の見た目"
+        compact
       >
         <div className="space-y-4 pb-4">
           <SectionCard title="フォント">
@@ -61,13 +63,13 @@ export function StyleSheet() {
                 void document.fonts?.load(`700 40px ${family}`).then(() => updateStyle({ font: value }))
               }}
             >
-              <SelectTrigger className="w-full rounded-xl">
+              <SelectTrigger aria-label="フォント" className="w-full rounded-xl">
                 <SelectValue placeholder="フォントを選択" />
               </SelectTrigger>
               <SelectContent>
                 {FONT_OPTIONS.map((font) => (
                   <SelectItem key={font.value} value={font.value}>
-                    <span style={{ fontFamily: font.family }}>{font.label}</span>
+                    {font.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -96,6 +98,7 @@ export function StyleSheet() {
             <div className="flex items-center justify-between gap-3">
               <p className="text-sm font-medium">地図透かしを表示</p>
               <Switch
+                aria-label="地図透かしを表示"
                 checked={style.showMap}
                 onCheckedChange={(showMap) => updateStyle({ showMap })}
               />
@@ -103,15 +106,41 @@ export function StyleSheet() {
             <div className="flex items-center justify-between gap-3">
               <p className="text-sm font-medium">出発地の飛行機バッジ</p>
               <Switch
+                aria-label="出発地の飛行機バッジ"
                 checked={style.showOriginPlaneBadge}
                 onCheckedChange={(showOriginPlaneBadge) => updateStyle({ showOriginPlaneBadge })}
               />
             </div>
           </SectionCard>
 
+          <SectionCard title="サイズ">
+            <ScaleSlider
+              label="テキスト"
+              value={style.textScale}
+              min={0.5}
+              max={2.5}
+              onChange={(textScale) => updateStyle({ textScale })}
+            />
+            <ScaleSlider
+              label="地図ボックス"
+              value={style.mapBoxScale}
+              min={0.5}
+              max={2.5}
+              onChange={(mapBoxScale) => updateStyle({ mapBoxScale })}
+            />
+            <ScaleSlider
+              label="地図ズーム"
+              value={style.mapInternalZoom}
+              min={0.5}
+              max={5}
+              onChange={(mapInternalZoom) => updateStyle({ mapInternalZoom })}
+            />
+          </SectionCard>
+
           <SectionCard title="配置">
             <p className="text-sm font-medium">テキストの基準位置</p>
             <Segmented
+              ariaLabel="テキストの基準位置"
               options={(Object.keys(CORNER_LABELS) as OverlayCorner[]).map((corner) => ({
                 value: corner,
                 label: CORNER_LABELS[corner],
@@ -166,12 +195,10 @@ export function StyleSheet() {
                     <button
                       type="button"
                       className="w-full text-left"
+                      aria-pressed={active}
                       onClick={() => updateStyle(preset.style)}
                     >
-                      <span
-                        className="mb-1.5 block text-sm font-semibold"
-                        style={{ color: preset.style.textColor }}
-                      >
+                      <span className="mb-1.5 block text-sm font-semibold text-foreground">
                         {preset.name}
                       </span>
                       <span className="flex gap-1">
@@ -269,7 +296,7 @@ function ColorField({
         <div className="flex items-center gap-1.5">
           <button
             type="button"
-            className="size-6 rounded-full border border-border"
+            className="size-9 min-h-0! rounded-full border border-border"
             style={{ background: value }}
             aria-label={`${label}のスポイト`}
             onClick={() => void pickFromScreen()}
@@ -280,7 +307,7 @@ function ColorField({
             type="color"
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            className="size-6 cursor-pointer rounded-full border-0 bg-transparent p-0"
+            className="size-9 min-h-0! cursor-pointer rounded-full border-0 bg-transparent p-0"
             aria-label={`${label}を選択`}
           />
         </div>
@@ -292,11 +319,43 @@ function ColorField({
             type="button"
             className={`size-7 rounded-full border ${value.toLowerCase() === swatch ? 'ring-2 ring-primary ring-offset-2 ring-offset-card' : 'border-border/70'}`}
             style={{ background: swatch }}
+            aria-pressed={value.toLowerCase() === swatch}
             onClick={() => onChange(swatch)}
             aria-label={`${label} ${swatch}`}
           />
         ))}
       </div>
+    </div>
+  )
+}
+
+function ScaleSlider({
+  label,
+  value,
+  min,
+  max,
+  onChange,
+}: {
+  label: string
+  value: number
+  min: number
+  max: number
+  onChange: (value: number) => void
+}) {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between text-sm">
+        <p className="font-medium">{label}</p>
+        <span className="tabular-nums text-muted-foreground">{value.toFixed(2)}×</span>
+      </div>
+      <Slider
+        aria-label={label}
+        value={[value]}
+        min={min}
+        max={max}
+        step={0.01}
+        onValueChange={([next]) => onChange(next)}
+      />
     </div>
   )
 }

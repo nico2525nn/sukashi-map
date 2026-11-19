@@ -1,23 +1,29 @@
-import { useEffect, useRef, useState } from 'react'
-import * as exifr from 'exifr'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { Toaster, toast } from 'sonner'
 import { useMediaQuery } from '@/hooks/use-media-query'
-import { Editor } from '@/components/editor/editor'
+const Editor = lazy(() => import('@/components/editor/editor').then((m) => ({ default: m.Editor })))
 import { EmptyState } from '@/components/empty-state'
-import { CameraDialog } from '@/components/sheets/camera-dialog'
+const CameraDialog = lazy(() =>
+  import('@/components/sheets/camera-dialog').then((m) => ({ default: m.CameraDialog })),
+)
+const SettingsSheet = lazy(() =>
+  import('@/components/sheets/settings-sheet').then((m) => ({ default: m.SettingsSheet })),
+)
 import { TopBar } from '@/components/top-bar'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { initGeoWasm } from '@/lib/geo'
-import { mediaFromFile } from '@/lib/media'
-import { loadAllMapDatasets, type MapDatasets } from '@/lib/map-data'
+import { isMediaFile, mediaFromFile } from '@/lib/media'
+import { ensureMapDatasetsFor, type MapDatasets } from '@/lib/map-data'
 import { formatLatLon } from '@/lib/geo'
 import { reverseGeocode } from '@/lib/data'
-import type { TransportInfo } from '@/types'
+import { FONT_OPTIONS, type TransportInfo } from '@/types'
 import { useAppStore } from '@/store/app-store'
 import { useUiStore } from '@/store/ui-store'
 
 function App() {
   const media = useAppStore((s) => s.media)
+  const info = useAppStore((s) => s.info)
+  const style = useAppStore((s) => s.style)
   const setMedia = useAppStore((s) => s.setMedia)
   const settings = useAppStore((s) => s.settings)
   const updateInfo = useAppStore((s) => s.updateInfo)
@@ -26,12 +32,19 @@ function App() {
   const systemDark = useMediaQuery('(prefers-color-scheme: dark)')
   const setCameraOpen = useUiStore((s) => s.setCameraOpen)
   const cameraOpen = useUiStore((s) => s.cameraOpen)
+  const sheet = useUiStore((s) => s.sheet)
   const inputRef = useRef<HTMLInputElement>(null)
   const [datasets, setDatasets] = useState<MapDatasets | null>(null)
   const [dragging, setDragging] = useState(false)
   const [wasmReady, setWasmReady] = useState(false)
+  const [fontVersion, setFontVersion] = useState(0)
   const mediaToken = useRef(0)
-  const mapRequested = useRef(false)
+  const [mapAttempt, setMapAttempt] = useState(0)
+
+  useEffect(() => {
+    const family = FONT_OPTIONS.find((f) => f.value === style.font)?.family ?? 'system-ui'
+    void document.fonts?.load(`700 40px ${family}`).then(() => setFontVersion((v) => v + 1)).catch(() => undefined)
+  }, [style.font])
 
   useEffect(() => {
     void initGeoWasm()
@@ -43,16 +56,20 @@ function App() {
   }, [])
 
   useEffect(() => {
-    if ((!media && !cameraOpen) || datasets || mapRequested.current) return
-    mapRequested.current = true
-    loadAllMapDatasets()
+    if (!media && !cameraOpen) return
+    const points = [
+      info.photoLat != null && info.photoLon != null ? { lat: info.photoLat, lon: info.photoLon } : null,
+      info.departureLat != null && info.departureLon != null ? { lat: info.departureLat, lon: info.departureLon } : null,
+      info.arrivalLat != null && info.arrivalLon != null ? { lat: info.arrivalLat, lon: info.arrivalLon } : null,
+    ].filter((p): p is { lat: number; lon: number } => p != null)
+    ensureMapDatasetsFor(points)
       .then(setDatasets)
       .catch((err) => {
         console.error(err)
         setDatasets(null)
         toast.error('地図データの読み込みに失敗しました')
       })
-  }, [media, cameraOpen, datasets])
+  }, [media, cameraOpen, mapAttempt, info.photoLat, info.photoLon, info.departureLat, info.departureLon, info.arrivalLat, info.arrivalLon])
 
   const dark =
     settings.themeMode === 'DARK' || (settings.themeMode === 'SYSTEM' && systemDark)
@@ -75,9 +92,7 @@ function App() {
   }, [dark, settings.dynamicColor])
 
   async function openFiles(files: FileList | File[]) {
-    const file = Array.from(files).find(
-      (f) => f.type.startsWith('image/') || f.type.startsWith('video/'),
-    )
+    const file = Array.from(files).find(isMediaFile)
     if (!file) {
       toast.error('画像または動画を選択してください')
       return
@@ -89,9 +104,6 @@ function App() {
         URL.revokeObjectURL(asset.url)
         return
       }
-      setMedia(asset)
-      resetCrop()
-
       const now = new Date()
       const patch: Partial<TransportInfo> = {
         photoLat: null,
@@ -106,7 +118,8 @@ function App() {
         minute: now.getMinutes(),
       }
 
-      if (file.type.startsWith('image/')) {
+      if (file.type.startsWith('image/') || (!file.type && /\.(jpe?g|png|webp|gif|heic|heif|avif|bmp)$/i.test(file.name))) {
+        const exifr = await import('exifr')
         let gps: { latitude: number; longitude: number } | null = null
         try {
           gps = await exifr.gps(file)
@@ -128,6 +141,8 @@ function App() {
         }
         if (token !== mediaToken.current) return
         if (gps?.latitude != null && gps?.longitude != null) {
+          setMedia(asset)
+          resetCrop()
           patch.photoLat = gps.latitude
           patch.photoLon = gps.longitude
           patch.photoLocationName = formatLatLon(gps.latitude, gps.longitude, 5)
@@ -141,6 +156,8 @@ function App() {
         }
       }
       if (token !== mediaToken.current) return
+      setMedia(asset)
+      resetCrop()
       updateInfo(patch)
     } catch (err) {
       if (token === mediaToken.current) {
@@ -178,9 +195,19 @@ function App() {
           }}
         />
         <TopBar onPick={() => inputRef.current?.click()} onCamera={() => setCameraOpen(true)} />
-        <main className="flex min-h-0 flex-1 flex-col">
+        <main
+          className="flex min-h-0 flex-1 flex-col"
+          style={{
+            paddingLeft: 'env(safe-area-inset-left)',
+            paddingRight: 'env(safe-area-inset-right)',
+          }}
+        >
           {media ? (
-            <Editor datasets={datasets} renderKey={wasmReady ? 1 : 0} />
+            <Editor
+              datasets={datasets}
+              renderKey={fontVersion * 2 + (wasmReady ? 1 : 0)}
+              onRetryMap={() => setMapAttempt((v) => v + 1)}
+            />
           ) : (
             <EmptyState
               onPick={() => inputRef.current?.click()}
@@ -193,8 +220,23 @@ function App() {
             ドロップして読み込む
           </div>
         )}
-        <CameraDialog datasets={datasets} />
-        <Toaster position="top-center" richColors closeButton />
+        {cameraOpen && (
+          <Suspense fallback={null}>
+            <CameraDialog datasets={datasets} />
+          </Suspense>
+        )}
+        {sheet === 'settings' && (
+          <Suspense fallback={null}>
+            <SettingsSheet />
+          </Suspense>
+        )}
+        <Toaster
+          position="top-center"
+          richColors
+          closeButton
+          theme={dark ? 'dark' : 'light'}
+          containerAriaLabel="通知"
+        />
       </div>
     </TooltipProvider>
   )

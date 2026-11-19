@@ -85,11 +85,11 @@ export function PreviewStage({ media, source, aspect, datasets, renderKey = 0 }:
   const style = useAppStore((s) => s.style)
   const crop = useAppStore((s) => s.crop)
   const updateStyle = useAppStore((s) => s.updateStyle)
-  const stageRef = useRef<HTMLDivElement>(null)
+  const stageSlotRef = useRef<HTMLDivElement>(null)
   const bgRef = useRef<HTMLCanvasElement>(null)
   const overlayRef = useRef<HTMLCanvasElement>(null)
   const layoutRef = useRef<OverlayLayout | null>(null)
-  const [size, setSize] = useState({ w: 1, h: 1 })
+  const [slot, setSlot] = useState({ w: 1, h: 1 })
   const [active, setActive] = useState<'text' | 'map' | null>(null)
   const [playing, setPlaying] = useState(true)
   const [muted, setMuted] = useState(true)
@@ -110,7 +110,8 @@ export function PreviewStage({ media, source, aspect, datasets, renderKey = 0 }:
   const styleRef = useRef(style)
   styleRef.current = style
   const effectiveStyle = dragStyle ?? style
-  const dpr = Math.min(3, window.devicePixelRatio || 1)
+  const dpr = Math.min(2, window.devicePixelRatio || 1)
+  const lastMoveRef = useRef(0)
   useEffect(() => {
     setPlaying(true)
     setMuted(true)
@@ -125,12 +126,29 @@ export function PreviewStage({ media, source, aspect, datasets, renderKey = 0 }:
         ? source
         : null
 
+  useEffect(() => {
+    const video = activeSource
+    if (!(video instanceof HTMLVideoElement)) return
+    const onPlay = () => setPlaying(true)
+    const onPause = () => setPlaying(false)
+    const onEnded = () => setPlaying(false)
+    video.addEventListener('play', onPlay)
+    video.addEventListener('pause', onPause)
+    video.addEventListener('ended', onEnded)
+    return () => {
+      video.removeEventListener('play', onPlay)
+      video.removeEventListener('pause', onPause)
+      video.removeEventListener('ended', onEnded)
+    }
+  }, [activeSource])
+
+
   useLayoutEffect(() => {
-    const el = stageRef.current
+    const el = stageSlotRef.current
     if (!el) return
     const update = () => {
       const r = el.getBoundingClientRect()
-      setSize({ w: Math.max(1, r.width), h: Math.max(1, r.height) })
+      setSlot({ w: Math.max(1, r.width), h: Math.max(1, r.height) })
     }
     update()
     const ro = new ResizeObserver(update)
@@ -138,8 +156,10 @@ export function PreviewStage({ media, source, aspect, datasets, renderKey = 0 }:
     return () => ro.disconnect()
   }, [])
 
-  const canvasW = Math.max(1, Math.round(size.w * dpr))
-  const canvasH = Math.max(1, Math.round(size.h * dpr))
+  const stageW = Math.max(1, Math.min(slot.w, slot.h * aspect))
+  const stageH = Math.max(1, stageW / aspect)
+  const canvasW = Math.max(1, Math.round(stageW * dpr))
+  const canvasH = Math.max(1, Math.round(stageH * dpr))
 
   useEffect(() => {
     if (!bgRef.current || !activeSource) return
@@ -149,7 +169,9 @@ export function PreviewStage({ media, source, aspect, datasets, renderKey = 0 }:
     if (activeSource instanceof HTMLVideoElement) {
       let raf = 0
       const loop = () => {
-        drawBackground(canvas, activeSource, activeSource.videoWidth || media.width, activeSource.videoHeight || media.height, crop)
+        if (!activeSource.paused && !activeSource.ended) {
+          drawBackground(canvas, activeSource, activeSource.videoWidth || media.width, activeSource.videoHeight || media.height, crop)
+        }
         raf = requestAnimationFrame(loop)
       }
       loop()
@@ -158,7 +180,7 @@ export function PreviewStage({ media, source, aspect, datasets, renderKey = 0 }:
     drawBackground(canvas, activeSource, activeSource.naturalWidth || media.width, activeSource.naturalHeight || media.height, crop)
   }, [activeSource, canvasW, canvasH, crop, media.width, media.height])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const canvas = overlayRef.current
     if (!canvas) return
     canvas.width = canvasW
@@ -188,6 +210,22 @@ export function PreviewStage({ media, source, aspect, datasets, renderKey = 0 }:
   }
 
   function onPointerDown(e: React.PointerEvent<HTMLCanvasElement>) {
+    const existing = dragRef.current
+    if (existing) {
+      existing.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+      if (existing.pointers.size >= 2) {
+        const pts = Array.from(existing.pointers.values())
+        existing.mode = 'map-pinch'
+        existing.initStyle = styleRef.current
+        existing.pinchDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y)
+        existing.pinchCenter = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+        existing.pinchZoom = styleRef.current.mapInternalZoom
+        setActive('map')
+        setDragStyle({ ...styleRef.current })
+      }
+      e.currentTarget.setPointerCapture(e.pointerId)
+      return
+    }
     const layout = layoutRef.current
     if (!layout) return
     const p = toCanvas(e)
@@ -247,6 +285,9 @@ export function PreviewStage({ media, source, aspect, datasets, renderKey = 0 }:
     const drag = dragRef.current
     const canvas = overlayRef.current
     if (!drag || !canvas) return
+    const now = performance.now()
+    if (now - lastMoveRef.current < 14 && drag.pointers.size < 2) return
+    lastMoveRef.current = now
     drag.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
     if (drag.pointers.size >= 2) {
       const pts = Array.from(drag.pointers.values())
@@ -262,10 +303,10 @@ export function PreviewStage({ media, source, aspect, datasets, renderKey = 0 }:
       const zoom = Math.min(5, Math.max(0.5, drag.pinchZoom * (dist / Math.max(1, drag.pinchDist))))
       const mapBounds = layoutRef.current?.mapBounds
       const panX = mapBounds
-        ? drag.initStyle.mapInternalPanX + (center.x - drag.pinchCenter.x) / (mapBounds.width * dpr)
+        ? drag.initStyle.mapInternalPanX + ((center.x - drag.pinchCenter.x) * dpr) / mapBounds.width
         : drag.initStyle.mapInternalPanX
       const panY = mapBounds
-        ? drag.initStyle.mapInternalPanY + (center.y - drag.pinchCenter.y) / (mapBounds.height * dpr)
+        ? drag.initStyle.mapInternalPanY - ((center.y - drag.pinchCenter.y) * dpr) / mapBounds.height
         : drag.initStyle.mapInternalPanY
       setDragStyle({
         ...drag.initStyle,
@@ -325,44 +366,80 @@ export function PreviewStage({ media, source, aspect, datasets, renderKey = 0 }:
     }
   }
 
-  function onWheel(e: React.WheelEvent<HTMLCanvasElement>) {
-    const layout = layoutRef.current
+  useEffect(() => {
     const canvas = overlayRef.current
-    if (!layout?.mapBounds || !canvas) return
-    const p = toCanvas(e as unknown as React.PointerEvent<HTMLCanvasElement>)
-    if (
-      p.x < layout.mapBounds.x ||
-      p.x > layout.mapBounds.x + layout.mapBounds.width ||
-      p.y < layout.mapBounds.y ||
-      p.y > layout.mapBounds.y + layout.mapBounds.height
-    ) {
-      return
+    if (!canvas) return
+    const handler = (event: WheelEvent) => {
+      const layout = layoutRef.current
+      if (!layout?.mapBounds) return
+      const rect = canvas.getBoundingClientRect()
+      const x = ((event.clientX - rect.left) / rect.width) * canvas.width
+      const y = ((event.clientY - rect.top) / rect.height) * canvas.height
+      const b = layout.mapBounds
+      if (x < b.x || x > b.x + b.width || y < b.y || y > b.y + b.height) return
+      event.preventDefault()
+      const next = Math.min(5, Math.max(0.5, styleRef.current.mapInternalZoom * Math.exp(-event.deltaY * 0.0015)))
+      updateStyle({ mapInternalZoom: next })
     }
-    e.preventDefault()
-    const next = Math.min(5, Math.max(0.5, styleRef.current.mapInternalZoom * Math.exp(-e.deltaY * 0.0015)))
-    updateStyle({ mapInternalZoom: next })
-  }
+    canvas.addEventListener('wheel', handler, { passive: false })
+    return () => canvas.removeEventListener('wheel', handler)
+  }, [updateStyle])
 
   return (
+    <div ref={stageSlotRef} className="absolute inset-3 flex items-center justify-center sm:inset-6">
     <div
-      className="relative w-full select-none overflow-hidden rounded-[2rem] bg-muted shadow-2xl shadow-primary/10 ring-1 ring-border/70 sm:rounded-[2.25rem] checkerboard"
-      ref={stageRef}
-      style={{
-        width: '100%',
-        maxWidth: `min(100%, calc(68dvh * ${aspect}))`,
-        aspectRatio: aspect,
-      }}
+      className="relative select-none overflow-hidden rounded-[2rem] bg-muted shadow-2xl shadow-primary/10 ring-1 ring-border/70 sm:rounded-[2.25rem] checkerboard"
+      style={{ width: stageW, height: stageH }}
     >
       <canvas ref={bgRef} className="absolute inset-0 size-full" aria-hidden />
       <canvas
         ref={overlayRef}
-        className="absolute inset-0 size-full touch-none"
+        className="absolute inset-0 size-full touch-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
-        onWheel={onWheel}
-        aria-label="透かしプレビュー。ドラッグでテキストと地図を移動できます。"
+        aria-label="透かしプレビュー。ドラッグでテキストと地図を移動できます。矢印キーで移動、+/-で拡大縮小できます。"
+        tabIndex={0}
+        onFocus={() => setActive((current) => current ?? 'text')}
+        onKeyDown={(e) => {
+          const target = active ?? 'text'
+          const b = target === 'text' ? layoutRef.current?.textBounds : layoutRef.current?.mapBounds
+          if (!b) return
+          const step = e.shiftKey ? 0.02 : 0.006
+          const init = target === 'text' ? styleRef.current.textFreePos : styleRef.current.mapFreePos
+          let cx = init?.x ?? (b.x + b.width / 2) / canvasW
+          let cy = init?.y ?? (b.y + b.height / 2) / canvasH
+          if (e.key === 'ArrowLeft') cx -= step
+          else if (e.key === 'ArrowRight') cx += step
+          else if (e.key === 'ArrowUp') cy -= step
+          else if (e.key === 'ArrowDown') cy += step
+          else if (e.key === '+' || e.key === '=') {
+            e.preventDefault()
+            const style = styleRef.current
+            updateStyle(
+              target === 'text'
+                ? { textScale: Math.min(2.5, style.textScale + 0.05) }
+                : { mapBoxScale: Math.min(2.5, style.mapBoxScale + 0.05) },
+            )
+            return
+          } else if (e.key === '-') {
+            e.preventDefault()
+            const style = styleRef.current
+            updateStyle(
+              target === 'text'
+                ? { textScale: Math.max(0.5, style.textScale - 0.05) }
+                : { mapBoxScale: Math.max(0.5, style.mapBoxScale - 0.05) },
+            )
+            return
+          } else {
+            return
+          }
+          e.preventDefault()
+          cx = Math.min(0.94, Math.max(0.06, cx))
+          cy = Math.min(0.94, Math.max(0.06, cy))
+          updateStyle(target === 'text' ? { textFreePos: { x: cx, y: cy } } : { mapFreePos: { x: cx, y: cy } })
+        }}
       />
       {activeSource instanceof HTMLVideoElement && (
         <div className="absolute top-3 right-3 z-20 flex gap-2">
@@ -372,8 +449,7 @@ export function PreviewStage({ media, source, aspect, datasets, renderKey = 0 }:
             className="rounded-full bg-background/80 backdrop-blur"
             onClick={() => {
               if (activeSource.paused) {
-                void activeSource.play()
-                setPlaying(true)
+                void activeSource.play().catch(() => setPlaying(false))
               } else {
                 activeSource.pause()
                 setPlaying(false)
@@ -402,6 +478,7 @@ export function PreviewStage({ media, source, aspect, datasets, renderKey = 0 }:
           メディアを読み込み中…
         </div>
       )}
+    </div>
     </div>
   )
 }

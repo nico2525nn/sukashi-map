@@ -49,6 +49,7 @@
 }
 
 :root {
+    color-scheme: light;
     --background: oklch(0.975 0.008 286);
     --foreground: oklch(0.24 0.02 282);
     --card: oklch(0.992 0.004 286);
@@ -84,6 +85,7 @@
 }
 
 .dark {
+    color-scheme: dark;
     --background: oklch(0.165 0.012 280);
     --foreground: oklch(0.94 0.01 286);
     --card: oklch(0.21 0.018 280);
@@ -153,6 +155,12 @@
   font-display: swap;
 }
 @font-face {
+  font-family: 'Artemis Inter';
+  src: url('/fonts/artemis_inter.otf') format('opentype');
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
   font-family: 'Kaisei Tokumin';
   src: url('@fontsource/kaisei-tokumin/files/kaisei-tokumin-japanese-700-normal.woff2') format('woff2');
   font-weight: 700;
@@ -191,5 +199,29 @@
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (pointer: coarse) {
+  button:not([role='switch']),
+  [role='button']:not([role='switch']) {
+    min-height: 44px;
+  }
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+  }
+  [data-slot='slider-thumb']::after {
+    inset: -12px;
   }
 }

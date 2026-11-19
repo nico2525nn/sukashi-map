@@ -13,7 +13,7 @@
 ## 開発
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
@@ -35,7 +35,15 @@ npm run lint        # oxlint
 
 ## GitHub Pages
 
-`.github/workflows/web-pages.yml` が `web/**` の変更時に `web/dist` を GitHub Pages へデプロイします。プロジェクトページのサブパス `/sukashi-map/` を考慮し、`GITHUB_ACTIONS=true` のとき Vite の `base` を切り替えています。地図データは `public/data` から `import.meta.env.BASE_URL` 経由で取得します。
+公開 URL: **https://nico2525nn.github.io/sukashi-map/**
+
+`.github/workflows/web-pages.yml` が `web/**` の変更時に `web/dist` を GitHub Pages へデプロイします。プロジェクトページのサブパス `/sukashi-map/` を考慮し、`GITHUB_ACTIONS=true` のとき Vite の `base` を切り替えています。ローカルで同じ条件を確認する場合:
+
+```bash
+GITHUB_ACTIONS=true npm run build
+```
+
+GitHub リポジトリの Settings → Pages → Source は **GitHub Actions** を選択してください。地図データは `public/data` から `import.meta.env.BASE_URL` 経由で取得します。
 
 ## 機能
 
@@ -45,7 +53,7 @@ npm run lint        # oxlint
 - スタイル: 7フォント、文字/ルート/海岸線色、地図・飛行機バッジ表示、プリセット
 - 切り抜き: 元画像 / フリー / 4:5 / 9:16 / 2:3 / 1:1、ズーム・位置、余白枠
 - 編集: テキスト・地図のドラッグ、角ハンドル拡大縮小、地図のホイール/ピンチズーム
-- 書き出し: JPEG / PNG、動画 WebM（VP9/VP8 + 可能なら音声）、Web Share API
+- 書き出し: JPEG / PNG、動画 MP4 / WebM（ブラウザ対応に応じて自動選択、音声はベストエフォート）、Web Share API
 - カメラ: `getUserMedia` によるライブプレビュー + 透かし合成 + 撮影
 - レスポンシブ: モバイルはボトムシート、デスクトップは右サイドシート
 
@@ -61,6 +69,6 @@ npm run lint        # oxlint
 
 ## ブラウザ依存の制約
 
-- 動画は WebM で書き出します。MP4 書き出しはブラウザのエンコーダ対応に依存します。
+- 動画はブラウザが対応する MP4 / WebM を自動選択します（Safari は MP4、Chrome は WebM が中心）。
 - HDR ゲインマップの保持は未対応です。
 - 写真の EXIF GPS はブラウザが取得できる場合のみ読み取ります。取得できない場合は手動設定できます。

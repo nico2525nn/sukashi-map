@@ -5,6 +5,7 @@ import { Segmented } from '@/components/segmented'
 import { SheetShell } from '@/components/sheets/sheet-shell'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
+import { Badge } from '@/components/ui/badge'
 import { useAppStore } from '@/store/app-store'
 import { useUiStore } from '@/store/ui-store'
 import type { ExportFormat, ThemeMode } from '@/types'
@@ -27,6 +28,7 @@ export function SettingsSheet() {
       <div className="space-y-4 pb-4">
         <SectionCard title="外観">
           <Segmented
+            ariaLabel="テーマ"
             options={[
               { value: 'SYSTEM', label: 'システム', icon: <Globe2 className="size-3.5" /> },
               { value: 'LIGHT', label: 'ライト', icon: <Sun className="size-3.5" /> },
@@ -37,10 +39,11 @@ export function SettingsSheet() {
           />
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-medium">ダイナミックカラー</p>
-              <p className="text-xs text-muted-foreground">アクセントカラーを端末に合わせます</p>
+              <p className="text-sm font-medium">アクセントカラーを自動調整</p>
+              <p className="text-xs text-muted-foreground">Web版のアクセントカラーを自動で調整します</p>
             </div>
             <Switch
+              aria-label="アクセントカラーを自動調整"
               checked={settings.dynamicColor}
               onCheckedChange={(dynamicColor) => updateSettings({ dynamicColor })}
             />
@@ -50,6 +53,7 @@ export function SettingsSheet() {
         <SectionCard title="書き出し">
           <p className="text-sm font-medium">デフォルト形式</p>
           <Segmented
+            ariaLabel="デフォルトの書き出し形式"
             options={[
               { value: 'JPEG_95', label: 'JPEG 95%' },
               { value: 'PNG_LOSSLESS', label: 'PNG 無劣化' },
@@ -63,13 +67,13 @@ export function SettingsSheet() {
             <div>
               <p className="text-sm font-medium">HDR情報を保持</p>
               <p className="text-xs text-muted-foreground">
-                ブラウザではPNG/JPEGのHDRゲインマップ保持は未対応です
+                PNG/JPEGのHDRゲインマップ保持はブラウザ未対応です
               </p>
             </div>
-            <Switch checked={settings.preserveHdr} disabled />
+            <Badge variant="secondary">未対応</Badge>
           </div>
           <p className="text-xs text-muted-foreground">
-            動画は WebM（VP9/VP8）で書き出します。MP4書き出しはブラウザの対応状況に依存します。
+            動画はブラウザの対応状況に応じて MP4 / WebM を自動選択します。
           </p>
         </SectionCard>
 
@@ -82,12 +86,13 @@ export function SettingsSheet() {
               </p>
             </div>
             <Switch
+              aria-label="カメラ撮影時に現在地を使う"
               checked={settings.autoLocationEnabled}
               onCheckedChange={(autoLocationEnabled) => updateSettings({ autoLocationEnabled })}
             />
           </div>
           <p className="text-xs text-muted-foreground">
-            写真のEXIF位置情報はブラウザが取得できる場合のみ読み取ります。取得できない場合は透かし情報シートから手動設定できます。
+            写真のEXIF位置情報はブラウザが取得できる場合のみ読み取ります。撮影地の座標は、地名検索 (Photon)、逆ジオコーディング (Nominatim)、経路取得 (OSRM) のため公開APIに送信されます。画像データそのものは送信しません。
           </p>
         </SectionCard>
 

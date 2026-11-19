@@ -15,33 +15,51 @@ import {
 
 const defaultPresets: StylePreset[] = [
   {
-    id: 'classic-white',
-    name: 'Classic White',
+    id: 'classic_sukashi',
+    name: 'Sukashi Classic (Outfit)',
     style: { ...defaultOverlayStyle },
   },
   {
-    id: 'midnight',
-    name: 'Midnight',
+    id: 'rail_amber',
+    name: 'Shinkansen Amber (Barlow)',
     style: {
       ...defaultOverlayStyle,
-      font: 'jetbrains-mono',
-      textColor: '#f5f5f5',
+      font: 'barlow',
       routeColor: '#ffb900',
-      borderColor: '#cfd8dc',
+      textCorner: 'TOP_LEFT',
+      mapCorner: 'TOP_RIGHT',
     },
   },
   {
-    id: 'amber',
-    name: 'Amber Film',
+    id: 'kaisei_mincho',
+    name: 'Kaisei 旅情明朝',
     style: {
       ...defaultOverlayStyle,
       font: 'kaisei-tokumin',
-      textColor: '#ffd08a',
-      routeColor: '#ffb900',
-      borderColor: '#ffd08a',
+      routeColor: '#d83b01',
+      textCorner: 'BOTTOM_LEFT',
+      mapCorner: 'TOP_RIGHT',
+    },
+  },
+  {
+    id: 'white_frame_ink',
+    name: 'White Frame Ink',
+    style: {
+      ...defaultOverlayStyle,
+      font: 'dm-sans',
+      textColor: '#1a1a1a',
+      routeColor: '#0078d7',
+      borderColor: '#1a1a1a',
     },
   },
 ]
+
+const defaultSettings: AppSettings = {
+  themeMode: 'SYSTEM',
+  dynamicColor: true,
+  exportFormat: 'JPEG_95',
+  autoLocationEnabled: true,
+}
 
 interface AppState {
   media: MediaAsset | null
@@ -77,6 +95,13 @@ function compactHistory(history: TransportInfo[], entry: TransportInfo): Transpo
   return [entry, ...sameMode, ...otherModes].slice(0, 20)
 }
 
+function mergePresets(old: StylePreset[] | undefined): StylePreset[] {
+  const byId = new Map<string, StylePreset>()
+  for (const preset of defaultPresets) byId.set(preset.id, preset)
+  for (const preset of old ?? []) byId.set(preset.id, preset)
+  return Array.from(byId.values())
+}
+
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
@@ -84,13 +109,7 @@ export const useAppStore = create<AppState>()(
       info: defaultTransportInfo,
       style: defaultOverlayStyle,
       crop: defaultCropFrame,
-      settings: {
-        themeMode: 'SYSTEM',
-        dynamicColor: true,
-        exportFormat: 'JPEG_95',
-        autoLocationEnabled: true,
-        preserveHdr: true,
-      },
+      settings: defaultSettings,
       history: [],
       presets: defaultPresets,
       infoRevision: 0,
@@ -142,9 +161,21 @@ export const useAppStore = create<AppState>()(
         }
         set({ presets: [...presets, preset] })
       },
-      deletePreset: (id) => set((s) => ({ presets: s.presets.filter((p) => p.id !== id) })),
+      deletePreset: (id) =>
+        set((s) => ({
+          presets: id.startsWith('custom_')
+            ? s.presets.filter((p) => p.id !== id)
+            : s.presets,
+        })),
       recordHistory: (entry) =>
-        set((s) => ({ history: compactHistory(s.history, structuredClone(entry)) })),
+        set((s) => ({
+          history: compactHistory(s.history, {
+            ...structuredClone(entry),
+            routePolylines: [],
+            photoLat: null,
+            photoLon: null,
+          }),
+        })),
       clearHistory: (mode) =>
         set((s) => ({
           history: mode ? s.history.filter((h) => h.mode !== mode) : [],
@@ -156,16 +187,10 @@ export const useAppStore = create<AppState>()(
       migrate: (persisted) => {
         const old = persisted as Partial<AppState>
         return {
-          style: old.style ?? defaultOverlayStyle,
-          settings: old.settings ?? {
-            themeMode: 'SYSTEM',
-            dynamicColor: true,
-            exportFormat: 'JPEG_95',
-            autoLocationEnabled: true,
-            preserveHdr: true,
-          },
+          style: { ...defaultOverlayStyle, ...old.style },
+          settings: { ...defaultSettings, ...old.settings },
           history: old.history ?? [],
-          presets: old.presets ?? defaultPresets,
+          presets: mergePresets(old.presets),
         }
       },
       partialize: (s) => ({

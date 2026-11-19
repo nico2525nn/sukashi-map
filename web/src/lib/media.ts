@@ -2,7 +2,12 @@ import type { MediaAsset } from '@/types'
 
 export function fileKind(file: File): 'image' | 'video' {
   if (file.type.startsWith('video/')) return 'video'
+  if (!file.type && /\.(mp4|mov|webm|m4v|avi|mkv)$/i.test(file.name)) return 'video'
   return 'image'
+}
+
+export function isMediaFile(file: File): boolean {
+  return file.type.startsWith('image/') || file.type.startsWith('video/') || /\.(jpe?g|png|webp|gif|heic|heif|avif|bmp|mp4|mov|webm|m4v|avi|mkv)$/i.test(file.name)
 }
 
 export function mediaFromFile(file: File): Promise<MediaAsset> {
@@ -12,6 +17,11 @@ export function mediaFromFile(file: File): Promise<MediaAsset> {
     if (kind === 'image') {
       const img = new Image()
       img.onload = () => {
+        if (img.naturalWidth * img.naturalHeight > 40_000_000) {
+          URL.revokeObjectURL(url)
+          reject(new Error('画像が大きすぎます（40MP以下にしてください）'))
+          return
+        }
         resolve({
           url,
           name: file.name || 'photo.jpg',

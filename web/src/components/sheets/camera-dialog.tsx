@@ -37,6 +37,10 @@ export function CameraDialog({ datasets }: CameraDialogProps) {
   const [ready, setReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [capturing, setCapturing] = useState(false)
+  const [retryKey, setRetryKey] = useState(0)
+  const [videoAspect, setVideoAspect] = useState(4 / 3)
+  const captureId = useRef(0)
+  const capturingRef = useRef(false)
 
   const stop = useCallback(() => {
     streamRef.current?.getTracks().forEach((t) => t.stop())
@@ -46,15 +50,24 @@ export function CameraDialog({ datasets }: CameraDialogProps) {
 
   useEffect(() => {
     if (!open) {
+      captureId.current++
       stop()
+      return
+    }
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setError('このブラウザ/環境ではカメラを利用できません。HTTPS で開いているか確認してください。')
       return
     }
     let cancelled = false
     setError(null)
     setReady(false)
+    const timer = window.setTimeout(() => {
+      if (!cancelled) setError('カメラの起動がタイムアウトしました。再接続してください。')
+    }, 10_000)
     navigator.mediaDevices
-      ?.getUserMedia({ video: { facingMode: facing, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false })
+      .getUserMedia({ video: { facingMode: facing, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false })
       .then((stream) => {
+        window.clearTimeout(timer)
         if (cancelled) {
           stream.getTracks().forEach((t) => t.stop())
           return
@@ -63,21 +76,33 @@ export function CameraDialog({ datasets }: CameraDialogProps) {
         const video = videoRef.current
         if (video) {
           video.onloadedmetadata = () => {
+            if (video.videoWidth && video.videoHeight) setVideoAspect(video.videoWidth / video.videoHeight)
             setReady(true)
             void video.play().catch(() => undefined)
           }
           video.srcObject = stream
         }
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
+        window.clearTimeout(timer)
         console.error(err)
-        setError('カメラを起動できませんでした。ブラウザのカメラ権限を確認してください。')
+        const name = err instanceof DOMException ? err.name : ''
+        setError(
+          name === 'NotAllowedError'
+            ? 'カメラの使用が許可されていません。ブラウザの設定から許可してください。'
+            : name === 'NotFoundError'
+              ? 'カメラが見つかりません。'
+              : name === 'NotReadableError'
+                ? 'カメラが他のアプリで使用中です。'
+                : 'カメラを起動できませんでした。ブラウザのカメラ権限を確認してください。',
+        )
       })
     return () => {
       cancelled = true
+      window.clearTimeout(timer)
       stop()
     }
-  }, [open, facing, stop])
+  }, [open, facing, stop, retryKey])
 
   useEffect(() => {
     if (!ready) return
@@ -95,8 +120,10 @@ export function CameraDialog({ datasets }: CameraDialogProps) {
 
   async function capture() {
     const video = videoRef.current
-    if (!video || capturing) return
+    if (!video || capturingRef.current) return
+    capturingRef.current = true
     setCapturing(true)
+    const token = captureId.current
     try {
       const canvas = document.createElement('canvas')
       canvas.width = video.videoWidth || 1280
@@ -113,6 +140,10 @@ export function CameraDialog({ datasets }: CameraDialogProps) {
       })
       const file = new File([blob], `camera_${Date.now()}.jpg`, { type: 'image/jpeg' })
       const asset = await mediaFromFile(file)
+      if (token !== captureId.current) {
+        URL.revokeObjectURL(asset.url)
+        return
+      }
       setMedia(asset)
       resetCrop()
       setOpen(false)
@@ -151,6 +182,7 @@ export function CameraDialog({ datasets }: CameraDialogProps) {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : '撮影に失敗しました')
     } finally {
+      capturingRef.current = false
       setCapturing(false)
     }
   }
@@ -165,7 +197,7 @@ export function CameraDialog({ datasets }: CameraDialogProps) {
           <DialogTitle>カメラ</DialogTitle>
           <DialogDescription>カメラプレビューと透かしの合成</DialogDescription>
         </DialogHeader>
-        <div className="relative aspect-[3/4] w-full bg-black sm:aspect-[4/3]">
+        <div className="relative w-full bg-black" style={{ aspectRatio: videoAspect }}>
           <video
             ref={videoRef}
             className="absolute inset-0 size-full object-cover"
@@ -182,9 +214,14 @@ export function CameraDialog({ datasets }: CameraDialogProps) {
           {error && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center text-sm text-white/80">
               <p>{error}</p>
-              <Button variant="secondary" onClick={() => setOpen(false)}>
-                閉じる
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="secondary" onClick={() => setRetryKey((v) => v + 1)}>
+                  再試行
+                </Button>
+                <Button variant="secondary" onClick={() => setOpen(false)}>
+                  閉じる
+                </Button>
+              </div>
             </div>
           )}
           <div className="absolute inset-x-0 top-0 flex items-center justify-between p-3">

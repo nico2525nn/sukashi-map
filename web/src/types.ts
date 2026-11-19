@@ -45,7 +45,9 @@ export interface RailLineEntry {
 
 export interface AirlineEntry {
   code: string
-  name: string
+  shortName: string
+  fullName: string
+  country?: string
 }
 
 export interface TransportInfo {
@@ -156,7 +158,6 @@ export interface AppSettings {
   dynamicColor: boolean
   exportFormat: ExportFormat
   autoLocationEnabled: boolean
-  preserveHdr: boolean
 }
 
 export interface MediaAsset {
@@ -205,7 +206,7 @@ export const FONT_OPTIONS = [
   { value: 'jetbrains-mono', label: 'JetBrains Mono', family: '"JetBrains Mono"' },
   { value: 'dm-sans', label: 'DM Sans', family: '"DM Sans"' },
   { value: 'kaisei-tokumin', label: 'Kaisei Tokumin', family: '"Kaisei Tokumin"' },
-  { value: 'artemis', label: 'ARTEMIS INTER', family: 'Outfit' },
+  { value: 'artemis', label: 'ARTEMIS INTER', family: '"Artemis Inter"' },
   { value: 'default', label: 'Default', family: 'system-ui' },
 ] as const
 

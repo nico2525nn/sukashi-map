@@ -18,6 +18,7 @@ interface SheetShellProps {
   action?: ReactNode
   children: ReactNode
   className?: string
+  compact?: boolean
 }
 
 export function SheetShell({
@@ -28,6 +29,7 @@ export function SheetShell({
   action,
   children,
   className,
+  compact,
 }: SheetShellProps) {
   const isMobile = useIsMobile()
   return (
@@ -38,8 +40,10 @@ export function SheetShell({
         className={cn(
           'flex flex-col gap-0 bg-card p-0',
           isMobile
-            ? 'max-h-[92dvh] rounded-t-[2rem] border-t-0'
-            : 'w-full border-l-0 p-0 sm:max-w-[30rem]',
+            ? compact
+              ? 'max-h-[58dvh] rounded-t-[2rem] border-t-0'
+              : 'max-h-[92dvh] rounded-t-[2rem] border-t-0'
+            : 'w-full border-l-0 p-0 sm:max-w-[30rem]!',
           className,
         )}
       >
@@ -66,7 +70,7 @@ export function SheetShell({
             </div>
           </div>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-5">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-5">
           {children}
         </div>
       </SheetContent>

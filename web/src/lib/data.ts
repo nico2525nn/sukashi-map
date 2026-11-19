@@ -1,4 +1,5 @@
 import type {
+  AirlineEntry,
   AirportRecord,
   Coord,
   PlaceCandidate,
@@ -43,6 +44,7 @@ const curatedPlaces: PlaceCandidate[] = [
   countryCode: countryCode as string,
 }))
 
+let airlinesPromise: Promise<AirlineEntry[]> | null = null
 let airportsPromise: Promise<AirportRecord[]> | null = null
 let stationsPromise: Promise<StationRecord[]> | null = null
 let linesPromise: Promise<RailLineEntry[]> | null = null
@@ -52,6 +54,34 @@ function loadJson<T>(path: string): Promise<T> {
     if (!res.ok) throw new Error(`failed to load ${path}`)
     return res.json() as Promise<T>
   })
+}
+
+export function loadAirlines(): Promise<AirlineEntry[]> {
+  airlinesPromise ??= loadJson<AirlineEntry[]>(`${import.meta.env.BASE_URL}data/airlines.json`).catch((err) => {
+    airlinesPromise = null
+    throw err
+  })
+  return airlinesPromise
+}
+
+export async function searchAirlines(query: string): Promise<AirlineEntry[]> {
+  const list = await loadAirlines()
+  const q = query.trim().toUpperCase()
+  if (!q) return list.slice(0, 30)
+  return list
+    .filter(
+      (a) =>
+        a.code.includes(q) ||
+        a.shortName.toUpperCase().includes(q) ||
+        a.fullName.toUpperCase().includes(q),
+    )
+    .slice(0, 30)
+}
+
+export async function findAirportByIata(code: string): Promise<AirportRecord | null> {
+  const list = await loadAirports()
+  const c = code.trim().toUpperCase()
+  return list.find((a) => a.iata === c) ?? null
 }
 
 export function loadAirports(): Promise<AirportRecord[]> {
@@ -176,7 +206,22 @@ export async function searchPlaces(
   }
 }
 
+let lastNominatim = 0
+const reverseCache = new Map<string, string>()
+
 export async function reverseGeocode(lat: number, lon: number): Promise<string> {
+  const key = `${lat.toFixed(4)},${lon.toFixed(4)}`
+  const cached = reverseCache.get(key)
+  if (cached) return cached
+  const wait = Math.max(0, 1100 - (Date.now() - lastNominatim))
+  if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait))
+  lastNominatim = Date.now()
+  const result = await reverseGeocodeUncached(lat, lon)
+  reverseCache.set(key, result)
+  return result
+}
+
+async function reverseGeocodeUncached(lat: number, lon: number): Promise<string> {
   let timer: ReturnType<typeof setTimeout> | undefined
   try {
     const controller = new AbortController()
@@ -208,12 +253,20 @@ export async function reverseGeocode(lat: number, lon: number): Promise<string> 
 export async function fetchDrivingRoute(
   dep: Coord,
   dest: Coord,
+  via?: Coord | null,
 ): Promise<Coord[][]> {
   let timer: ReturnType<typeof setTimeout> | undefined
   try {
     const controller = new AbortController()
     timer = setTimeout(() => controller.abort(), 8000)
-    const url = `https://router.project-osrm.org/route/v1/driving/${dep.lon},${dep.lat};${dest.lon},${dest.lat}?overview=full&geometries=geojson`
+    const useVia =
+      via != null &&
+      Math.hypot(via.lat - dep.lat, via.lon - dep.lon) > 0.01 &&
+      Math.hypot(via.lat - dest.lat, via.lon - dest.lon) > 0.01
+    const waypoints = useVia
+      ? `${dep.lon},${dep.lat};${via!.lon},${via!.lat};${dest.lon},${dest.lat}`
+      : `${dep.lon},${dep.lat};${dest.lon},${dest.lat}`
+    const url = `https://router.project-osrm.org/route/v1/driving/${waypoints}?overview=full&geometries=geojson`
     const res = await fetch(url, { signal: controller.signal })
     if (!res.ok) throw new Error(String(res.status))
     const json = (await res.json()) as {

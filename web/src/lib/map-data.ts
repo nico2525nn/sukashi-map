@@ -54,7 +54,11 @@ export interface Bounds {
   maxLat: number
 }
 
+const boundsCache = new WeakMap<Ring, Bounds>()
+
 export function ringBounds(ring: Ring): Bounds | null {
+  const cached = boundsCache.get(ring)
+  if (cached) return cached
   if (!ring.length) return null
   let minLon = Infinity
   let maxLon = -Infinity
@@ -66,7 +70,9 @@ export function ringBounds(ring: Ring): Bounds | null {
     if (lat < minLat) minLat = lat
     if (lat > maxLat) maxLat = lat
   }
-  return { minLon, maxLon, minLat, maxLat }
+  const bounds = { minLon, maxLon, minLat, maxLat }
+  boundsCache.set(ring, bounds)
+  return bounds
 }
 
 export function pointInRing(lon: number, lat: number, ring: Ring): boolean {
@@ -81,13 +87,26 @@ export function pointInRing(lon: number, lat: number, ring: Ring): boolean {
   return inside
 }
 
+const containingCache = new WeakMap<Ring[], Map<string, Ring | null>>()
+
 export function findEnclosingRing(lon: number, lat: number, rings: Ring[]): Ring | null {
+  let cache = containingCache.get(rings)
+  if (!cache) {
+    cache = new Map()
+    containingCache.set(rings, cache)
+  }
+  const key = `${lon.toFixed(3)}:${lat.toFixed(3)}`
+  if (cache.has(key)) return cache.get(key) ?? null
   for (const ring of rings) {
     const b = ringBounds(ring)
     if (!b) continue
     if (lon < b.minLon || lon > b.maxLon || lat < b.minLat || lat > b.maxLat) continue
-    if (pointInRing(lon, lat, ring)) return ring
+    if (pointInRing(lon, lat, ring)) {
+      cache.set(key, ring)
+      return ring
+    }
   }
+  cache.set(key, null)
   return null
 }
 
@@ -106,4 +125,42 @@ export function boundsAround(lon: number, lat: number, lonSpan: number, latSpan:
     minLat: lat - latSpan / 2,
     maxLat: lat + latSpan / 2,
   }
+}
+
+let datasetCache: MapDatasets = {
+  world: [],
+  japanCoast: [],
+  japanPrefectures: [],
+  japanWater: [],
+  usStates: [],
+}
+let worldPromise: Promise<Ring[]> | null = null
+let japanPromise: Promise<[Ring[], Ring[], Ring[]]> | null = null
+let usPromise: Promise<Ring[]> | null = null
+
+/**
+ * Loads only the layers needed by the current anchors, reusing everything already fetched.
+ * World is always required as the fallback/context layer.
+ */
+export async function ensureMapDatasetsFor(points: { lon: number; lat: number }[]): Promise<MapDatasets> {
+  const needJapan = points.some((p) => isInJapan(p.lon, p.lat))
+  const needUs = points.some((p) => isInUs(p.lon, p.lat))
+  worldPromise ??= loadWorldMap()
+  if (needJapan) {
+    japanPromise ??= Promise.all([loadJapanCoast(), loadJapanPrefectures(), loadJapanWater()])
+  }
+  if (needUs) usPromise ??= loadUsStates()
+  const [world, japan, us] = await Promise.all([
+    worldPromise,
+    japanPromise ?? Promise.resolve(null),
+    usPromise ?? Promise.resolve(null),
+  ])
+  datasetCache = {
+    world,
+    japanCoast: japan?.[0] ?? datasetCache.japanCoast,
+    japanPrefectures: japan?.[1] ?? datasetCache.japanPrefectures,
+    japanWater: japan?.[2] ?? datasetCache.japanWater,
+    usStates: us ?? datasetCache.usStates,
+  }
+  return datasetCache
 }

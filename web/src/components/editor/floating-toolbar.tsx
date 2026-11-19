@@ -31,6 +31,7 @@ interface FloatingToolbarProps {
   onSaveVideo: () => void
   onResetLayout: () => void
   disabled?: boolean
+  className?: string
 }
 
 export function FloatingToolbar({
@@ -44,9 +45,10 @@ export function FloatingToolbar({
   onSaveVideo,
   onResetLayout,
   disabled,
+  className,
 }: FloatingToolbarProps) {
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 flex justify-center pb-[max(1rem,env(safe-area-inset-bottom))]">
+    <div className={`pointer-events-none fixed inset-x-0 bottom-0 z-30 flex justify-center pb-[max(1rem,env(safe-area-inset-bottom))] ${className ?? ''}`}>
       <div className="pointer-events-auto flex items-center gap-0.5 rounded-full border border-border/60 bg-card/90 p-1.5 shadow-2xl shadow-primary/10 backdrop-blur-xl sm:gap-1 sm:p-2">
         <ToolbarButton label="ルート・透かし情報" onClick={onOpenInfo} disabled={disabled}>
           <Route className="size-5" />

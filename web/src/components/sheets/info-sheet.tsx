@@ -33,6 +33,8 @@ import { Switch } from '@/components/ui/switch'
 import { useIsMobile } from '@/hooks/use-media-query'
 import {
   fetchDrivingRoute,
+  findAirportByIata,
+  searchAirlines,
   searchAirports,
   searchPlaces,
   searchRailLines,
@@ -55,37 +57,9 @@ import {
   type StationRecord,
   type TransportInfo,
   type TransportMode,
+  summaryLabel,
 } from '@/types'
 import { modeIcon } from '@/components/editor/route-chip'
-
-const AIRLINES: AirlineEntry[] = [
-  { code: 'NH', name: 'ANA (All Nippon Airways)' },
-  { code: 'JL', name: 'Japan Airlines' },
-  { code: 'NU', name: 'Japan Transocean Air' },
-  { code: '6J', name: 'Solaseed Air' },
-  { code: 'BC', name: 'Skymark Airlines' },
-  { code: 'MM', name: 'Peach Aviation' },
-  { code: 'GK', name: 'Jetstar Japan' },
-  { code: 'IJ', name: 'Spring Japan' },
-  { code: '7G', name: 'StarFlyer' },
-  { code: 'HD', name: 'Air Do' },
-  { code: 'KE', name: 'Korean Air' },
-  { code: 'OZ', name: 'Asiana Airlines' },
-  { code: 'CA', name: 'Air China' },
-  { code: 'MU', name: 'China Eastern' },
-  { code: 'CI', name: 'China Airlines' },
-  { code: 'BR', name: 'EVA Air' },
-  { code: 'SQ', name: 'Singapore Airlines' },
-  { code: 'TG', name: 'Thai Airways' },
-  { code: 'CX', name: 'Cathay Pacific' },
-  { code: 'UA', name: 'United Airlines' },
-  { code: 'AA', name: 'American Airlines' },
-  { code: 'DL', name: 'Delta Air Lines' },
-  { code: 'BA', name: 'British Airways' },
-  { code: 'AF', name: 'Air France' },
-  { code: 'LH', name: 'Lufthansa' },
-  { code: 'QF', name: 'Qantas' },
-]
 
 type SearchKind =
   | 'dep-airport'
@@ -134,6 +108,7 @@ export function InfoSheet() {
   const style = useAppStore((s) => s.style)
   const updateStyle = useAppStore((s) => s.updateStyle)
   const [draft, setDraft] = useState<TransportInfo>(info)
+  const [styleDraft, setStyleDraft] = useState(style)
   const [searchKind, setSearchKind] = useState<SearchKind | null>(null)
   const [coordOpen, setCoordOpen] = useState(false)
   const [coordLat, setCoordLat] = useState('')
@@ -142,12 +117,21 @@ export function InfoSheet() {
   const [locating, setLocating] = useState(false)
   const locToken = useRef(0)
   const routeToken = useRef(0)
+  const applyingRef = useRef(false)
 
   const wasOpen = useRef(false)
   useEffect(() => {
-    if (open && !wasOpen.current) setDraft(info)
+    if (open && !wasOpen.current) {
+      locToken.current++
+      setDraft(info)
+      setStyleDraft(style)
+    }
     wasOpen.current = open
-  }, [open, info])
+  }, [open, info, style])
+
+  useEffect(() => {
+    if (!open) locToken.current++
+  }, [open])
 
   useEffect(() => {
     if (open && mediaUrl && mediaUrl !== previousMediaUrl.current) setDraft(info)
@@ -164,7 +148,16 @@ export function InfoSheet() {
   }
 
   function apply() {
+    if (applyingRef.current) return
+    applyingRef.current = true
+    window.setTimeout(() => { applyingRef.current = false }, 600)
     const next: TransportInfo = { ...draft, routePolylines: [] }
+    locToken.current++
+    updateStyle({
+      textCorner: styleDraft.textCorner,
+      mapCorner: styleDraft.mapCorner,
+      showMap: styleDraft.showMap,
+    })
     const revision = applyInfo(next)
     closeSheet()
     toast.success('透かし情報を適用しました')
@@ -179,8 +172,15 @@ export function InfoSheet() {
         void fetchDrivingRoute(
           { lat: depLat, lon: depLon },
           { lat: destLat, lon: destLon },
+          next.photoLat != null && next.photoLon != null
+            ? { lat: next.photoLat, lon: next.photoLon }
+            : null,
         ).then((polylines) => {
-          if (token !== routeToken.current || !polylines.length) return
+          if (token !== routeToken.current) return
+          if (!polylines.length) {
+            toast.info('道路経路を取得できませんでした。直線で表示します')
+            return
+          }
           const state = useAppStore.getState()
           if (state.infoRevision !== revision || state.info.mode !== 'OTHER') return
           const current = state.info
@@ -254,18 +254,28 @@ export function InfoSheet() {
   function onSearchSelect(kind: SearchKind, value: unknown) {
     if (kind === 'dep-airport' || kind === 'arr-airport') {
       const ap = value as AirportRecord
-      const prefix = kind === 'dep-airport' ? 'departureAirport' : 'arrivalAirport'
-      update({
-        [`${prefix}Code`]: ap.iata,
-        [`${prefix}Name`]: ap.name,
-        [`${prefix}City`]: ap.city,
-        [`${prefix}Country`]: ap.country,
-        [`${prefix}Lat`]: ap.lat,
-        [`${prefix}Lon`]: ap.lon,
-      } as Partial<TransportInfo>)
+      if (kind === 'dep-airport') {
+        update({
+          departureAirportCode: ap.iata,
+          departureAirportName: ap.name,
+          departureAirportCity: ap.city,
+          departureAirportCountry: ap.country,
+          departureLat: ap.lat,
+          departureLon: ap.lon,
+        })
+      } else {
+        update({
+          arrivalAirportCode: ap.iata,
+          arrivalAirportName: ap.name,
+          arrivalAirportCity: ap.city,
+          arrivalAirportCountry: ap.country,
+          arrivalLat: ap.lat,
+          arrivalLon: ap.lon,
+        })
+      }
     } else if (kind === 'airline') {
       const airline = value as AirlineEntry
-      update({ airlineCode: airline.code, airlineDisplayName: airline.name })
+      update({ airlineCode: airline.code, airlineDisplayName: airline.fullName })
     } else if (kind === 'line') {
       const line = value as RailLineEntry
       update({ railwayLineName: line.line, railwayCompany: line.company })
@@ -292,20 +302,101 @@ export function InfoSheet() {
           photoCountryCode: place.countryCode,
         })
       } else if (kind === 'dep-place') {
+        if (draft.mode === 'TRAIN') {
+          update({
+            departureStationName: place.name,
+            departureStationLat: place.latitude,
+            departureStationLon: place.longitude,
+            departureStationCountry: place.countryCode,
+          })
+        } else {
+          update({
+            departurePlaceName: place.name,
+            departurePlaceLat: place.latitude,
+            departurePlaceLon: place.longitude,
+            departurePlaceCountry: place.countryCode,
+          })
+        }
+      } else {
+        if (draft.mode === 'TRAIN') {
+          update({
+            arrivalStationName: place.name,
+            arrivalStationLat: place.latitude,
+            arrivalStationLon: place.longitude,
+            arrivalStationCountry: place.countryCode,
+          })
+        } else {
+          update({
+            destinationPlaceName: place.name,
+            destinationPlaceLat: place.latitude,
+            destinationPlaceLon: place.longitude,
+            destinationPlaceCountry: place.countryCode,
+          })
+        }
+      }
+    }
+    setSearchKind(null)
+  }
+
+  async function handleFreeText(kind: SearchKind, raw: string) {
+    const text = raw.trim()
+    if (!text) return
+    if (kind === 'dep-airport' || kind === 'arr-airport') {
+      const found = await findAirportByIata(text)
+      if (found) {
+        onSearchSelect(kind, found)
+        return
+      }
+      if (kind === 'dep-airport') {
         update({
-          departurePlaceName: place.name,
-          departurePlaceLat: place.latitude,
-          departurePlaceLon: place.longitude,
-          departurePlaceCountry: place.countryCode,
+          departureAirportCode: text.toUpperCase(),
+          departureAirportName: '',
+          departureAirportCity: '',
+          departureAirportCountry: '',
+          departureLat: null,
+          departureLon: null,
         })
       } else {
         update({
-          destinationPlaceName: place.name,
-          destinationPlaceLat: place.latitude,
-          destinationPlaceLon: place.longitude,
-          destinationPlaceCountry: place.countryCode,
+          arrivalAirportCode: text.toUpperCase(),
+          arrivalAirportName: '',
+          arrivalAirportCity: '',
+          arrivalAirportCountry: '',
+          arrivalLat: null,
+          arrivalLon: null,
         })
       }
+    } else if (kind === 'airline') {
+      update({ airlineCode: text.toUpperCase(), airlineDisplayName: text })
+    } else if (kind === 'line') {
+      update({ railwayLineName: text, railwayCompany: '' })
+    } else if (kind === 'dep-station' || kind === 'arr-station') {
+      const prefix = kind === 'dep-station' ? 'departureStation' : 'arrivalStation'
+      update({
+        [`${prefix}Name`]: text,
+        [`${prefix}GroupCode`]: '',
+        [`${prefix}Lat`]: null,
+        [`${prefix}Lon`]: null,
+      } as Partial<TransportInfo>)
+    } else if (kind === 'dep-place' || kind === 'dest-place') {
+      if (draft.mode === 'TRAIN') {
+        const prefix = kind === 'dep-place' ? 'departureStation' : 'arrivalStation'
+        update({
+          [`${prefix}Name`]: text,
+          [`${prefix}GroupCode`]: '',
+          [`${prefix}Lat`]: null,
+          [`${prefix}Lon`]: null,
+        } as Partial<TransportInfo>)
+      } else {
+        const prefix = kind === 'dep-place' ? 'departurePlace' : 'destinationPlace'
+        update({
+          [`${prefix}Name`]: text,
+          [`${prefix}Lat`]: null,
+          [`${prefix}Lon`]: null,
+        } as Partial<TransportInfo>)
+      }
+    } else {
+      return
     }
     setSearchKind(null)
   }
@@ -329,7 +420,7 @@ export function InfoSheet() {
         }
       >
         <div className="space-y-4 pb-4">
-          <Segmented options={modeOptions} value={draft.mode} onValueChange={(mode) => update({ mode })} />
+          <Segmented ariaLabel="透かしモード" options={modeOptions} value={draft.mode} onValueChange={(mode) => update({ mode })} />
 
           {modeHistory.length > 0 && (
             <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
@@ -357,7 +448,7 @@ export function InfoSheet() {
                   }}
                 >
                   <History className="size-3.5" />
-                  {h.mode === 'SPOT' ? h.spotLine1 : h.mode === 'AIRPLANE' ? `${h.airlineCode}${h.flightNumber}` : h.mode === 'TRAIN' ? h.railwayLineName : h.transportName}
+                  {summaryLabel(h)}
                 </Button>
               ))}
             </div>
@@ -479,18 +570,30 @@ export function InfoSheet() {
               <div className="flex items-center justify-between gap-3">
                 <p className="text-sm font-medium">日本の鉄道路線・駅DBを使用</p>
                 <Switch
+                  aria-label="日本の鉄道路線・駅DBを使用"
                   checked={draft.isDomesticJapanRail}
                   onCheckedChange={(checked) => update({ isDomesticJapanRail: checked })}
                 />
               </div>
-              <PickerField
-                label="路線名"
-                value={draft.railwayLineName}
-                placeholder="路線を検索（駅選択で自動判定も可）"
-                icon={<TrainFront className="size-4" />}
-                onClick={() => setSearchKind('line')}
-                onClear={() => update({ railwayLineName: '', railwayCompany: '' })}
-              />
+              {draft.isDomesticJapanRail ? (
+                <PickerField
+                  label="路線名"
+                  value={draft.railwayLineName}
+                  placeholder="路線を検索（駅選択で自動判定も可）"
+                  icon={<TrainFront className="size-4" />}
+                  onClick={() => setSearchKind('line')}
+                  onClear={() => update({ railwayLineName: '', railwayCompany: '' })}
+                />
+              ) : (
+                <div className="space-y-1.5">
+                  <Label htmlFor="railway-line">路線名</Label>
+                  <Input
+                    id="railway-line"
+                    value={draft.railwayLineName}
+                    onChange={(e) => update({ railwayLineName: e.target.value })}
+                  />
+                </div>
+              )}
               <PickerField
                 label="出発駅"
                 value={draft.departureStationName}
@@ -505,6 +608,9 @@ export function InfoSheet() {
                 icon={<MapPin className="size-4" />}
                 onClick={() => setSearchKind(draft.isDomesticJapanRail ? 'arr-station' : 'dest-place')}
               />
+              <p className="text-[11px] text-muted-foreground">
+                Web版の線路形状・経由路線は簡易表示です。
+              </p>
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="train-name">列車名 (任意)</Label>
@@ -612,6 +718,7 @@ export function InfoSheet() {
 
           <SectionCard title="日時・撮影地">
             <Segmented
+              ariaLabel="日時表示"
               options={[
                 { value: 'DATE_ONLY', label: '日付のみ' },
                 { value: 'DATE_AND_TIME', label: '日時' },
@@ -714,6 +821,7 @@ export function InfoSheet() {
             <div className="space-y-2">
               <p className="text-sm font-medium">撮影地ラベルの表示</p>
               <Segmented
+                ariaLabel="撮影地ラベルの表示"
                 options={[
                   { value: 'NAME', label: '地名' },
                   { value: 'COORDINATES', label: '緯度・経度' },
@@ -742,11 +850,12 @@ export function InfoSheet() {
           <SectionCard title="配置と地図">
             <p className="text-sm font-medium">テキストの基準位置</p>
             <Segmented
+              ariaLabel="テキストの基準位置"
               options={(Object.keys(CORNER_LABELS) as OverlayCorner[]).map((corner) => ({
                 value: corner,
                 label: CORNER_LABELS[corner],
               }))}
-              value={style.textCorner}
+              value={styleDraft.textCorner}
               onValueChange={(corner) => {
                 const opposite: Record<OverlayCorner, OverlayCorner> = {
                   BOTTOM_RIGHT: 'BOTTOM_LEFT',
@@ -754,19 +863,21 @@ export function InfoSheet() {
                   TOP_RIGHT: 'TOP_LEFT',
                   TOP_LEFT: 'TOP_RIGHT',
                 }
-                updateStyle({
+                setStyleDraft((s) => ({
+                  ...s,
                   textCorner: corner as OverlayCorner,
                   mapCorner: opposite[corner as OverlayCorner],
                   textFreePos: null,
                   mapFreePos: null,
-                })
+                }))
               }}
             />
             <div className="flex items-center justify-between gap-3">
               <p className="text-sm font-medium">地図透かしを表示</p>
               <Switch
-                checked={style.showMap}
-                onCheckedChange={(checked) => updateStyle({ showMap: checked })}
+                aria-label="地図透かしを表示"
+                checked={styleDraft.showMap}
+                onCheckedChange={(checked) => setStyleDraft((s) => ({ ...s, showMap: checked }))}
               />
             </div>
           </SectionCard>
@@ -776,12 +887,15 @@ export function InfoSheet() {
       <EntitySearchDialog
         kind={searchKind}
         lineFilter={draft.railwayLineName}
+        biasLat={draft.photoLat}
+        biasLon={draft.photoLon}
         onClose={() => setSearchKind(null)}
         onSelect={onSearchSelect}
+        onFreeText={(kind, text) => void handleFreeText(kind, text)}
       />
 
       <Dialog open={coordOpen} onOpenChange={setCoordOpen}>
-        <DialogContent className="max-w-sm rounded-3xl">
+        <DialogContent className="max-h-[min(90dvh,32rem)] max-w-sm overflow-y-auto rounded-3xl pb-[max(1.25rem,env(safe-area-inset-bottom))]">
           <DialogHeader>
             <DialogTitle>緯度・経度を入力</DialogTitle>
             <DialogDescription>
@@ -793,6 +907,7 @@ export function InfoSheet() {
               <Label htmlFor="coord-lat">緯度（-90〜90）</Label>
               <Input
                 id="coord-lat"
+                aria-invalid={coordError != null}
                 value={coordLat}
                 onChange={(e) => {
                   setCoordLat(e.target.value)
@@ -806,6 +921,7 @@ export function InfoSheet() {
               <Label htmlFor="coord-lon">経度（-180〜180）</Label>
               <Input
                 id="coord-lon"
+                aria-invalid={coordError != null}
                 value={coordLon}
                 onChange={(e) => {
                   setCoordLon(e.target.value)
@@ -815,7 +931,7 @@ export function InfoSheet() {
                 inputMode="text"
               />
             </div>
-            {coordError && <p className="text-xs text-destructive">{coordError}</p>}
+            {coordError && <p role="alert" className="text-xs text-destructive">{coordError}</p>}
             <div className="flex justify-end gap-2 pt-1">
               <Button variant="ghost" onClick={() => setCoordOpen(false)}>
                 キャンセル
@@ -880,11 +996,14 @@ function PickerField({
 interface EntitySearchDialogProps {
   kind: SearchKind | null
   lineFilter: string
+  biasLat: number | null
+  biasLon: number | null
   onClose: () => void
   onSelect: (kind: SearchKind, value: unknown) => void
+  onFreeText: (kind: SearchKind, text: string) => void
 }
 
-function EntitySearchDialog({ kind, lineFilter, onClose, onSelect }: EntitySearchDialogProps) {
+function EntitySearchDialog({ kind, lineFilter, biasLat, biasLon, onClose, onSelect, onFreeText }: EntitySearchDialogProps) {
   const isMobile = useIsMobile()
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(false)
@@ -892,19 +1011,22 @@ function EntitySearchDialog({ kind, lineFilter, onClose, onSelect }: EntitySearc
   const [stations, setStations] = useState<StationRecord[]>([])
   const [lines, setLines] = useState<RailLineEntry[]>([])
   const [places, setPlaces] = useState<PlaceCandidate[]>([])
-  const [airlines, setAirlines] = useState<AirlineEntry[]>(AIRLINES)
+  const [airlines, setAirlines] = useState<AirlineEntry[]>([])
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!kind) return
     setQuery('')
+    setError(null)
   }, [kind])
 
   useEffect(() => {
     if (!kind) return
     let cancelled = false
-    setLoading(true)
     const timer = setTimeout(() => {
       const run = async () => {
+        setLoading(true)
+        setError(null)
         try {
           if (kind === 'dep-airport' || kind === 'arr-airport') {
             const res = await searchAirports(query)
@@ -916,29 +1038,28 @@ function EntitySearchDialog({ kind, lineFilter, onClose, onSelect }: EntitySearc
             const res = await searchStations(query, lineFilter)
             if (!cancelled) setStations(res)
           } else if (kind === 'photo-place' || kind === 'dep-place' || kind === 'dest-place') {
-            const res = await searchPlaces(query)
+            const res = await searchPlaces(query, biasLat, biasLon)
             if (!cancelled) setPlaces(res)
           } else {
-            const q = query.trim().toUpperCase()
-            if (!cancelled) {
-              setAirlines(
-                q
-                  ? AIRLINES.filter((a) => a.code.includes(q) || a.name.toUpperCase().includes(q))
-                  : AIRLINES,
-              )
-            }
+            const res = await searchAirlines(query)
+            if (!cancelled) setAirlines(res)
+          }
+        } catch (err) {
+          if (!cancelled) {
+            console.error(err)
+            setError('検索に失敗しました。通信状態を確認して再度お試しください。')
           }
         } finally {
           if (!cancelled) setLoading(false)
         }
       }
       void run()
-    }, query ? 140 : 0)
+    }, query ? 350 : 0)
     return () => {
       cancelled = true
       clearTimeout(timer)
     }
-  }, [kind, query, lineFilter])
+  }, [kind, query, lineFilter, biasLat, biasLon])
 
   const title = kind ? SEARCH_TITLES[kind] : ''
 
@@ -951,26 +1072,57 @@ function EntitySearchDialog({ kind, lineFilter, onClose, onSelect }: EntitySearc
             : 'max-w-md rounded-3xl p-0'
         }
       >
-        <DialogHeader className="border-b border-border/60 px-5 py-4">
+        <DialogHeader className="min-w-0 border-b border-border/60 px-5 py-4">
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription className="sr-only">候補を検索して選択します</DialogDescription>
           <div className="relative mt-2">
             <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
+              aria-label="検索語"
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && query.trim() && kind && kind !== 'photo-place') {
+                  e.preventDefault()
+                  onFreeText(kind, query.trim())
+                }
+              }}
               placeholder="名前・コードで絞り込み"
-              className="pl-9"
+              className="pr-9 pl-9"
             />
+            {query && (
+              <button
+                type="button"
+                className="absolute top-1/2 right-2 flex size-6 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
+                onClick={() => setQuery('')}
+                aria-label="検索語をクリア"
+              >
+                <X className="size-3.5" />
+              </button>
+            )}
           </div>
+          {query.trim() && kind && kind !== 'photo-place' && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-1 h-8 max-w-full self-end truncate text-xs"
+              title={`「${query.trim()}」を直接入力`}
+              onClick={() => onFreeText(kind, query.trim())}
+            >
+              直接入力
+            </Button>
+          )}
         </DialogHeader>
         <ScrollArea className="h-[min(60dvh,26rem)]">
           <div className="p-2">
             {loading && (
-              <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
+              <div role="status" aria-live="polite" className="flex items-center justify-center gap-2 py-3 text-sm text-muted-foreground">
                 <Loader2 className="size-4 animate-spin" /> 検索中…
               </div>
+            )}
+            {error && (
+              <p role="alert" className="px-3 py-4 text-center text-sm text-destructive">{error}</p>
             )}
             {!loading && kind === 'airline' &&
               airlines.map((a) => (
@@ -982,7 +1134,7 @@ function EntitySearchDialog({ kind, lineFilter, onClose, onSelect }: EntitySearc
                 >
                   <Plane className="size-4 text-primary" />
                   <span className="text-sm font-semibold">{a.code}</span>
-                  <span className="truncate text-sm text-muted-foreground">{a.name}</span>
+                  <span className="truncate text-sm text-muted-foreground">{a.shortName} · {a.fullName}</span>
                 </button>
               ))}
             {!loading && (kind === 'dep-airport' || kind === 'arr-airport') &&
@@ -1042,7 +1194,7 @@ function EntitySearchDialog({ kind, lineFilter, onClose, onSelect }: EntitySearc
                   </span>
                 </button>
               ))}
-            {!loading && !hasResults(kind, airports, stations, lines, places, airlines) && (
+            {!loading && !error && !hasResults(kind, airports, stations, lines, places, airlines) && (
               <p className="px-3 py-8 text-center text-sm text-muted-foreground">
                 候補が見つかりません。別のキーワードで検索してください。
               </p>

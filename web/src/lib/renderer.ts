@@ -117,13 +117,26 @@ function focusPoints(info: TransportInfo): Coord[] {
   const end = endCoord(info)
   const cur = currentGpsCoord(info)
   const points: Coord[] = []
+  if (info.mode === 'AIRPLANE' && start && end) {
+    points.push(start, ...greatCircle(start.lat, start.lon, end.lat, end.lon, 64), end)
+    return points
+  }
   if (info.mode !== 'SPOT') {
     for (const polyline of info.routePolylines) points.push(...polyline)
     if (start) points.push(start)
     if (end) points.push(end)
+    if (!info.routePolylines.length && start && end) {
+      points.push({ lon: (start.lon + end.lon) / 2, lat: Math.max(start.lat, end.lat) + 0.18 })
+    }
   }
   if (!points.length && cur) points.push(cur)
   return points
+}
+
+function anchorPoints(info: TransportInfo): Coord[] {
+  return [startCoord(info), endCoord(info), currentGpsCoord(info)].filter(
+    (p): p is Coord => p != null,
+  )
 }
 
 function singlePointBounds(
@@ -332,7 +345,7 @@ function fontFamily(key: string): string {
     case 'kaisei-tokumin':
       return '"Kaisei Tokumin", serif'
     case 'artemis':
-      return '"Outfit", system-ui, sans-serif'
+      return '"Artemis Inter", "Outfit", system-ui, sans-serif'
     case 'default':
       return 'system-ui, sans-serif'
     default:
@@ -358,7 +371,13 @@ function luminance(hex: string): number {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b
 }
 
-function buildRows(ctx: CanvasRenderingContext2D, info: TransportInfo, style: OverlayStyle, unit: number): Row[] {
+function buildRows(
+  ctx: CanvasRenderingContext2D,
+  info: TransportInfo,
+  style: OverlayStyle,
+  unit: number,
+  W: number,
+): Row[] {
   const rows: Row[] = []
   const u = unit * style.textScale
   const measure = (text: string, size: number, bold = true) => {
@@ -398,6 +417,10 @@ function buildRows(ctx: CanvasRenderingContext2D, info: TransportInfo, style: Ov
       const gap = 15 * u
       const w = measure(dep, size) + gap + iconSize + gap + measure(arr, size)
       rows.push({ kind: 'iata', dep, arr, size, iconSize, gap, width: w, height: 62 * u })
+    } else if (dep || arr) {
+      const only = dep || arr
+      const size = 52 * u
+      rows.push({ kind: 'simple', text: only, size, alpha: 1, width: measure(only, size), height: 62 * u })
     }
     if (info.departureAirportName.trim()) {
       const text = info.departureAirportName.trim()
@@ -440,13 +463,13 @@ function buildRows(ctx: CanvasRenderingContext2D, info: TransportInfo, style: Ov
         rows.push({ kind: 'simple', text, size: 45 * u, alpha: 1, width: measure(text, 45 * u), height: 52 * u })
       }
     }
-    addArrowRow(rows, info.departureStationName, info.arrivalStationName, u, measure, 46 * u)
+    addArrowRow(rows, info.departureStationName, info.arrivalStationName, u, measure, 46 * u, W)
   } else if (info.mode === 'OTHER') {
     if (info.transportName.trim()) {
       const text = info.transportName.trim()
       rows.push({ kind: 'simple', text, size: 46 * u, alpha: 1, width: measure(text, 46 * u), height: 54 * u })
     }
-    addArrowRow(rows, info.departurePlaceName, info.destinationPlaceName, u, measure, 46 * u)
+    addArrowRow(rows, info.departurePlaceName, info.destinationPlaceName, u, measure, 46 * u, W)
   } else {
     for (const raw of [info.spotLine1, info.spotLine2, info.spotLine3]) {
       const text = raw.trim()
@@ -501,6 +524,7 @@ function addArrowRow(
   u: number,
   measure: (text: string, size: number, bold?: boolean) => number,
   size: number,
+  W: number,
 ) {
   const dep = depRaw.trim()
   const arr = arrRaw.trim()
@@ -512,6 +536,21 @@ function addArrowRow(
     rows.push({ kind: 'simple', text, size, alpha: 1, width: measure(text, size), height: 54 * u })
     return
   }
+  const singleWidth = measure(dep, size) + gap + arrowWidth + gap + measure(arr, size)
+  if (singleWidth > W * 0.5) {
+    rows.push({ kind: 'simple', text: dep, size, alpha: 1, width: measure(dep, size), height: 52 * u })
+    rows.push({
+      kind: 'arrow',
+      left: null,
+      right: arr,
+      size,
+      arrowWidth,
+      gap,
+      width: arrowWidth + gap + measure(arr, size),
+      height: 54 * u,
+    })
+    return
+  }
   rows.push({
     kind: 'arrow',
     left: dep,
@@ -519,7 +558,7 @@ function addArrowRow(
     size,
     arrowWidth,
     gap,
-    width: measure(dep, size) + gap + arrowWidth + gap + measure(arr, size),
+    width: singleWidth,
     height: 54 * u,
   })
 }
@@ -619,12 +658,20 @@ function renderMap(
   const end = info.mode === 'SPOT' ? null : endCoord(info)
   const rawCur = currentGpsCoord(info)
 
-  const allJapan = points.every((p) => isInJapan(p.lon, p.lat))
-  const allUs = points.every((p) => isInUs(p.lon, p.lat))
+  const anchors = anchorPoints(info)
+  const selectionPoints = anchors.length ? anchors : points
+  const allJapan = selectionPoints.every(
+    (p) => findEnclosingRing(p.lon, p.lat, datasets.japanPrefectures) != null,
+  )
+  const allUs = selectionPoints.every(
+    (p) => findEnclosingRing(p.lon, p.lat, datasets.usStates) != null,
+  )
   const primary = allJapan ? datasets.japanCoast : allUs ? datasets.usStates : datasets.world
   const borders = allJapan ? datasets.japanPrefectures : []
   const water = allJapan ? datasets.japanWater : []
-  const context = allJapan ? datasets.world : []
+  // Japan's coast + prefectures are drawn on their own; drawing the coarse world
+  // underneath ghosts neighboring coastlines at small scales.
+  const context = allJapan ? [] : []
 
   const centerRef = points[0].lon
   const normalized = points.map((p) => normalizeLon(p.lon, centerRef))
@@ -672,7 +719,6 @@ function renderMap(
   const centerY = (minY + maxY) / 2
   const spanX = Math.max(0.008, maxX - minX)
   const spanY = Math.max(0.008, maxY - minY)
-  const lonSpanDeg = spanX / toRad
 
   const landscape = width > height
   const minBound = 0.03 * width * 0.4
@@ -734,6 +780,11 @@ function renderMap(
   roundRectPath(ctx, rect.x, rect.y, rect.width, rect.height, Math.min(18, boxW * 0.06))
   ctx.clip()
 
+  const viewCenterLon = centerLon - (style.mapInternalPanX * spanX / zoom) / toRad
+  const cullHalf = ((spanX / zoom) / toRad) * 1.25 + 6
+  const viewMinLon = viewCenterLon - cullHalf
+  const viewMaxLon = viewCenterLon + cullHalf
+
   const drawRings = (
     rings: Ring[],
     lineWidth: number,
@@ -743,13 +794,13 @@ function renderMap(
   ) => {
     ctx.lineJoin = 'round'
     ctx.lineCap = 'round'
+    const path = new Path2D()
     for (const ring of rings) {
       const b = ringBounds(ring)
       if (!b) continue
-      const ringMin = normalizeLon(b.minLon, centerLon)
-      const ringMax = normalizeLon(b.maxLon, centerLon)
-      if (ringMax < minLon - lonSpanDeg || ringMin > maxLon + lonSpanDeg) continue
-      ctx.beginPath()
+      const ringMin = normalizeLon(b.minLon, viewCenterLon)
+      const ringMax = normalizeLon(b.maxLon, viewCenterLon)
+      if (ringMax < viewMinLon || ringMin > viewMaxLon) continue
       let started = false
       let prevX = 0
       for (let i = 0; i < ring.length; i++) {
@@ -757,26 +808,26 @@ function renderMap(
         const x = projectX(lon)
         const y = projectY(lat)
         if (!started) {
-          ctx.moveTo(x, y)
+          path.moveTo(x, y)
           started = true
         } else if (Math.abs(x - prevX) > rect.width * 0.5) {
-          ctx.moveTo(x, y)
+          path.moveTo(x, y)
         } else {
-          ctx.lineTo(x, y)
+          path.lineTo(x, y)
         }
         prevX = x
       }
-      if (halo) {
-        ctx.strokeStyle = luminance(color) < 0.5 ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.55)'
-        ctx.lineWidth = lineWidth * 1.65
-        ctx.globalAlpha = alpha
-        ctx.stroke()
-      }
-      ctx.strokeStyle = color
-      ctx.lineWidth = lineWidth
-      ctx.globalAlpha = alpha
-      ctx.stroke()
     }
+    if (halo) {
+      ctx.strokeStyle = luminance(color) < 0.5 ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.55)'
+      ctx.lineWidth = lineWidth * 1.65
+      ctx.globalAlpha = alpha
+      ctx.stroke(path)
+    }
+    ctx.strokeStyle = color
+    ctx.lineWidth = lineWidth
+    ctx.globalAlpha = alpha
+    ctx.stroke(path)
     ctx.globalAlpha = 1
   }
 
@@ -792,20 +843,25 @@ function renderMap(
       drawRings(borders, Math.max(1.1, 0.004 * boxW), borderColor, true)
     }
     if (water.length) {
-      ctx.strokeStyle = withAlpha(borderColor, 0.75)
-      ctx.lineWidth = Math.max(0.9, 0.004 * boxW)
+      const path = new Path2D()
       for (const lake of water) {
-        ctx.beginPath()
+        const b = ringBounds(lake)
+        if (!b) continue
+        const ringMin = normalizeLon(b.minLon, viewCenterLon)
+        const ringMax = normalizeLon(b.maxLon, viewCenterLon)
+        if (ringMax < viewMinLon || ringMin > viewMaxLon) continue
         for (let i = 0; i < lake.length; i++) {
           const [lon, lat] = lake[i]
           const x = projectX(lon)
           const y = projectY(lat)
-          if (i === 0) ctx.moveTo(x, y)
-          else ctx.lineTo(x, y)
+          if (i === 0) path.moveTo(x, y)
+          else path.lineTo(x, y)
         }
-        ctx.closePath()
-        ctx.stroke()
+        path.closePath()
       }
+      ctx.strokeStyle = withAlpha(borderColor, 0.75)
+      ctx.lineWidth = Math.max(0.9, 0.004 * boxW)
+      ctx.stroke(path)
     }
   } else {
     drawRings(primary, Math.max(1.1, 0.005 * boxW), borderColor, true)
@@ -821,11 +877,13 @@ function renderMap(
     for (const poly of info.routePolylines) {
       if (poly.length < 2) continue
       ctx.beginPath()
+      let prevX = 0
       poly.forEach((p, i) => {
         const x = projectX(p.lon)
         const y = projectY(p.lat)
-        if (i === 0) ctx.moveTo(x, y)
+        if (i === 0 || Math.abs(x - prevX) > rect.width * 0.5) ctx.moveTo(x, y)
         else ctx.lineTo(x, y)
+        prevX = x
       })
       ctx.stroke()
     }
@@ -834,11 +892,13 @@ function renderMap(
     for (const poly of info.routePolylines) {
       if (poly.length < 2) continue
       ctx.beginPath()
+      let prevX = 0
       poly.forEach((p, i) => {
         const x = projectX(p.lon)
         const y = projectY(p.lat)
-        if (i === 0) ctx.moveTo(x, y)
+        if (i === 0 || Math.abs(x - prevX) > rect.width * 0.5) ctx.moveTo(x, y)
         else ctx.lineTo(x, y)
+        prevX = x
       })
       ctx.stroke()
     }
@@ -852,11 +912,13 @@ function renderMap(
             end,
           ]
     ctx.beginPath()
+    let arcPrevX = 0
     arc.forEach((p, i) => {
       const x = projectX(p.lon)
       const y = projectY(p.lat)
-      if (i === 0) ctx.moveTo(x, y)
+      if (i === 0 || Math.abs(x - arcPrevX) > rect.width * 0.5) ctx.moveTo(x, y)
       else ctx.lineTo(x, y)
+      arcPrevX = x
     })
     ctx.setLineDash([routeStroke * 0.85, routeStroke * 2.15])
     ctx.strokeStyle = withAlpha(routeColor, 0.45)
@@ -927,7 +989,7 @@ export function renderOverlay(options: RenderOptions): OverlayLayout {
   ctx.clearRect(0, 0, width, height)
   const map = style.showMap ? renderMap(ctx, width, height, info, style, datasets) : null
 
-  const rows = buildRows(ctx, info, style, unit)
+  const rows = buildRows(ctx, info, style, unit, width)
   if (!rows.length) {
     ctx.restore()
     return { textBounds: { x: textMargin, y: textMargin, width: 100, height: 50 }, mapBounds: map?.rect ?? null }
