@@ -1,0 +1,49 @@
+{
+  "name": "sukashi-map-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "oxlint",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "build:wasm": "cd wasm/geo-core && wasm-pack build --target web --out-dir pkg --release && rm -rf ../../src/wasm/geo && cp -r pkg ../../src/wasm/geo && rm -f ../../src/wasm/geo/.gitignore",
+    "typecheck": "tsc -b"
+  },
+  "dependencies": {
+    "@fontsource-variable/geist": "^5.3.0",
+    "@fontsource/barlow": "^5.3.0",
+    "@fontsource/dm-sans": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "@fontsource/kaisei-tokumin": "^5.3.1",
+    "@fontsource/outfit": "^5.3.0",
+    "@tailwindcss/vite": "^4.3.5",
+    "class-variance-authority": "^0.7.1",
+    "cmdk": "^1.1.1",
+    "cn": "^0.5.2",
+    "exifr": "^7.1.3",
+    "lucide-react": "^1.75.0",
+    "next-themes": "^0.4.6",
+    "radix-ui": "^1.8.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "shadcn": "^4.23.0",
+    "sonner": "^2.0.8",
+    "tailwindcss": "^4.3.5",
+    "tw-animate-css": "^1.4.0",
+    "zustand": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "oxlint": "^1.90.0",
+    "playwright-core": "^1.65.1",
+    "typescript": "~7.0.2",
+    "vite": "^8.3.6",
+    "vitest": "^5.1.1"
+  }
+}

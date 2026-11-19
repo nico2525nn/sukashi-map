@@ -1,0 +1,5 @@
+node_modules/
+dist/
+.tmp-*
+wasm/geo-core/target/
+wasm/geo-core/pkg/

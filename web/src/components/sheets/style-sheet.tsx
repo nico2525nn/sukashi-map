@@ -1,0 +1,302 @@
+import { useState } from 'react'
+import { Check, Pipette, Plus, RotateCcw, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
+import { SectionCard } from '@/components/section-card'
+import { Segmented } from '@/components/segmented'
+import { SheetShell } from '@/components/sheets/sheet-shell'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
+import { useAppStore } from '@/store/app-store'
+import { useUiStore } from '@/store/ui-store'
+import {
+  COLOR_SWATCHES,
+  CORNER_LABELS,
+  FONT_OPTIONS,
+  type OverlayCorner,
+} from '@/types'
+
+export function StyleSheet() {
+  const sheet = useUiStore((s) => s.sheet)
+  const closeSheet = useUiStore((s) => s.closeSheet)
+  const open = sheet === 'style'
+  const style = useAppStore((s) => s.style)
+  const updateStyle = useAppStore((s) => s.updateStyle)
+  const resetLayout = useAppStore((s) => s.resetLayout)
+  const presets = useAppStore((s) => s.presets)
+  const savePreset = useAppStore((s) => s.savePreset)
+  const deletePreset = useAppStore((s) => s.deletePreset)
+  const [presetOpen, setPresetOpen] = useState(false)
+  const [presetName, setPresetName] = useState('')
+
+  return (
+    <>
+      <SheetShell
+        open={open}
+        onOpenChange={(next) => (next ? undefined : closeSheet())}
+        title="スタイル"
+        description="文字・ルート・地図の見た目"
+      >
+        <div className="space-y-4 pb-4">
+          <SectionCard title="フォント">
+            <Select
+              value={style.font}
+              onValueChange={(value) => {
+                const family = FONT_OPTIONS.find((f) => f.value === value)?.family ?? 'system-ui'
+                updateStyle({ font: value })
+                void document.fonts?.load(`700 40px ${family}`).then(() => updateStyle({ font: value }))
+              }}
+            >
+              <SelectTrigger className="w-full rounded-xl">
+                <SelectValue placeholder="フォントを選択" />
+              </SelectTrigger>
+              <SelectContent>
+                {FONT_OPTIONS.map((font) => (
+                  <SelectItem key={font.value} value={font.value}>
+                    <span style={{ fontFamily: font.family }}>{font.label}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </SectionCard>
+
+          <SectionCard title="カラー">
+            <ColorField
+              label="文字色"
+              value={style.textColor}
+              onChange={(textColor) => updateStyle({ textColor })}
+            />
+            <ColorField
+              label="ルート線色"
+              value={style.routeColor}
+              onChange={(routeColor) => updateStyle({ routeColor })}
+            />
+            <ColorField
+              label="海岸線色"
+              value={style.borderColor}
+              onChange={(borderColor) => updateStyle({ borderColor })}
+            />
+          </SectionCard>
+
+          <SectionCard title="表示">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-medium">地図透かしを表示</p>
+              <Switch
+                checked={style.showMap}
+                onCheckedChange={(showMap) => updateStyle({ showMap })}
+              />
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-medium">出発地の飛行機バッジ</p>
+              <Switch
+                checked={style.showOriginPlaneBadge}
+                onCheckedChange={(showOriginPlaneBadge) => updateStyle({ showOriginPlaneBadge })}
+              />
+            </div>
+          </SectionCard>
+
+          <SectionCard title="配置">
+            <p className="text-sm font-medium">テキストの基準位置</p>
+            <Segmented
+              options={(Object.keys(CORNER_LABELS) as OverlayCorner[]).map((corner) => ({
+                value: corner,
+                label: CORNER_LABELS[corner],
+              }))}
+              value={style.textCorner}
+              onValueChange={(corner) => {
+                const opposite: Record<OverlayCorner, OverlayCorner> = {
+                  BOTTOM_RIGHT: 'BOTTOM_LEFT',
+                  BOTTOM_LEFT: 'BOTTOM_RIGHT',
+                  TOP_RIGHT: 'TOP_LEFT',
+                  TOP_LEFT: 'TOP_RIGHT',
+                }
+                updateStyle({
+                  textCorner: corner,
+                  mapCorner: opposite[corner],
+                  textFreePos: null,
+                  mapFreePos: null,
+                })
+              }}
+            />
+            <Button variant="outline" className="w-full rounded-xl" onClick={resetLayout}>
+              <RotateCcw className="size-4" />
+              位置・サイズをリセット
+            </Button>
+          </SectionCard>
+
+          <SectionCard
+            title="プリセット"
+            trailing={
+              <Button
+                variant="ghost"
+                size="sm"
+                className="rounded-full"
+                onClick={() => {
+                  setPresetName('')
+                  setPresetOpen(true)
+                }}
+              >
+                <Plus className="size-4" />
+                保存
+              </Button>
+            }
+          >
+            <div className="grid grid-cols-2 gap-2">
+              {presets.map((preset) => {
+                const active = JSON.stringify(preset.style) === JSON.stringify(style)
+                return (
+                  <div
+                    key={preset.id}
+                    className="relative rounded-2xl border border-border/70 bg-background/60 p-2.5"
+                  >
+                    <button
+                      type="button"
+                      className="w-full text-left"
+                      onClick={() => updateStyle(preset.style)}
+                    >
+                      <span
+                        className="mb-1.5 block text-sm font-semibold"
+                        style={{ color: preset.style.textColor }}
+                      >
+                        {preset.name}
+                      </span>
+                      <span className="flex gap-1">
+                        <i className="size-3 rounded-full" style={{ background: preset.style.textColor }} />
+                        <i className="size-3 rounded-full" style={{ background: preset.style.routeColor }} />
+                        <i className="size-3 rounded-full" style={{ background: preset.style.borderColor }} />
+                      </span>
+                    </button>
+                    {active && <Check className="absolute top-2 right-2 size-4 text-primary" />}
+                    {preset.id.startsWith('custom_') && (
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        className="absolute right-1 bottom-1 rounded-full text-muted-foreground"
+                        onClick={() => deletePreset(preset.id)}
+                        aria-label={`${preset.name}を削除`}
+                      >
+                        <Trash2 className="size-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </SectionCard>
+        </div>
+      </SheetShell>
+
+      <Dialog open={presetOpen} onOpenChange={setPresetOpen}>
+        <DialogContent className="max-w-sm rounded-3xl">
+          <DialogHeader>
+            <DialogTitle>プリセットを保存</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="preset-name">名前</Label>
+              <Input
+                id="preset-name"
+                value={presetName}
+                onChange={(e) => setPresetName(e.target.value)}
+                placeholder="My Preset"
+                autoFocus
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setPresetOpen(false)}>
+                キャンセル
+              </Button>
+              <Button
+                onClick={() => {
+                  savePreset(presetName)
+                  setPresetOpen(false)
+                  toast.success('プリセットを保存しました')
+                }}
+              >
+                保存
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  )
+}
+
+function ColorField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+}) {
+  async function pickFromScreen() {
+    const EyeDropperCtor = (
+      window as unknown as { EyeDropper?: new () => { open: () => Promise<{ sRGBHex: string }> } }
+    ).EyeDropper
+    if (!EyeDropperCtor) {
+      toast.error('このブラウザはスポイトに対応していません')
+      return
+    }
+    try {
+      const result = await new EyeDropperCtor().open()
+      onChange(result.sRGBHex)
+    } catch {
+      // User cancelled.
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-medium">{label}</p>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            className="size-6 rounded-full border border-border"
+            style={{ background: value }}
+            aria-label={`${label}のスポイト`}
+            onClick={() => void pickFromScreen()}
+          >
+            <Pipette className="mx-auto size-3 text-white mix-blend-difference" />
+          </button>
+          <input
+            type="color"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            className="size-6 cursor-pointer rounded-full border-0 bg-transparent p-0"
+            aria-label={`${label}を選択`}
+          />
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {COLOR_SWATCHES.map((swatch) => (
+          <button
+            key={swatch}
+            type="button"
+            className={`size-7 rounded-full border ${value.toLowerCase() === swatch ? 'ring-2 ring-primary ring-offset-2 ring-offset-card' : 'border-border/70'}`}
+            style={{ background: swatch }}
+            onClick={() => onChange(swatch)}
+            aria-label={`${label} ${swatch}`}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}

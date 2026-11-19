@@ -1,0 +1,15 @@
+{
+  "name": "geo-core",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "geo_core_bg.wasm",
+    "geo_core.js",
+    "geo_core.d.ts"
+  ],
+  "main": "geo_core.js",
+  "types": "geo_core.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
