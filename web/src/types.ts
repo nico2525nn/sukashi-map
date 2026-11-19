@@ -133,6 +133,10 @@ export interface OverlayStyle {
   textFreePos: { x: number; y: number } | null
   mapFreePos: { x: number; y: number } | null
   textScale: number
+  titleScale: number
+  subtitleScale: number
+  locationScale: number
+  dateScale: number
   mapBoxScale: number
   mapInternalZoom: number
   mapInternalPanX: number
@@ -300,10 +304,18 @@ export const defaultOverlayStyle: OverlayStyle = {
   textFreePos: null,
   mapFreePos: null,
   textScale: 1,
+  titleScale: 1,
+  subtitleScale: 1,
+  locationScale: 1,
+  dateScale: 1,
   mapBoxScale: 1,
   mapInternalZoom: 1,
   mapInternalPanX: 0,
   mapInternalPanY: 0,
+}
+
+export function normalizeOverlayStyle(style?: Partial<OverlayStyle> | null): OverlayStyle {
+  return { ...defaultOverlayStyle, ...style }
 }
 
 export const defaultCropFrame: CropFrameSettings = {

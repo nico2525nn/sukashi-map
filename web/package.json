@@ -11,7 +11,8 @@
     "test": "vitest run",
     "build:wasm": "cd wasm/geo-core && wasm-pack build --target web --out-dir pkg --release && rm -rf ../../src/wasm/geo && cp -r pkg ../../src/wasm/geo && rm -f ../../src/wasm/geo/.gitignore",
     "typecheck": "tsc -b",
-    "build:pages": "GITHUB_ACTIONS=true tsc -b && GITHUB_ACTIONS=true vite build"
+    "build:pages": "GITHUB_ACTIONS=true tsc -b && GITHUB_ACTIONS=true vite build",
+    "audit:m3": "node scripts/audit-m3.mjs"
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.3.0",

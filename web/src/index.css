@@ -39,13 +39,13 @@
     --color-card: var(--card);
     --color-foreground: var(--foreground);
     --color-background: var(--background);
-    --radius-sm: calc(var(--radius) * 0.6);
-    --radius-md: calc(var(--radius) * 0.8);
-    --radius-lg: var(--radius);
-    --radius-xl: calc(var(--radius) * 1.4);
-    --radius-2xl: calc(var(--radius) * 1.8);
-    --radius-3xl: calc(var(--radius) * 2.2);
-    --radius-4xl: calc(var(--radius) * 2.6);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --radius-2xl: 24px;
+    --radius-3xl: 28px;
+    --radius-4xl: 32px;
 }
 
 :root {
@@ -211,9 +211,63 @@
   }
 }
 
+[data-slot='select-item'],
+[data-slot='dropdown-menu-item'] {
+  min-height: 40px;
+}
+
+input[type='color'].color-swatch {
+  appearance: none;
+  overflow: hidden;
+  padding: 0;
+  background: transparent;
+}
+input[type='color'].color-swatch::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+input[type='color'].color-swatch::-webkit-color-swatch {
+  border: 0;
+  border-radius: 9999px;
+}
+input[type='color'].color-swatch::-moz-color-swatch {
+  border: 0;
+  border-radius: 9999px;
+}
+
+.safe-x {
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+@media (min-width: 640px) {
+  input[type='color'].color-swatch {
+  appearance: none;
+  overflow: hidden;
+  padding: 0;
+  background: transparent;
+}
+input[type='color'].color-swatch::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+input[type='color'].color-swatch::-webkit-color-swatch {
+  border: 0;
+  border-radius: 9999px;
+}
+input[type='color'].color-swatch::-moz-color-swatch {
+  border: 0;
+  border-radius: 9999px;
+}
+
+.safe-x {
+    padding-left: max(1.5rem, env(safe-area-inset-left));
+    padding-right: max(1.5rem, env(safe-area-inset-right));
+  }
+}
+
 @media (pointer: coarse) {
   button:not([role='switch']),
   [role='button']:not([role='switch']) {
+    min-width: 44px;
     min-height: 44px;
   }
   input,
@@ -222,6 +276,10 @@
     min-height: 44px;
   }
   [data-slot='slider-thumb']::after {
-    inset: -12px;
+    inset: -16px;
+  }
+  [data-slot='select-item'],
+  [data-slot='dropdown-menu-item'] {
+    min-height: 44px;
   }
 }

@@ -25,11 +25,11 @@ export class ErrorBoundary extends Component<Props, State> {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-background p-6">
         <div className="w-full max-w-md rounded-3xl border border-border/70 bg-card p-6 text-center shadow-xl">
-          <h1 className="text-lg font-bold">問題が発生しました</h1>
+          <h1 className="text-[22px] leading-7 font-bold">問題が発生しました</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             ページを再読み込みしてください。画像はブラウザ内に留まっており、アップロードされていません。
           </p>
-          <pre className="mt-3 max-h-32 overflow-auto rounded-xl bg-muted p-3 text-left text-[11px] text-muted-foreground">
+          <pre className="mt-3 max-h-32 overflow-auto rounded-xl bg-muted p-3 text-left text-xs text-muted-foreground">
             {this.state.message}
           </pre>
           <button

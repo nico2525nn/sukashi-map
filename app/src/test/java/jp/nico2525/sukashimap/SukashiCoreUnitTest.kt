@@ -7,12 +7,14 @@ import jp.nico2525.sukashimap.model.Coord
 import jp.nico2525.sukashimap.model.CropAspectPreset
 import jp.nico2525.sukashimap.model.CropFrameSettings
 import jp.nico2525.sukashimap.model.GeoCoordinate
+import jp.nico2525.sukashimap.model.OverlayStyle
 import jp.nico2525.sukashimap.model.TransportInfo
 import jp.nico2525.sukashimap.render.MapProjectionEngine
 import jp.nico2525.sukashimap.render.ProjectionKind
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import kotlinx.serialization.json.Json
 import org.junit.Test
 import kotlin.math.abs
 import kotlin.math.sin
@@ -154,6 +156,19 @@ class SukashiCoreUnitTest {
         assertEquals(Coord(139.7022, 35.6585), info.currentGpsCoord())
         assertEquals(null, info.startCoord())
         assertEquals(null, info.endCoord())
+    }
+
+    @Test
+    fun legacyOverlayStyleJsonDecodesElementScalesAtOne() {
+        val style = Json.decodeFromString<OverlayStyle>(
+            """{"font":"BARLOW","textScale":1.4,"mapBoxScale":0.8}"""
+        )
+        assertEquals(1.4f, style.textScale, 1e-6f)
+        assertEquals(0.8f, style.mapBoxScale, 1e-6f)
+        assertEquals(1f, style.titleScale, 1e-6f)
+        assertEquals(1f, style.subtitleScale, 1e-6f)
+        assertEquals(1f, style.locationScale, 1e-6f)
+        assertEquals(1f, style.dateScale, 1e-6f)
     }
 
     @Test

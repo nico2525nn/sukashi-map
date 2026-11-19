@@ -71,6 +71,7 @@ interface IataRow extends RowBase {
   size: number
   iconSize: number
   gap: number
+  unit: number
 }
 
 interface ArrowRow extends RowBase {
@@ -80,6 +81,7 @@ interface ArrowRow extends RowBase {
   size: number
   arrowWidth: number
   gap: number
+  unit: number
 }
 
 interface AirportRow extends RowBase {
@@ -87,6 +89,7 @@ interface AirportRow extends RowBase {
   name: string
   withPlane: boolean
   size: number
+  unit: number
 }
 
 interface LocationRow extends RowBase {
@@ -94,6 +97,7 @@ interface LocationRow extends RowBase {
   text: string
   size: number
   pinSize: number
+  unit: number
 }
 
 type Row = SimpleRow | DualRow | IataRow | ArrowRow | AirportRow | LocationRow
@@ -371,7 +375,31 @@ function luminance(hex: string): number {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b
 }
 
-function buildRows(
+const SCALE_MIN = 0.5
+const SCALE_MAX = 2.5
+
+function clampScale(value: number): number {
+  return clampFinite(value, SCALE_MIN, SCALE_MAX, 1)
+}
+
+function clampFinite(value: number, min: number, max: number, fallback: number): number {
+  if (!Number.isFinite(value)) return fallback
+  return Math.min(max, Math.max(min, value))
+}
+
+/** Resolves the global and per-element percentage controls into canvas units. */
+export function overlayUnits(style: OverlayStyle, unit: number) {
+  const master = unit * clampScale(style.textScale)
+  return {
+    master,
+    title: master * clampScale(style.titleScale),
+    subtitle: master * clampScale(style.subtitleScale),
+    location: master * clampScale(style.locationScale),
+    date: master * clampScale(style.dateScale),
+  }
+}
+
+export function buildRows(
   ctx: CanvasRenderingContext2D,
   info: TransportInfo,
   style: OverlayStyle,
@@ -379,7 +407,7 @@ function buildRows(
   W: number,
 ): Row[] {
   const rows: Row[] = []
-  const u = unit * style.textScale
+  const { title: titleU, subtitle: subU, location: locU, date: dateU } = overlayUnits(style, unit)
   const measure = (text: string, size: number, bold = true) => {
     ctx.save()
     ctx.font = `${bold ? 700 : 400} ${size}px ${fontFamily(style.font)}`
@@ -392,39 +420,71 @@ function buildRows(
     const code = `${info.airlineCode.trim()} ${info.flightNumber.trim()}`.trim()
     if (code || info.registrationNumber) {
       if (code && info.registrationNumber) {
-        const p = measure(code, 46 * u)
-        const s = measure(info.registrationNumber, 39 * u)
+        const rowU = Math.max(titleU, subU)
+        const p = measure(code, 46 * titleU)
+        const s = measure(info.registrationNumber, 39 * subU)
         rows.push({
           kind: 'dual',
           primary: code,
           secondary: info.registrationNumber,
-          primarySize: 46 * u,
-          secondarySize: 39 * u,
-          gap: 12 * u,
-          width: p + 12 * u + s,
-          height: 54 * u,
+          primarySize: 46 * titleU,
+          secondarySize: 39 * subU,
+          gap: 12 * rowU,
+          width: p + 12 * rowU + s,
+          height: 54 * rowU,
+        })
+      } else if (code) {
+        rows.push({
+          kind: 'simple',
+          text: code,
+          size: 46 * titleU,
+          alpha: 1,
+          width: measure(code, 46 * titleU),
+          height: 54 * titleU,
         })
       } else {
-        const text = code || info.registrationNumber
-        rows.push({ kind: 'simple', text, size: 46 * u, alpha: 1, width: measure(text, 46 * u), height: 54 * u })
+        const text = info.registrationNumber
+        rows.push({
+          kind: 'simple',
+          text,
+          size: 39 * subU,
+          alpha: 1,
+          width: measure(text, 39 * subU),
+          height: 52 * subU,
+        })
       }
     }
     const dep = info.departureAirportCode.trim().toUpperCase()
     const arr = info.arrivalAirportCode.trim().toUpperCase()
     if (dep && arr) {
-      const size = 52 * u
-      const iconSize = 42 * u
-      const gap = 15 * u
+      const size = 52 * titleU
+      const iconSize = 42 * titleU
+      const gap = 15 * titleU
       const w = measure(dep, size) + gap + iconSize + gap + measure(arr, size)
-      rows.push({ kind: 'iata', dep, arr, size, iconSize, gap, width: w, height: 62 * u })
+      rows.push({ kind: 'iata', dep, arr, size, iconSize, gap, unit: titleU, width: w, height: 62 * titleU })
     } else if (dep || arr) {
       const only = dep || arr
-      const size = 52 * u
-      rows.push({ kind: 'simple', text: only, size, alpha: 1, width: measure(only, size), height: 62 * u })
+      const size = 52 * titleU
+      rows.push({
+        kind: 'simple',
+        text: only,
+        size,
+        alpha: 1,
+        width: measure(only, size),
+        height: 62 * titleU,
+      })
     }
     if (info.departureAirportName.trim()) {
       const text = info.departureAirportName.trim()
-      rows.push({ kind: 'airport', name: text, withPlane: false, size: 24 * u, width: measure(text, 24 * u), height: 30 * u })
+      rows.push({
+        kind: 'airport',
+        name: text,
+        withPlane: false,
+        size: 24 * subU,
+        unit: subU,
+        width: measure(text, 24 * subU, false),
+        height: 30 * subU,
+      })
     }
     if (info.arrivalAirportName.trim()) {
       const text = info.arrivalAirportName.trim()
@@ -432,49 +492,83 @@ function buildRows(
         kind: 'airport',
         name: text,
         withPlane: true,
-        size: 24 * u,
-        width: measure(text, 24 * u) + 28 * u,
-        height: 32 * u,
+        size: 24 * subU,
+        unit: subU,
+        width: measure(text, 24 * subU, false) + 28 * subU,
+        height: 32 * subU,
       })
     }
   } else if (info.mode === 'TRAIN') {
     if (info.railwayLineName.trim()) {
       const text = info.railwayLineName.trim()
-      rows.push({ kind: 'simple', text, size: 46 * u, alpha: 1, width: measure(text, 46 * u), height: 54 * u })
+      rows.push({
+        kind: 'simple',
+        text,
+        size: 46 * titleU,
+        alpha: 1,
+        width: measure(text, 46 * titleU),
+        height: 54 * titleU,
+      })
     }
     const name = info.trainName.trim()
     const model = info.vehicleModel.trim()
     if (name || model) {
       if (name && model) {
-        const p = measure(name, 45 * u)
-        const s = measure(model, 39 * u)
+        const p = measure(name, 45 * subU)
+        const s = measure(model, 39 * subU)
         rows.push({
           kind: 'dual',
           primary: name,
           secondary: model,
-          primarySize: 45 * u,
-          secondarySize: 39 * u,
-          gap: 12 * u,
-          width: p + 12 * u + s,
-          height: 52 * u,
+          primarySize: 45 * subU,
+          secondarySize: 39 * subU,
+          gap: 12 * subU,
+          width: p + 12 * subU + s,
+          height: 52 * subU,
         })
       } else {
         const text = name || model
-        rows.push({ kind: 'simple', text, size: 45 * u, alpha: 1, width: measure(text, 45 * u), height: 52 * u })
+        rows.push({
+          kind: 'simple',
+          text,
+          size: 45 * subU,
+          alpha: 1,
+          width: measure(text, 45 * subU),
+          height: 52 * subU,
+        })
       }
     }
-    addArrowRow(rows, info.departureStationName, info.arrivalStationName, u, measure, 46 * u, W)
+    addArrowRow(rows, info.departureStationName, info.arrivalStationName, subU, measure, 46 * subU, W)
   } else if (info.mode === 'OTHER') {
     if (info.transportName.trim()) {
       const text = info.transportName.trim()
-      rows.push({ kind: 'simple', text, size: 46 * u, alpha: 1, width: measure(text, 46 * u), height: 54 * u })
+      rows.push({
+        kind: 'simple',
+        text,
+        size: 46 * titleU,
+        alpha: 1,
+        width: measure(text, 46 * titleU),
+        height: 54 * titleU,
+      })
     }
-    addArrowRow(rows, info.departurePlaceName, info.destinationPlaceName, u, measure, 46 * u, W)
+    addArrowRow(rows, info.departurePlaceName, info.destinationPlaceName, subU, measure, 46 * subU, W)
   } else {
-    for (const raw of [info.spotLine1, info.spotLine2, info.spotLine3]) {
+    const lines = [info.spotLine1, info.spotLine2, info.spotLine3]
+    let rendered = 0
+    for (const raw of lines) {
       const text = raw.trim()
       if (!text) continue
-      rows.push({ kind: 'simple', text, size: 48 * u, alpha: 1, width: measure(text, 48 * u), height: 56 * u })
+      const first = rendered === 0
+      const lineU = first ? titleU : subU
+      rendered += 1
+      rows.push({
+        kind: 'simple',
+        text,
+        size: 48 * lineU,
+        alpha: 1,
+        width: measure(text, 48 * lineU),
+        height: 56 * lineU,
+      })
     }
   }
 
@@ -486,16 +580,20 @@ function buildRows(
           ? formatLatLon(info.photoLat, info.photoLon, 5)
           : null
         : info.photoLocationName.trim() ||
-          (info.photoLat != null && info.photoLon != null ? formatLatLon(info.photoLat, info.photoLon, 5) : '')
+          (info.photoLat != null && info.photoLon != null
+            ? formatLatLon(info.photoLat, info.photoLon, 5)
+            : '')
   if (locationText) {
-    const size = 28 * u
+    const size = 28 * locU
+    const pinSize = 26 * locU
     rows.push({
       kind: 'location',
       text: locationText,
       size,
-      pinSize: 26 * u,
-      width: 26 * u + 8 * u + measure(locationText, size, false),
-      height: 38 * u,
+      pinSize,
+      unit: locU,
+      width: pinSize + 8 * locU + measure(locationText, size),
+      height: 38 * locU,
     })
   }
 
@@ -507,10 +605,10 @@ function buildRows(
     rows.push({
       kind: 'simple',
       text,
-      size: 25 * u,
+      size: 25 * dateU,
       alpha: 0.82,
-      width: measure(text, 25 * u),
-      height: 34 * u,
+      width: measure(text, 25 * dateU),
+      height: 34 * dateU,
     })
   }
 
@@ -546,6 +644,7 @@ function addArrowRow(
       size,
       arrowWidth,
       gap,
+      unit: u,
       width: arrowWidth + gap + measure(arr, size),
       height: 54 * u,
     })
@@ -558,6 +657,7 @@ function addArrowRow(
     size,
     arrowWidth,
     gap,
+    unit: u,
     width: singleWidth,
     height: 54 * u,
   })
@@ -571,7 +671,6 @@ function drawRows(
   alignRight: boolean,
   style: OverlayStyle,
   blockWidth: number,
-  unit: number,
 ) {
   let y = top
   for (const row of rows) {
@@ -587,7 +686,7 @@ function drawRows(
       drawText(ctx, row.dep, rowLeft, baseline, style, row.size)
       const depW = measureCtx(ctx, row.dep, style, row.size)
       const iconCx = rowLeft + depW + row.gap + row.iconSize * 0.5
-      drawPlaneGlyph(ctx, iconCx, baseline - row.iconSize * 0.4, row.iconSize, style.textColor, 'rgba(0,0,0,0.5)', unit, 90)
+      drawPlaneGlyph(ctx, iconCx, baseline - row.iconSize * 0.4, row.iconSize, style.textColor, 'rgba(0,0,0,0.5)', row.unit, 90)
       const arrX = rowLeft + depW + row.gap * 2 + row.iconSize
       drawText(ctx, row.arr, arrX, baseline, style, row.size)
     } else if (row.kind === 'arrow') {
@@ -601,11 +700,11 @@ function drawRows(
       const head = row.arrowWidth * 0.34
       ctx.save()
       ctx.strokeStyle = style.textColor
-      ctx.lineWidth = Math.max(2, 4.4 * unit)
+      ctx.lineWidth = Math.max(2, 4.4 * row.unit)
       ctx.lineCap = 'round'
       ctx.lineJoin = 'round'
       ctx.shadowColor = luminance(style.textColor) < 0.25 ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.6)'
-      ctx.shadowBlur = 6 * unit
+      ctx.shadowBlur = 6 * row.unit
       ctx.beginPath()
       ctx.moveTo(x, cy)
       ctx.lineTo(rightX - row.arrowWidth * 0.08, cy)
@@ -618,15 +717,15 @@ function drawRows(
       drawText(ctx, row.right, x, baseline, style, row.size)
     } else if (row.kind === 'airport') {
       if (row.withPlane) {
-        const small = 19 * unit
-        drawPlaneGlyph(ctx, rowLeft + small * 0.5, baseline - small * 0.42, small, style.textColor, 'rgba(0,0,0,0.45)', unit * 0.6, 90)
-        drawText(ctx, row.name, rowLeft + 28 * unit, baseline, style, row.size, 0.88, false)
+        const small = 19 * row.unit
+        drawPlaneGlyph(ctx, rowLeft + small * 0.5, baseline - small * 0.42, small, style.textColor, 'rgba(0,0,0,0.45)', row.unit * 0.6, 90)
+        drawText(ctx, row.name, rowLeft + 28 * row.unit, baseline, style, row.size, 0.88, false)
       } else {
         drawText(ctx, row.name, rowLeft, baseline, style, row.size, 0.88, false)
       }
     } else if (row.kind === 'location') {
-      drawPushpin(ctx, rowLeft + row.pinSize * 0.45, baseline + 2 * unit, row.pinSize)
-      drawText(ctx, row.text, rowLeft + row.pinSize + 8 * unit, baseline, style, row.size, 1)
+      drawPushpin(ctx, rowLeft + row.pinSize * 0.45, baseline + 2 * row.unit, row.pinSize)
+      drawText(ctx, row.text, rowLeft + row.pinSize + 8 * row.unit, baseline, style, row.size, 1)
     }
     y += row.height
   }
@@ -722,7 +821,7 @@ function renderMap(
 
   const landscape = width > height
   const minBound = 0.03 * width * 0.4
-  const scale = style.mapBoxScale
+  const scale = clampFinite(style.mapBoxScale, 0.5, 2.5, 1)
   const maxW = Math.min(
     ((landscape ? 0.33 : 0.45) * width * (landscape ? 0.85 : 1)) * scale,
     width - minBound * 2,
@@ -759,7 +858,7 @@ function renderMap(
       : mapCornerPosition(style.mapCorner, width, height, boxW, boxH, mapMargin)
   const rect: BoundsRect = { x: pos.left, y: pos.top, width: boxW, height: boxH }
 
-  const zoom = Math.max(0.5, Math.min(5, style.mapInternalZoom))
+  const zoom = clampFinite(style.mapInternalZoom, 0.5, 5, 1)
   const fitScale = Math.min(boxW / spanX, boxH / spanY) * zoom
   const centerX = centerXProj - (style.mapInternalPanX * spanX) / zoom
   const screenCx = rect.x + rect.width / 2
@@ -1017,7 +1116,7 @@ export function renderOverlay(options: RenderOptions): OverlayLayout {
         : Math.max(minBound, height - textMargin - blockH)
   }
 
-  drawRows(ctx, rows, left, top, alignRight, style, blockW, unit)
+  drawRows(ctx, rows, left, top, alignRight, style, blockW)
   ctx.restore()
   return {
     textBounds: { x: left, y: top, width: blockW, height: blockH },

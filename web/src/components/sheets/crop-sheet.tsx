@@ -170,7 +170,7 @@ export function CropSheet() {
               type="color"
               value={draft.frameColor}
               onChange={(e) => update({ frameColor: e.target.value })}
-              className="h-8 w-16 cursor-pointer p-1"
+              className="color-swatch size-11 min-h-0! cursor-pointer rounded-full border border-border/70 p-0"
             />
           </div>
           <div className="flex flex-wrap gap-1.5">
@@ -178,7 +178,7 @@ export function CropSheet() {
               <button
                 key={c}
                 type="button"
-                className={`size-9 min-h-0! rounded-full border ${draft.frameColor === c ? 'ring-2 ring-primary ring-offset-2 ring-offset-card' : 'border-border/70'}`}
+                className={`size-11 min-h-0! rounded-full border ${draft.frameColor === c ? 'ring-2 ring-primary ring-offset-2 ring-offset-card' : 'border-border/70'}`}
                 style={{ background: c }}
                 aria-pressed={draft.frameColor === c}
                 onClick={() => update({ frameColor: c })}

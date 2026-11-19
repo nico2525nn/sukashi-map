@@ -218,37 +218,36 @@ fun StyleSettingsSheet(
                     }
 
                     2 -> {
-                        ExpressiveSectionCard(title = "拡大率・ズーム調整") {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text("文字サイズ", style = MaterialTheme.typography.bodyMedium)
-                                Text(
-                                    String.format(Locale.US, "%.2f×", style.textScale),
-                                    style = MaterialTheme.typography.labelLargeEmphasized
-                                )
-                            }
-                            ExpressiveValueSlider(
+                        ExpressiveSectionCard(title = "サイズ（%）・ズーム") {
+                            PercentSlider(
+                                label = "文字全体",
                                 value = style.textScale,
-                                onValueChange = { onStyleChange(style.copy(textScale = it)) },
-                                valueRange = 0.5f..2.5f
+                                onValueChange = { onStyleChange(style.copy(textScale = it)) }
                             )
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text("地図枠サイズ", style = MaterialTheme.typography.bodyMedium)
-                                Text(
-                                    String.format(Locale.US, "%.2f×", style.mapBoxScale),
-                                    style = MaterialTheme.typography.labelLargeEmphasized
-                                )
-                            }
-                            ExpressiveValueSlider(
+                            PercentSlider(
+                                label = "タイトル",
+                                value = style.titleScale,
+                                onValueChange = { onStyleChange(style.copy(titleScale = it)) }
+                            )
+                            PercentSlider(
+                                label = "サブタイトル",
+                                value = style.subtitleScale,
+                                onValueChange = { onStyleChange(style.copy(subtitleScale = it)) }
+                            )
+                            PercentSlider(
+                                label = "座標・地名",
+                                value = style.locationScale,
+                                onValueChange = { onStyleChange(style.copy(locationScale = it)) }
+                            )
+                            PercentSlider(
+                                label = "日付",
+                                value = style.dateScale,
+                                onValueChange = { onStyleChange(style.copy(dateScale = it)) }
+                            )
+                            PercentSlider(
+                                label = "地図",
                                 value = style.mapBoxScale,
-                                onValueChange = { onStyleChange(style.copy(mapBoxScale = it)) },
-                                valueRange = 0.5f..2.5f
+                                onValueChange = { onStyleChange(style.copy(mapBoxScale = it)) }
                             )
 
                             Row(
@@ -354,4 +353,28 @@ fun StyleSettingsSheet(
             }
         )
     }
+}
+
+@Composable
+private fun PercentSlider(
+    label: String,
+    value: Float,
+    onValueChange: (Float) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(label, style = MaterialTheme.typography.bodyMedium)
+        Text(
+            String.format(Locale.US, "%.0f%%", value * 100f),
+            style = MaterialTheme.typography.labelLargeEmphasized
+        )
+    }
+    ExpressiveValueSlider(
+        value = value,
+        onValueChange = onValueChange,
+        valueRange = 0.5f..2.5f,
+        steps = 199
+    )
 }

@@ -207,6 +207,10 @@ fun EditorScreen(
     val hasCustomLayout = state.overlayStyle.textFreePos != null ||
         state.overlayStyle.mapFreePos != null ||
         state.overlayStyle.textScale != 1f ||
+        state.overlayStyle.titleScale != 1f ||
+        state.overlayStyle.subtitleScale != 1f ||
+        state.overlayStyle.locationScale != 1f ||
+        state.overlayStyle.dateScale != 1f ||
         state.overlayStyle.mapBoxScale != 1f ||
         state.overlayStyle.mapInternalZoom != 1f ||
         state.overlayStyle.mapInternalPanX != 0f ||

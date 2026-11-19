@@ -46,7 +46,7 @@ export function Segmented<T extends string>({
           key={option.value}
           value={option.value}
           className={cn(
-            'h-11 min-w-0 flex-1 basis-0 justify-center gap-1 rounded-full border-0 bg-transparent px-1 text-[10px] font-medium text-muted-foreground shadow-none data-[state=on]:bg-primary data-[state=on]:text-primary-foreground sm:h-9 sm:gap-1.5 sm:px-2 sm:text-sm',
+            'h-11 min-w-0 flex-1 basis-0 justify-center gap-1 rounded-full border-0 bg-transparent px-1 text-xs font-medium text-muted-foreground shadow-none data-[state=on]:bg-primary data-[state=on]:text-primary-foreground sm:h-10 sm:gap-1.5 sm:px-2 sm:text-sm',
             itemClassName,
           )}
         >

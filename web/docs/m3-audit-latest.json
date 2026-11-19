@@ -1,0 +1,7751 @@
+{
+  "findings": [],
+  "results": [
+    {
+      "name": "compact-320",
+      "base": {
+        "viewport": {
+          "width": 320,
+          "height": 568
+        },
+        "coarse": true,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "w": 320,
+          "h": 65,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "16px"
+        },
+        "headerTitle": {
+          "x": 112,
+          "y": 22,
+          "w": 96,
+          "h": 20,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "16px"
+        },
+        "emptyCard": {
+          "x": 16,
+          "y": 103,
+          "w": 288,
+          "h": 428,
+          "padding": "24px",
+          "gap": "0px",
+          "radius": "32px",
+          "fontSize": "14px"
+        },
+        "emptyTitle": {
+          "x": 66,
+          "y": 211,
+          "w": 187,
+          "h": 32,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "24px"
+        },
+        "primaryCta": {
+          "x": 40,
+          "y": 319,
+          "w": 240,
+          "h": 48,
+          "padding": "0px 20px",
+          "gap": "8px",
+          "radius": "3.35544e+07px",
+          "fontSize": "14px"
+        },
+        "secondaryCta": {
+          "x": 40,
+          "y": 383,
+          "w": 240,
+          "h": 44,
+          "padding": "0px 20px",
+          "gap": "8px",
+          "radius": "3.35544e+07px",
+          "fontSize": "14px"
+        },
+        "headerInner": {
+          "x": 0,
+          "y": 0,
+          "w": 320,
+          "h": 64,
+          "padding": "0px 16px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "16px"
+        },
+        "documentHeight": 568,
+        "targets": [
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "設定",
+            "x": 260,
+            "y": 10,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "写真・動画を選ぶ",
+            "x": 40,
+            "y": 319,
+            "w": 240,
+            "h": 48,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "カメラで撮影する",
+            "x": 40,
+            "y": 383,
+            "w": 240,
+            "h": 44,
+            "expanded": false
+          }
+        ],
+        "overflow": 0
+      },
+      "editor": {
+        "stage": {
+          "x": 16,
+          "y": 141,
+          "w": 288,
+          "h": 216,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "32px",
+          "fontSize": "16px"
+        },
+        "stageSlot": {
+          "top": "16px",
+          "right": "16px",
+          "bottom": "16px",
+          "left": "16px"
+        },
+        "headerTitle": {
+          "x": 112,
+          "y": 22,
+          "w": 96,
+          "h": 20,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "16px"
+        },
+        "leftIconRight": 108,
+        "toolbar": {
+          "x": 17,
+          "y": 494,
+          "w": 287,
+          "h": 58,
+          "padding": "4px",
+          "gap": "0px",
+          "radius": "3.35544e+07px",
+          "fontSize": "16px"
+        },
+        "hint": {
+          "fontSize": "12px"
+        },
+        "targets": [
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "別の写真・動画を選択",
+            "x": 16,
+            "y": 10,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "カメラ",
+            "x": 64,
+            "y": 10,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "設定",
+            "x": 260,
+            "y": 10,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "NH 1731 · KIX ✈ OKA",
+            "x": 74,
+            "y": 65,
+            "w": 171,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "ルート・透かし情報",
+            "x": 22,
+            "y": 501,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "スタイル",
+            "x": 66,
+            "y": 501,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "切り抜き・余白枠",
+            "x": 110,
+            "y": 501,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "保存して共有",
+            "x": 154,
+            "y": 501,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": "button",
+            "label": "その他の保存メニュー",
+            "x": 198,
+            "y": 501,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "保存",
+            "x": 251,
+            "y": 499,
+            "w": 48,
+            "h": 48,
+            "expanded": false
+          }
+        ],
+        "overflow": 0
+      },
+      "sheet": {
+        "content": {
+          "x": 0,
+          "y": 284,
+          "w": 320,
+          "h": 284,
+          "padding": "0px",
+          "gap": "0px",
+          "radius": "32px 32px 0px 0px",
+          "fontSize": "14px"
+        },
+        "side": "bottom",
+        "appTitle": {
+          "x": 112,
+          "y": 22,
+          "w": 96,
+          "h": 20,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "16px"
+        },
+        "header": {
+          "x": 0,
+          "y": 285,
+          "w": 320,
+          "h": 85,
+          "padding": "16px 16px 12px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "body": {
+          "x": 0,
+          "y": 370,
+          "w": 320,
+          "h": 198,
+          "padding": "16px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "title": {
+          "x": 16,
+          "y": 313,
+          "w": 156,
+          "h": 28,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "22px"
+        },
+        "titleRow": {
+          "x": 16,
+          "y": 313,
+          "w": 288,
+          "h": 44,
+          "padding": "0px",
+          "gap": "12px",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "close": {
+          "x": 260,
+          "y": 313,
+          "w": 44,
+          "h": 44,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "3.35544e+07px",
+          "fontSize": "14px"
+        },
+        "select": {
+          "x": 32,
+          "y": 434,
+          "w": 256,
+          "h": 44,
+          "padding": "8px 8px 8px 10px",
+          "gap": "6px",
+          "radius": "20px",
+          "fontSize": "14px"
+        },
+        "presetCard": {
+          "x": 32,
+          "y": 2194,
+          "w": 124,
+          "h": 111,
+          "padding": "12px",
+          "gap": "normal",
+          "radius": "28px",
+          "fontSize": "14px"
+        },
+        "card": {
+          "x": 16,
+          "y": 386,
+          "w": 288,
+          "h": 108,
+          "padding": "0px",
+          "gap": "0px",
+          "radius": "24px",
+          "fontSize": "14px"
+        },
+        "cardHeader": {
+          "x": 16,
+          "y": 386,
+          "w": 288,
+          "h": 48,
+          "padding": "16px 16px 12px",
+          "gap": "8px",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "cardBody": {
+          "x": 16,
+          "y": 434,
+          "w": 288,
+          "h": 60,
+          "padding": "0px 16px 16px",
+          "gap": "12px",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "stage": {
+          "x": 83,
+          "y": 125,
+          "w": 155,
+          "h": 116,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "32px",
+          "fontSize": "16px"
+        },
+        "toolbarVisible": true,
+        "sliders": [
+          {
+            "label": "文字全体",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 32,
+              "y": 1322,
+              "w": 256,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "文字全体",
+              "x": 77,
+              "y": 1321,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "タイトル",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 32,
+              "y": 1406,
+              "w": 256,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "タイトル",
+              "x": 77,
+              "y": 1405,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "サブタイトル",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 32,
+              "y": 1490,
+              "w": 256,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "サブタイトル",
+              "x": 77,
+              "y": 1489,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "座標・地名",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 32,
+              "y": 1574,
+              "w": 256,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "座標・地名",
+              "x": 77,
+              "y": 1573,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "日付",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 32,
+              "y": 1658,
+              "w": 256,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "日付",
+              "x": 77,
+              "y": 1657,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "地図",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 32,
+              "y": 1742,
+              "w": 256,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "地図",
+              "x": 77,
+              "y": 1741,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "地図内部ズーム",
+            "value": 1,
+            "min": 0.5,
+            "max": 5,
+            "valueText": "1.00×",
+            "box": {
+              "x": 32,
+              "y": 1826,
+              "w": 256,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "地図内部ズーム",
+              "x": 44,
+              "y": 1825,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          }
+        ],
+        "targets": [
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "閉じる",
+            "x": 260,
+            "y": 313,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "select-trigger",
+            "type": "button",
+            "label": "フォント",
+            "x": 32,
+            "y": 434,
+            "w": 256,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色のスポイト",
+            "x": 192,
+            "y": 558,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "INPUT",
+            "slot": null,
+            "type": "color",
+            "label": "文字色を選択",
+            "x": 244,
+            "y": 558,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #ffffff",
+            "x": 32,
+            "y": 610,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #1a1a1a",
+            "x": 84,
+            "y": 610,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #767676",
+            "x": 136,
+            "y": 610,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #0078d7",
+            "x": 188,
+            "y": 610,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #002050",
+            "x": 240,
+            "y": 610,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #ffb900",
+            "x": 32,
+            "y": 662,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #d83b01",
+            "x": 84,
+            "y": 662,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #008272",
+            "x": 136,
+            "y": 662,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #107c10",
+            "x": 188,
+            "y": 662,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色のスポイト",
+            "x": 192,
+            "y": 718,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "INPUT",
+            "slot": null,
+            "type": "color",
+            "label": "ルート線色を選択",
+            "x": 244,
+            "y": 718,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #ffffff",
+            "x": 32,
+            "y": 770,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #1a1a1a",
+            "x": 84,
+            "y": 770,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #767676",
+            "x": 136,
+            "y": 770,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #0078d7",
+            "x": 188,
+            "y": 770,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #002050",
+            "x": 240,
+            "y": 770,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #ffb900",
+            "x": 32,
+            "y": 822,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #d83b01",
+            "x": 84,
+            "y": 822,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #008272",
+            "x": 136,
+            "y": 822,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #107c10",
+            "x": 188,
+            "y": 822,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色のスポイト",
+            "x": 192,
+            "y": 878,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "INPUT",
+            "slot": null,
+            "type": "color",
+            "label": "海岸線色を選択",
+            "x": 244,
+            "y": 878,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #ffffff",
+            "x": 32,
+            "y": 930,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #1a1a1a",
+            "x": 84,
+            "y": 930,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #767676",
+            "x": 136,
+            "y": 930,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #0078d7",
+            "x": 188,
+            "y": 930,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #002050",
+            "x": 240,
+            "y": 930,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #ffb900",
+            "x": 32,
+            "y": 982,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #d83b01",
+            "x": 84,
+            "y": 982,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #008272",
+            "x": 136,
+            "y": 982,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #107c10",
+            "x": 188,
+            "y": 982,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "switch",
+            "type": "button",
+            "label": "地図透かしを表示",
+            "x": 241,
+            "y": 1106,
+            "w": 62,
+            "h": 48,
+            "expanded": true
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "switch",
+            "type": "button",
+            "label": "出発地の飛行機バッジ",
+            "x": 241,
+            "y": 1166,
+            "w": 62,
+            "h": 48,
+            "expanded": true
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "文字全体",
+            "x": 32,
+            "y": 1322,
+            "w": 256,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "タイトル",
+            "x": 32,
+            "y": 1406,
+            "w": 256,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "サブタイトル",
+            "x": 32,
+            "y": 1490,
+            "w": 256,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "座標・地名",
+            "x": 32,
+            "y": 1574,
+            "w": 256,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "日付",
+            "x": 32,
+            "y": 1658,
+            "w": 256,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "地図",
+            "x": 32,
+            "y": 1742,
+            "w": 256,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "地図内部ズーム",
+            "x": 32,
+            "y": 1826,
+            "w": 256,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "toggle-group-item",
+            "type": "button",
+            "label": "左上",
+            "x": 36,
+            "y": 1986,
+            "w": 62,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "toggle-group-item",
+            "type": "button",
+            "label": "右上",
+            "x": 98,
+            "y": 1986,
+            "w": 62,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "toggle-group-item",
+            "type": "button",
+            "label": "左下",
+            "x": 160,
+            "y": 1986,
+            "w": 62,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "toggle-group-item",
+            "type": "button",
+            "label": "右下",
+            "x": 222,
+            "y": 1986,
+            "w": 62,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "位置・サイズをリセット",
+            "x": 32,
+            "y": 2046,
+            "w": 256,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "保存",
+            "x": 208,
+            "y": 2138,
+            "w": 80,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "Sukashi Classic (Outfit)",
+            "x": 45,
+            "y": 2207,
+            "w": 98,
+            "h": 80,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "Shinkansen Amber (Barlow)",
+            "x": 177,
+            "y": 2207,
+            "w": 98,
+            "h": 80,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "Kaisei 旅情明朝",
+            "x": 45,
+            "y": 2326,
+            "w": 98,
+            "h": 60,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "White Frame Ink",
+            "x": 177,
+            "y": 2326,
+            "w": 98,
+            "h": 60,
+            "expanded": false
+          }
+        ],
+        "overflow": 0,
+        "selectOptions": [
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "Outfit",
+            "x": 37,
+            "y": 338,
+            "w": 251,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "Barlow",
+            "x": 37,
+            "y": 382,
+            "w": 251,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "JetBrains Mono",
+            "x": 37,
+            "y": 426,
+            "w": 251,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "DM Sans",
+            "x": 37,
+            "y": 470,
+            "w": 251,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "Kaisei Tokumin",
+            "x": 37,
+            "y": 514,
+            "w": 251,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "ARTEMIS INTER",
+            "x": 37,
+            "y": 558,
+            "w": 251,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "Default",
+            "x": 37,
+            "y": 602,
+            "w": 251,
+            "h": 44,
+            "expanded": false
+          }
+        ]
+      },
+      "errors": []
+    },
+    {
+      "name": "mobile-390",
+      "base": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "coarse": true,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "w": 390,
+          "h": 65,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "16px"
+        },
+        "headerTitle": {
+          "x": 129,
+          "y": 18,
+          "w": 132,
+          "h": 28,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "22px"
+        },
+        "emptyCard": {
+          "x": 16,
+          "y": 251,
+          "w": 358,
+          "h": 408,
+          "padding": "24px",
+          "gap": "0px",
+          "radius": "32px",
+          "fontSize": "14px"
+        },
+        "emptyTitle": {
+          "x": 101,
+          "y": 359,
+          "w": 187,
+          "h": 32,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "24px"
+        },
+        "primaryCta": {
+          "x": 40,
+          "y": 467,
+          "w": 310,
+          "h": 48,
+          "padding": "0px 20px",
+          "gap": "8px",
+          "radius": "3.35544e+07px",
+          "fontSize": "14px"
+        },
+        "secondaryCta": {
+          "x": 40,
+          "y": 531,
+          "w": 310,
+          "h": 44,
+          "padding": "0px 20px",
+          "gap": "8px",
+          "radius": "3.35544e+07px",
+          "fontSize": "14px"
+        },
+        "headerInner": {
+          "x": 0,
+          "y": 0,
+          "w": 390,
+          "h": 64,
+          "padding": "0px 16px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "16px"
+        },
+        "documentHeight": 844,
+        "targets": [
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "設定",
+            "x": 330,
+            "y": 10,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "写真・動画を選ぶ",
+            "x": 40,
+            "y": 467,
+            "w": 310,
+            "h": 48,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "カメラで撮影する",
+            "x": 40,
+            "y": 531,
+            "w": 310,
+            "h": 44,
+            "expanded": false
+          }
+        ],
+        "overflow": 0
+      },
+      "editor": {
+        "stage": {
+          "x": 16,
+          "y": 262,
+          "w": 358,
+          "h": 269,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "32px",
+          "fontSize": "16px"
+        },
+        "stageSlot": {
+          "top": "16px",
+          "right": "16px",
+          "bottom": "16px",
+          "left": "16px"
+        },
+        "headerTitle": {
+          "x": 129,
+          "y": 18,
+          "w": 132,
+          "h": 28,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "22px"
+        },
+        "leftIconRight": 108,
+        "toolbar": {
+          "x": 32,
+          "y": 754,
+          "w": 327,
+          "h": 74,
+          "padding": "8px",
+          "gap": "4px",
+          "radius": "3.35544e+07px",
+          "fontSize": "16px"
+        },
+        "hint": {
+          "fontSize": "12px"
+        },
+        "targets": [
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "別の写真・動画を選択",
+            "x": 16,
+            "y": 10,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "カメラ",
+            "x": 64,
+            "y": 10,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "設定",
+            "x": 330,
+            "y": 10,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "NH 1731 · KIX ✈ OKA",
+            "x": 109,
+            "y": 65,
+            "w": 171,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "ルート・透かし情報",
+            "x": 41,
+            "y": 769,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "スタイル",
+            "x": 89,
+            "y": 769,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "切り抜き・余白枠",
+            "x": 137,
+            "y": 769,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "保存して共有",
+            "x": 185,
+            "y": 769,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": "button",
+            "label": "その他の保存メニュー",
+            "x": 233,
+            "y": 769,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "保存",
+            "x": 294,
+            "y": 763,
+            "w": 56,
+            "h": 56,
+            "expanded": false
+          }
+        ],
+        "overflow": 0
+      },
+      "sheet": {
+        "content": {
+          "x": 0,
+          "y": 422,
+          "w": 390,
+          "h": 422,
+          "padding": "0px",
+          "gap": "0px",
+          "radius": "32px 32px 0px 0px",
+          "fontSize": "14px"
+        },
+        "side": "bottom",
+        "appTitle": {
+          "x": 129,
+          "y": 18,
+          "w": 132,
+          "h": 28,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "22px"
+        },
+        "header": {
+          "x": 0,
+          "y": 423,
+          "w": 390,
+          "h": 85,
+          "padding": "16px 16px 12px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "body": {
+          "x": 0,
+          "y": 508,
+          "w": 390,
+          "h": 336,
+          "padding": "16px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "title": {
+          "x": 16,
+          "y": 451,
+          "w": 156,
+          "h": 28,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "22px"
+        },
+        "titleRow": {
+          "x": 16,
+          "y": 451,
+          "w": 358,
+          "h": 44,
+          "padding": "0px",
+          "gap": "12px",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "close": {
+          "x": 330,
+          "y": 451,
+          "w": 44,
+          "h": 44,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "3.35544e+07px",
+          "fontSize": "14px"
+        },
+        "select": {
+          "x": 32,
+          "y": 572,
+          "w": 326,
+          "h": 44,
+          "padding": "8px 8px 8px 10px",
+          "gap": "6px",
+          "radius": "20px",
+          "fontSize": "14px"
+        },
+        "presetCard": {
+          "x": 32,
+          "y": 2332,
+          "w": 159,
+          "h": 91,
+          "padding": "12px",
+          "gap": "normal",
+          "radius": "28px",
+          "fontSize": "14px"
+        },
+        "card": {
+          "x": 16,
+          "y": 524,
+          "w": 358,
+          "h": 108,
+          "padding": "0px",
+          "gap": "0px",
+          "radius": "24px",
+          "fontSize": "14px"
+        },
+        "cardHeader": {
+          "x": 16,
+          "y": 524,
+          "w": 358,
+          "h": 48,
+          "padding": "16px 16px 12px",
+          "gap": "8px",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "cardBody": {
+          "x": 16,
+          "y": 572,
+          "w": 358,
+          "h": 60,
+          "padding": "0px 16px 16px",
+          "gap": "12px",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "stage": {
+          "x": 26,
+          "y": 125,
+          "w": 339,
+          "h": 254,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "32px",
+          "fontSize": "16px"
+        },
+        "toolbarVisible": true,
+        "sliders": [
+          {
+            "label": "文字全体",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 32,
+              "y": 1460,
+              "w": 326,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "文字全体",
+              "x": 95,
+              "y": 1459,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "タイトル",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 32,
+              "y": 1544,
+              "w": 326,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "タイトル",
+              "x": 95,
+              "y": 1543,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "サブタイトル",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 32,
+              "y": 1628,
+              "w": 326,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "サブタイトル",
+              "x": 95,
+              "y": 1627,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "座標・地名",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 32,
+              "y": 1712,
+              "w": 326,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "座標・地名",
+              "x": 95,
+              "y": 1711,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "日付",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 32,
+              "y": 1796,
+              "w": 326,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "日付",
+              "x": 95,
+              "y": 1795,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "地図",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 32,
+              "y": 1880,
+              "w": 326,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "地図",
+              "x": 95,
+              "y": 1879,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "地図内部ズーム",
+            "value": 1,
+            "min": 0.5,
+            "max": 5,
+            "valueText": "1.00×",
+            "box": {
+              "x": 32,
+              "y": 1964,
+              "w": 326,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "地図内部ズーム",
+              "x": 51,
+              "y": 1963,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          }
+        ],
+        "targets": [
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "閉じる",
+            "x": 330,
+            "y": 451,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "select-trigger",
+            "type": "button",
+            "label": "フォント",
+            "x": 32,
+            "y": 572,
+            "w": 326,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色のスポイト",
+            "x": 262,
+            "y": 696,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "INPUT",
+            "slot": null,
+            "type": "color",
+            "label": "文字色を選択",
+            "x": 314,
+            "y": 696,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #ffffff",
+            "x": 32,
+            "y": 748,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #1a1a1a",
+            "x": 84,
+            "y": 748,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #767676",
+            "x": 136,
+            "y": 748,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #0078d7",
+            "x": 188,
+            "y": 748,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #002050",
+            "x": 240,
+            "y": 748,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #ffb900",
+            "x": 292,
+            "y": 748,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #d83b01",
+            "x": 32,
+            "y": 800,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #008272",
+            "x": 84,
+            "y": 800,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #107c10",
+            "x": 136,
+            "y": 800,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色のスポイト",
+            "x": 262,
+            "y": 856,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "INPUT",
+            "slot": null,
+            "type": "color",
+            "label": "ルート線色を選択",
+            "x": 314,
+            "y": 856,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #ffffff",
+            "x": 32,
+            "y": 908,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #1a1a1a",
+            "x": 84,
+            "y": 908,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #767676",
+            "x": 136,
+            "y": 908,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #0078d7",
+            "x": 188,
+            "y": 908,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #002050",
+            "x": 240,
+            "y": 908,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #ffb900",
+            "x": 292,
+            "y": 908,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #d83b01",
+            "x": 32,
+            "y": 960,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #008272",
+            "x": 84,
+            "y": 960,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #107c10",
+            "x": 136,
+            "y": 960,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色のスポイト",
+            "x": 262,
+            "y": 1016,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "INPUT",
+            "slot": null,
+            "type": "color",
+            "label": "海岸線色を選択",
+            "x": 314,
+            "y": 1016,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #ffffff",
+            "x": 32,
+            "y": 1068,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #1a1a1a",
+            "x": 84,
+            "y": 1068,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #767676",
+            "x": 136,
+            "y": 1068,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #0078d7",
+            "x": 188,
+            "y": 1068,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #002050",
+            "x": 240,
+            "y": 1068,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #ffb900",
+            "x": 292,
+            "y": 1068,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #d83b01",
+            "x": 32,
+            "y": 1120,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #008272",
+            "x": 84,
+            "y": 1120,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #107c10",
+            "x": 136,
+            "y": 1120,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "switch",
+            "type": "button",
+            "label": "地図透かしを表示",
+            "x": 311,
+            "y": 1244,
+            "w": 62,
+            "h": 48,
+            "expanded": true
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "switch",
+            "type": "button",
+            "label": "出発地の飛行機バッジ",
+            "x": 311,
+            "y": 1304,
+            "w": 62,
+            "h": 48,
+            "expanded": true
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "文字全体",
+            "x": 32,
+            "y": 1460,
+            "w": 326,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "タイトル",
+            "x": 32,
+            "y": 1544,
+            "w": 326,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "サブタイトル",
+            "x": 32,
+            "y": 1628,
+            "w": 326,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "座標・地名",
+            "x": 32,
+            "y": 1712,
+            "w": 326,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "日付",
+            "x": 32,
+            "y": 1796,
+            "w": 326,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "地図",
+            "x": 32,
+            "y": 1880,
+            "w": 326,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "地図内部ズーム",
+            "x": 32,
+            "y": 1964,
+            "w": 326,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "toggle-group-item",
+            "type": "button",
+            "label": "左上",
+            "x": 36,
+            "y": 2124,
+            "w": 80,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "toggle-group-item",
+            "type": "button",
+            "label": "右上",
+            "x": 116,
+            "y": 2124,
+            "w": 80,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "toggle-group-item",
+            "type": "button",
+            "label": "左下",
+            "x": 195,
+            "y": 2124,
+            "w": 80,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "toggle-group-item",
+            "type": "button",
+            "label": "右下",
+            "x": 275,
+            "y": 2124,
+            "w": 80,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "位置・サイズをリセット",
+            "x": 32,
+            "y": 2184,
+            "w": 326,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "保存",
+            "x": 278,
+            "y": 2276,
+            "w": 80,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "Sukashi Classic (Outfit)",
+            "x": 45,
+            "y": 2345,
+            "w": 133,
+            "h": 60,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "Shinkansen Amber (Barlow)",
+            "x": 212,
+            "y": 2345,
+            "w": 133,
+            "h": 60,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "Kaisei 旅情明朝",
+            "x": 45,
+            "y": 2444,
+            "w": 133,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "White Frame Ink",
+            "x": 212,
+            "y": 2444,
+            "w": 133,
+            "h": 44,
+            "expanded": false
+          }
+        ],
+        "overflow": 0,
+        "selectOptions": [
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "Outfit",
+            "x": 37,
+            "y": 572,
+            "w": 321,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "Barlow",
+            "x": 37,
+            "y": 616,
+            "w": 321,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "JetBrains Mono",
+            "x": 37,
+            "y": 660,
+            "w": 321,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "DM Sans",
+            "x": 37,
+            "y": 704,
+            "w": 321,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "Kaisei Tokumin",
+            "x": 37,
+            "y": 748,
+            "w": 321,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "ARTEMIS INTER",
+            "x": 37,
+            "y": 792,
+            "w": 321,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "Default",
+            "x": 37,
+            "y": 836,
+            "w": 321,
+            "h": 44,
+            "expanded": false
+          }
+        ]
+      },
+      "errors": []
+    },
+    {
+      "name": "phone-landscape-568",
+      "base": {
+        "viewport": {
+          "width": 568,
+          "height": 320
+        },
+        "coarse": true,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "w": 568,
+          "h": 65,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "16px"
+        },
+        "headerTitle": {
+          "x": 218,
+          "y": 18,
+          "w": 132,
+          "h": 28,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "22px"
+        },
+        "emptyCard": {
+          "x": 60,
+          "y": 113,
+          "w": 448,
+          "h": 160,
+          "padding": "16px",
+          "gap": "0px",
+          "radius": "32px",
+          "fontSize": "14px"
+        },
+        "emptyTitle": {
+          "x": 206,
+          "y": 177,
+          "w": 156,
+          "h": 24,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "20px"
+        },
+        "primaryCta": {
+          "x": 76,
+          "y": 213,
+          "w": 204,
+          "h": 44,
+          "padding": "0px 8px",
+          "gap": "8px",
+          "radius": "3.35544e+07px",
+          "fontSize": "12px"
+        },
+        "secondaryCta": {
+          "x": 288,
+          "y": 213,
+          "w": 204,
+          "h": 44,
+          "padding": "0px 8px",
+          "gap": "8px",
+          "radius": "3.35544e+07px",
+          "fontSize": "12px"
+        },
+        "headerInner": {
+          "x": 0,
+          "y": 0,
+          "w": 568,
+          "h": 64,
+          "padding": "0px 16px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "16px"
+        },
+        "documentHeight": 320,
+        "targets": [
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "設定",
+            "x": 508,
+            "y": 10,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "写真・動画を選ぶ",
+            "x": 76,
+            "y": 213,
+            "w": 204,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "カメラで撮影する",
+            "x": 288,
+            "y": 213,
+            "w": 204,
+            "h": 44,
+            "expanded": false
+          }
+        ],
+        "overflow": 0
+      },
+      "editor": {
+        "stage": {
+          "x": 229,
+          "y": 125,
+          "w": 111,
+          "h": 83,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "32px",
+          "fontSize": "16px"
+        },
+        "stageSlot": {
+          "top": "16px",
+          "right": "16px",
+          "bottom": "16px",
+          "left": "16px"
+        },
+        "headerTitle": {
+          "x": 218,
+          "y": 18,
+          "w": 132,
+          "h": 28,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "22px"
+        },
+        "leftIconRight": 108,
+        "toolbar": {
+          "x": 121,
+          "y": 230,
+          "w": 327,
+          "h": 74,
+          "padding": "8px",
+          "gap": "4px",
+          "radius": "3.35544e+07px",
+          "fontSize": "16px"
+        },
+        "hint": {
+          "fontSize": "12px"
+        },
+        "targets": [
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "別の写真・動画を選択",
+            "x": 16,
+            "y": 10,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "カメラ",
+            "x": 64,
+            "y": 10,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "設定",
+            "x": 508,
+            "y": 10,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "NH 1731 · KIX ✈ OKA",
+            "x": 198,
+            "y": 65,
+            "w": 171,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "ルート・透かし情報",
+            "x": 130,
+            "y": 245,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "スタイル",
+            "x": 178,
+            "y": 245,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "切り抜き・余白枠",
+            "x": 226,
+            "y": 245,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "保存して共有",
+            "x": 274,
+            "y": 245,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": "button",
+            "label": "その他の保存メニュー",
+            "x": 322,
+            "y": 245,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "保存",
+            "x": 383,
+            "y": 239,
+            "w": 56,
+            "h": 56,
+            "expanded": false
+          }
+        ],
+        "overflow": 0
+      },
+      "sheet": {
+        "content": {
+          "x": 248,
+          "y": 0,
+          "w": 320,
+          "h": 320,
+          "padding": "0px",
+          "gap": "0px",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "side": "right",
+        "appTitle": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "22px"
+        },
+        "header": {
+          "x": 249,
+          "y": 0,
+          "w": 319,
+          "h": 73,
+          "padding": "16px 16px 12px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "body": {
+          "x": 249,
+          "y": 73,
+          "w": 319,
+          "h": 247,
+          "padding": "16px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "title": {
+          "x": 265,
+          "y": 16,
+          "w": 156,
+          "h": 28,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "22px"
+        },
+        "titleRow": {
+          "x": 265,
+          "y": 16,
+          "w": 287,
+          "h": 44,
+          "padding": "0px",
+          "gap": "12px",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "close": {
+          "x": 508,
+          "y": 16,
+          "w": 44,
+          "h": 44,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "3.35544e+07px",
+          "fontSize": "14px"
+        },
+        "select": {
+          "x": 281,
+          "y": 137,
+          "w": 255,
+          "h": 44,
+          "padding": "8px 8px 8px 10px",
+          "gap": "6px",
+          "radius": "20px",
+          "fontSize": "14px"
+        },
+        "presetCard": {
+          "x": 281,
+          "y": 1897,
+          "w": 124,
+          "h": 111,
+          "padding": "12px",
+          "gap": "normal",
+          "radius": "28px",
+          "fontSize": "14px"
+        },
+        "card": {
+          "x": 265,
+          "y": 89,
+          "w": 287,
+          "h": 108,
+          "padding": "0px",
+          "gap": "0px",
+          "radius": "24px",
+          "fontSize": "14px"
+        },
+        "cardHeader": {
+          "x": 265,
+          "y": 89,
+          "w": 287,
+          "h": 48,
+          "padding": "16px 16px 12px",
+          "gap": "8px",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "cardBody": {
+          "x": 265,
+          "y": 137,
+          "w": 287,
+          "h": 60,
+          "padding": "0px 16px 16px",
+          "gap": "12px",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "stage": {
+          "x": 16,
+          "y": 128,
+          "w": 232,
+          "h": 174,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "32px",
+          "fontSize": "16px"
+        },
+        "toolbarVisible": false,
+        "sliders": [
+          {
+            "label": "文字全体",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 281,
+              "y": 1025,
+              "w": 255,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "文字全体",
+              "x": 326,
+              "y": 1024,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "タイトル",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 281,
+              "y": 1109,
+              "w": 255,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "タイトル",
+              "x": 326,
+              "y": 1108,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "サブタイトル",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 281,
+              "y": 1193,
+              "w": 255,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "サブタイトル",
+              "x": 326,
+              "y": 1192,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "座標・地名",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 281,
+              "y": 1277,
+              "w": 255,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "座標・地名",
+              "x": 326,
+              "y": 1276,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "日付",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 281,
+              "y": 1361,
+              "w": 255,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "日付",
+              "x": 326,
+              "y": 1360,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "地図",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 281,
+              "y": 1445,
+              "w": 255,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "地図",
+              "x": 326,
+              "y": 1444,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "地図内部ズーム",
+            "value": 1,
+            "min": 0.5,
+            "max": 5,
+            "valueText": "1.00×",
+            "box": {
+              "x": 281,
+              "y": 1529,
+              "w": 255,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "地図内部ズーム",
+              "x": 293,
+              "y": 1528,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          }
+        ],
+        "targets": [
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "閉じる",
+            "x": 508,
+            "y": 16,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "select-trigger",
+            "type": "button",
+            "label": "フォント",
+            "x": 281,
+            "y": 137,
+            "w": 255,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色のスポイト",
+            "x": 440,
+            "y": 261,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "INPUT",
+            "slot": null,
+            "type": "color",
+            "label": "文字色を選択",
+            "x": 492,
+            "y": 261,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #ffffff",
+            "x": 281,
+            "y": 313,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #1a1a1a",
+            "x": 333,
+            "y": 313,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #767676",
+            "x": 385,
+            "y": 313,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #0078d7",
+            "x": 437,
+            "y": 313,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #002050",
+            "x": 489,
+            "y": 313,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #ffb900",
+            "x": 281,
+            "y": 365,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #d83b01",
+            "x": 333,
+            "y": 365,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #008272",
+            "x": 385,
+            "y": 365,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #107c10",
+            "x": 437,
+            "y": 365,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色のスポイト",
+            "x": 440,
+            "y": 421,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "INPUT",
+            "slot": null,
+            "type": "color",
+            "label": "ルート線色を選択",
+            "x": 492,
+            "y": 421,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #ffffff",
+            "x": 281,
+            "y": 473,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #1a1a1a",
+            "x": 333,
+            "y": 473,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #767676",
+            "x": 385,
+            "y": 473,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #0078d7",
+            "x": 437,
+            "y": 473,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #002050",
+            "x": 489,
+            "y": 473,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #ffb900",
+            "x": 281,
+            "y": 525,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #d83b01",
+            "x": 333,
+            "y": 525,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #008272",
+            "x": 385,
+            "y": 525,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #107c10",
+            "x": 437,
+            "y": 525,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色のスポイト",
+            "x": 440,
+            "y": 581,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "INPUT",
+            "slot": null,
+            "type": "color",
+            "label": "海岸線色を選択",
+            "x": 492,
+            "y": 581,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #ffffff",
+            "x": 281,
+            "y": 633,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #1a1a1a",
+            "x": 333,
+            "y": 633,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #767676",
+            "x": 385,
+            "y": 633,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #0078d7",
+            "x": 437,
+            "y": 633,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #002050",
+            "x": 489,
+            "y": 633,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #ffb900",
+            "x": 281,
+            "y": 685,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #d83b01",
+            "x": 333,
+            "y": 685,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #008272",
+            "x": 385,
+            "y": 685,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #107c10",
+            "x": 437,
+            "y": 685,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "switch",
+            "type": "button",
+            "label": "地図透かしを表示",
+            "x": 489,
+            "y": 809,
+            "w": 62,
+            "h": 48,
+            "expanded": true
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "switch",
+            "type": "button",
+            "label": "出発地の飛行機バッジ",
+            "x": 489,
+            "y": 869,
+            "w": 62,
+            "h": 48,
+            "expanded": true
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "文字全体",
+            "x": 281,
+            "y": 1025,
+            "w": 255,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "タイトル",
+            "x": 281,
+            "y": 1109,
+            "w": 255,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "サブタイトル",
+            "x": 281,
+            "y": 1193,
+            "w": 255,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "座標・地名",
+            "x": 281,
+            "y": 1277,
+            "w": 255,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "日付",
+            "x": 281,
+            "y": 1361,
+            "w": 255,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "地図",
+            "x": 281,
+            "y": 1445,
+            "w": 255,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "地図内部ズーム",
+            "x": 281,
+            "y": 1529,
+            "w": 255,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "toggle-group-item",
+            "type": "button",
+            "label": "左上",
+            "x": 285,
+            "y": 1689,
+            "w": 62,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "toggle-group-item",
+            "type": "button",
+            "label": "右上",
+            "x": 347,
+            "y": 1689,
+            "w": 62,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "toggle-group-item",
+            "type": "button",
+            "label": "左下",
+            "x": 409,
+            "y": 1689,
+            "w": 62,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "toggle-group-item",
+            "type": "button",
+            "label": "右下",
+            "x": 470,
+            "y": 1689,
+            "w": 62,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "位置・サイズをリセット",
+            "x": 281,
+            "y": 1749,
+            "w": 255,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "保存",
+            "x": 456,
+            "y": 1841,
+            "w": 80,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "Sukashi Classic (Outfit)",
+            "x": 294,
+            "y": 1910,
+            "w": 98,
+            "h": 80,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "Shinkansen Amber (Barlow)",
+            "x": 426,
+            "y": 1910,
+            "w": 98,
+            "h": 80,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "Kaisei 旅情明朝",
+            "x": 294,
+            "y": 2029,
+            "w": 98,
+            "h": 60,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "White Frame Ink",
+            "x": 426,
+            "y": 2029,
+            "w": 98,
+            "h": 60,
+            "expanded": false
+          }
+        ],
+        "overflow": 0,
+        "selectOptions": [
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "Outfit",
+            "x": 286,
+            "y": 90,
+            "w": 250,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "Barlow",
+            "x": 286,
+            "y": 134,
+            "w": 250,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "JetBrains Mono",
+            "x": 286,
+            "y": 178,
+            "w": 250,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "DM Sans",
+            "x": 286,
+            "y": 222,
+            "w": 250,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "Kaisei Tokumin",
+            "x": 286,
+            "y": 266,
+            "w": 250,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "ARTEMIS INTER",
+            "x": 286,
+            "y": 310,
+            "w": 250,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "Default",
+            "x": 286,
+            "y": 354,
+            "w": 250,
+            "h": 44,
+            "expanded": false
+          }
+        ]
+      },
+      "errors": []
+    },
+    {
+      "name": "tablet-768",
+      "base": {
+        "viewport": {
+          "width": 768,
+          "height": 1024
+        },
+        "coarse": true,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "w": 768,
+          "h": 65,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "16px"
+        },
+        "headerTitle": {
+          "x": 318,
+          "y": 18,
+          "w": 132,
+          "h": 28,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "22px"
+        },
+        "emptyCard": {
+          "x": 160,
+          "y": 333,
+          "w": 448,
+          "h": 424,
+          "padding": "32px",
+          "gap": "0px",
+          "radius": "32px",
+          "fontSize": "14px"
+        },
+        "emptyTitle": {
+          "x": 290,
+          "y": 449,
+          "w": 187,
+          "h": 32,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "24px"
+        },
+        "primaryCta": {
+          "x": 192,
+          "y": 557,
+          "w": 384,
+          "h": 48,
+          "padding": "0px 20px",
+          "gap": "8px",
+          "radius": "3.35544e+07px",
+          "fontSize": "14px"
+        },
+        "secondaryCta": {
+          "x": 192,
+          "y": 621,
+          "w": 384,
+          "h": 44,
+          "padding": "0px 20px",
+          "gap": "8px",
+          "radius": "3.35544e+07px",
+          "fontSize": "14px"
+        },
+        "headerInner": {
+          "x": 0,
+          "y": 0,
+          "w": 768,
+          "h": 64,
+          "padding": "0px 16px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "16px"
+        },
+        "documentHeight": 1024,
+        "targets": [
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "設定",
+            "x": 708,
+            "y": 10,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "写真・動画を選ぶ",
+            "x": 192,
+            "y": 557,
+            "w": 384,
+            "h": 48,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "カメラで撮影する",
+            "x": 192,
+            "y": 621,
+            "w": 384,
+            "h": 44,
+            "expanded": false
+          }
+        ],
+        "overflow": 0
+      },
+      "editor": {
+        "stage": {
+          "x": 24,
+          "y": 217,
+          "w": 720,
+          "h": 540,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "32px",
+          "fontSize": "16px"
+        },
+        "stageSlot": {
+          "top": "24px",
+          "right": "24px",
+          "bottom": "24px",
+          "left": "24px"
+        },
+        "headerTitle": {
+          "x": 318,
+          "y": 18,
+          "w": 132,
+          "h": 28,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "22px"
+        },
+        "leftIconRight": 108,
+        "toolbar": {
+          "x": 221,
+          "y": 934,
+          "w": 327,
+          "h": 74,
+          "padding": "8px",
+          "gap": "4px",
+          "radius": "3.35544e+07px",
+          "fontSize": "16px"
+        },
+        "hint": {
+          "fontSize": "12px"
+        },
+        "targets": [
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "別の写真・動画を選択",
+            "x": 16,
+            "y": 10,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "カメラ",
+            "x": 64,
+            "y": 10,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "設定",
+            "x": 708,
+            "y": 10,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "NH 1731 · KIX ✈ OKA",
+            "x": 289,
+            "y": 65,
+            "w": 190,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "ルート・透かし情報",
+            "x": 230,
+            "y": 949,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "スタイル",
+            "x": 278,
+            "y": 949,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "切り抜き・余白枠",
+            "x": 326,
+            "y": 949,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "保存して共有",
+            "x": 374,
+            "y": 949,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": "button",
+            "label": "その他の保存メニュー",
+            "x": 422,
+            "y": 949,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "保存",
+            "x": 483,
+            "y": 943,
+            "w": 56,
+            "h": 56,
+            "expanded": false
+          }
+        ],
+        "overflow": 0
+      },
+      "sheet": {
+        "content": {
+          "x": 368,
+          "y": 0,
+          "w": 400,
+          "h": 1024,
+          "padding": "0px",
+          "gap": "0px",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "side": "right",
+        "appTitle": {
+          "x": 118,
+          "y": 18,
+          "w": 132,
+          "h": 28,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "22px"
+        },
+        "header": {
+          "x": 369,
+          "y": 0,
+          "w": 399,
+          "h": 73,
+          "padding": "16px 24px 12px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "body": {
+          "x": 369,
+          "y": 73,
+          "w": 399,
+          "h": 951,
+          "padding": "16px 24px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "title": {
+          "x": 393,
+          "y": 16,
+          "w": 156,
+          "h": 28,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "22px"
+        },
+        "titleRow": {
+          "x": 393,
+          "y": 16,
+          "w": 351,
+          "h": 44,
+          "padding": "0px",
+          "gap": "12px",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "close": {
+          "x": 700,
+          "y": 16,
+          "w": 44,
+          "h": 44,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "3.35544e+07px",
+          "fontSize": "14px"
+        },
+        "select": {
+          "x": 409,
+          "y": 137,
+          "w": 319,
+          "h": 44,
+          "padding": "8px 8px 8px 10px",
+          "gap": "6px",
+          "radius": "20px",
+          "fontSize": "14px"
+        },
+        "presetCard": {
+          "x": 409,
+          "y": 1897,
+          "w": 156,
+          "h": 91,
+          "padding": "12px",
+          "gap": "normal",
+          "radius": "28px",
+          "fontSize": "14px"
+        },
+        "card": {
+          "x": 393,
+          "y": 89,
+          "w": 351,
+          "h": 108,
+          "padding": "0px",
+          "gap": "0px",
+          "radius": "24px",
+          "fontSize": "14px"
+        },
+        "cardHeader": {
+          "x": 393,
+          "y": 89,
+          "w": 351,
+          "h": 48,
+          "padding": "16px 16px 12px",
+          "gap": "8px",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "cardBody": {
+          "x": 393,
+          "y": 137,
+          "w": 351,
+          "h": 60,
+          "padding": "0px 16px 16px",
+          "gap": "12px",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "stage": {
+          "x": 24,
+          "y": 358,
+          "w": 344,
+          "h": 258,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "32px",
+          "fontSize": "16px"
+        },
+        "toolbarVisible": true,
+        "sliders": [
+          {
+            "label": "文字全体",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 409,
+              "y": 1025,
+              "w": 319,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "文字全体",
+              "x": 470,
+              "y": 1024,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "タイトル",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 409,
+              "y": 1109,
+              "w": 319,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "タイトル",
+              "x": 470,
+              "y": 1108,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "サブタイトル",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 409,
+              "y": 1193,
+              "w": 319,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "サブタイトル",
+              "x": 470,
+              "y": 1192,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "座標・地名",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 409,
+              "y": 1277,
+              "w": 319,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "座標・地名",
+              "x": 470,
+              "y": 1276,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "日付",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 409,
+              "y": 1361,
+              "w": 319,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "日付",
+              "x": 470,
+              "y": 1360,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "地図",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 409,
+              "y": 1445,
+              "w": 319,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "地図",
+              "x": 470,
+              "y": 1444,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "地図内部ズーム",
+            "value": 1,
+            "min": 0.5,
+            "max": 5,
+            "valueText": "1.00×",
+            "box": {
+              "x": 409,
+              "y": 1529,
+              "w": 319,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "地図内部ズーム",
+              "x": 428,
+              "y": 1528,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          }
+        ],
+        "targets": [
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "閉じる",
+            "x": 700,
+            "y": 16,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "select-trigger",
+            "type": "button",
+            "label": "フォント",
+            "x": 409,
+            "y": 137,
+            "w": 319,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色のスポイト",
+            "x": 632,
+            "y": 261,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "INPUT",
+            "slot": null,
+            "type": "color",
+            "label": "文字色を選択",
+            "x": 684,
+            "y": 261,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #ffffff",
+            "x": 409,
+            "y": 313,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #1a1a1a",
+            "x": 461,
+            "y": 313,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #767676",
+            "x": 513,
+            "y": 313,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #0078d7",
+            "x": 565,
+            "y": 313,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #002050",
+            "x": 617,
+            "y": 313,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #ffb900",
+            "x": 669,
+            "y": 313,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #d83b01",
+            "x": 409,
+            "y": 365,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #008272",
+            "x": 461,
+            "y": 365,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #107c10",
+            "x": 513,
+            "y": 365,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色のスポイト",
+            "x": 632,
+            "y": 421,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "INPUT",
+            "slot": null,
+            "type": "color",
+            "label": "ルート線色を選択",
+            "x": 684,
+            "y": 421,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #ffffff",
+            "x": 409,
+            "y": 473,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #1a1a1a",
+            "x": 461,
+            "y": 473,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #767676",
+            "x": 513,
+            "y": 473,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #0078d7",
+            "x": 565,
+            "y": 473,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #002050",
+            "x": 617,
+            "y": 473,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #ffb900",
+            "x": 669,
+            "y": 473,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #d83b01",
+            "x": 409,
+            "y": 525,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #008272",
+            "x": 461,
+            "y": 525,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #107c10",
+            "x": 513,
+            "y": 525,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色のスポイト",
+            "x": 632,
+            "y": 581,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "INPUT",
+            "slot": null,
+            "type": "color",
+            "label": "海岸線色を選択",
+            "x": 684,
+            "y": 581,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #ffffff",
+            "x": 409,
+            "y": 633,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #1a1a1a",
+            "x": 461,
+            "y": 633,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #767676",
+            "x": 513,
+            "y": 633,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #0078d7",
+            "x": 565,
+            "y": 633,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #002050",
+            "x": 617,
+            "y": 633,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #ffb900",
+            "x": 669,
+            "y": 633,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #d83b01",
+            "x": 409,
+            "y": 685,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #008272",
+            "x": 461,
+            "y": 685,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #107c10",
+            "x": 513,
+            "y": 685,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "switch",
+            "type": "button",
+            "label": "地図透かしを表示",
+            "x": 681,
+            "y": 809,
+            "w": 62,
+            "h": 48,
+            "expanded": true
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "switch",
+            "type": "button",
+            "label": "出発地の飛行機バッジ",
+            "x": 681,
+            "y": 869,
+            "w": 62,
+            "h": 48,
+            "expanded": true
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "文字全体",
+            "x": 409,
+            "y": 1025,
+            "w": 319,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "タイトル",
+            "x": 409,
+            "y": 1109,
+            "w": 319,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "サブタイトル",
+            "x": 409,
+            "y": 1193,
+            "w": 319,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "座標・地名",
+            "x": 409,
+            "y": 1277,
+            "w": 319,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "日付",
+            "x": 409,
+            "y": 1361,
+            "w": 319,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "地図",
+            "x": 409,
+            "y": 1445,
+            "w": 319,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "地図内部ズーム",
+            "x": 409,
+            "y": 1529,
+            "w": 319,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "toggle-group-item",
+            "type": "button",
+            "label": "左上",
+            "x": 413,
+            "y": 1689,
+            "w": 78,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "toggle-group-item",
+            "type": "button",
+            "label": "右上",
+            "x": 491,
+            "y": 1689,
+            "w": 78,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "toggle-group-item",
+            "type": "button",
+            "label": "左下",
+            "x": 569,
+            "y": 1689,
+            "w": 78,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "toggle-group-item",
+            "type": "button",
+            "label": "右下",
+            "x": 646,
+            "y": 1689,
+            "w": 78,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "位置・サイズをリセット",
+            "x": 409,
+            "y": 1749,
+            "w": 319,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "保存",
+            "x": 648,
+            "y": 1841,
+            "w": 80,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "Sukashi Classic (Outfit)",
+            "x": 422,
+            "y": 1910,
+            "w": 130,
+            "h": 60,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "Shinkansen Amber (Barlow)",
+            "x": 586,
+            "y": 1910,
+            "w": 130,
+            "h": 60,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "Kaisei 旅情明朝",
+            "x": 422,
+            "y": 2009,
+            "w": 130,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "White Frame Ink",
+            "x": 586,
+            "y": 2009,
+            "w": 130,
+            "h": 44,
+            "expanded": false
+          }
+        ],
+        "overflow": 0,
+        "selectOptions": [
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "Outfit",
+            "x": 414,
+            "y": 137,
+            "w": 314,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "Barlow",
+            "x": 414,
+            "y": 181,
+            "w": 314,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "JetBrains Mono",
+            "x": 414,
+            "y": 225,
+            "w": 314,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "DM Sans",
+            "x": 414,
+            "y": 269,
+            "w": 314,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "Kaisei Tokumin",
+            "x": 414,
+            "y": 313,
+            "w": 314,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "ARTEMIS INTER",
+            "x": 414,
+            "y": 357,
+            "w": 314,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "Default",
+            "x": 414,
+            "y": 401,
+            "w": 314,
+            "h": 44,
+            "expanded": false
+          }
+        ]
+      },
+      "errors": []
+    },
+    {
+      "name": "phone-landscape-844",
+      "base": {
+        "viewport": {
+          "width": 844,
+          "height": 390
+        },
+        "coarse": true,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "w": 844,
+          "h": 65,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "16px"
+        },
+        "headerTitle": {
+          "x": 356,
+          "y": 18,
+          "w": 132,
+          "h": 28,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "22px"
+        },
+        "emptyCard": {
+          "x": 198,
+          "y": 148,
+          "w": 448,
+          "h": 160,
+          "padding": "16px",
+          "gap": "0px",
+          "radius": "32px",
+          "fontSize": "14px"
+        },
+        "emptyTitle": {
+          "x": 344,
+          "y": 212,
+          "w": 156,
+          "h": 24,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "20px"
+        },
+        "primaryCta": {
+          "x": 214,
+          "y": 248,
+          "w": 204,
+          "h": 44,
+          "padding": "0px 8px",
+          "gap": "8px",
+          "radius": "3.35544e+07px",
+          "fontSize": "12px"
+        },
+        "secondaryCta": {
+          "x": 426,
+          "y": 248,
+          "w": 204,
+          "h": 44,
+          "padding": "0px 8px",
+          "gap": "8px",
+          "radius": "3.35544e+07px",
+          "fontSize": "12px"
+        },
+        "headerInner": {
+          "x": 0,
+          "y": 0,
+          "w": 844,
+          "h": 64,
+          "padding": "0px 16px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "16px"
+        },
+        "documentHeight": 390,
+        "targets": [
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "設定",
+            "x": 784,
+            "y": 10,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "写真・動画を選ぶ",
+            "x": 214,
+            "y": 248,
+            "w": 204,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "カメラで撮影する",
+            "x": 426,
+            "y": 248,
+            "w": 204,
+            "h": 44,
+            "expanded": false
+          }
+        ],
+        "overflow": 0
+      },
+      "editor": {
+        "stage": {
+          "x": 331,
+          "y": 133,
+          "w": 183,
+          "h": 137,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "32px",
+          "fontSize": "16px"
+        },
+        "stageSlot": {
+          "top": "24px",
+          "right": "24px",
+          "bottom": "24px",
+          "left": "24px"
+        },
+        "headerTitle": {
+          "x": 356,
+          "y": 18,
+          "w": 132,
+          "h": 28,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "22px"
+        },
+        "leftIconRight": 108,
+        "toolbar": {
+          "x": 259,
+          "y": 300,
+          "w": 327,
+          "h": 74,
+          "padding": "8px",
+          "gap": "4px",
+          "radius": "3.35544e+07px",
+          "fontSize": "16px"
+        },
+        "hint": {
+          "fontSize": "12px"
+        },
+        "targets": [
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "別の写真・動画を選択",
+            "x": 16,
+            "y": 10,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "カメラ",
+            "x": 64,
+            "y": 10,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "設定",
+            "x": 784,
+            "y": 10,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "NH 1731 · KIX ✈ OKA",
+            "x": 327,
+            "y": 65,
+            "w": 190,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "ルート・透かし情報",
+            "x": 268,
+            "y": 315,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "スタイル",
+            "x": 316,
+            "y": 315,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "切り抜き・余白枠",
+            "x": 364,
+            "y": 315,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "保存して共有",
+            "x": 412,
+            "y": 315,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": "button",
+            "label": "その他の保存メニュー",
+            "x": 460,
+            "y": 315,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "保存",
+            "x": 521,
+            "y": 309,
+            "w": 56,
+            "h": 56,
+            "expanded": false
+          }
+        ],
+        "overflow": 0
+      },
+      "sheet": {
+        "content": {
+          "x": 524,
+          "y": 0,
+          "w": 320,
+          "h": 390,
+          "padding": "0px",
+          "gap": "0px",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "side": "right",
+        "appTitle": {
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "22px"
+        },
+        "header": {
+          "x": 525,
+          "y": 0,
+          "w": 319,
+          "h": 73,
+          "padding": "16px 24px 12px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "body": {
+          "x": 525,
+          "y": 73,
+          "w": 319,
+          "h": 317,
+          "padding": "16px 24px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "title": {
+          "x": 549,
+          "y": 16,
+          "w": 156,
+          "h": 28,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "22px"
+        },
+        "titleRow": {
+          "x": 549,
+          "y": 16,
+          "w": 271,
+          "h": 44,
+          "padding": "0px",
+          "gap": "12px",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "close": {
+          "x": 776,
+          "y": 16,
+          "w": 44,
+          "h": 44,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "3.35544e+07px",
+          "fontSize": "14px"
+        },
+        "select": {
+          "x": 565,
+          "y": 137,
+          "w": 239,
+          "h": 44,
+          "padding": "8px 8px 8px 10px",
+          "gap": "6px",
+          "radius": "20px",
+          "fontSize": "14px"
+        },
+        "presetCard": {
+          "x": 565,
+          "y": 2053,
+          "w": 116,
+          "h": 111,
+          "padding": "12px",
+          "gap": "normal",
+          "radius": "28px",
+          "fontSize": "14px"
+        },
+        "card": {
+          "x": 549,
+          "y": 89,
+          "w": 271,
+          "h": 108,
+          "padding": "0px",
+          "gap": "0px",
+          "radius": "24px",
+          "fontSize": "14px"
+        },
+        "cardHeader": {
+          "x": 549,
+          "y": 89,
+          "w": 271,
+          "h": 48,
+          "padding": "16px 16px 12px",
+          "gap": "8px",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "cardBody": {
+          "x": 549,
+          "y": 137,
+          "w": 271,
+          "h": 60,
+          "padding": "0px 16px 16px",
+          "gap": "12px",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "stage": {
+          "x": 119,
+          "y": 133,
+          "w": 311,
+          "h": 233,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "32px",
+          "fontSize": "16px"
+        },
+        "toolbarVisible": false,
+        "sliders": [
+          {
+            "label": "文字全体",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 565,
+              "y": 1181,
+              "w": 239,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "文字全体",
+              "x": 606,
+              "y": 1180,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "タイトル",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 565,
+              "y": 1265,
+              "w": 239,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "タイトル",
+              "x": 606,
+              "y": 1264,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "サブタイトル",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 565,
+              "y": 1349,
+              "w": 239,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "サブタイトル",
+              "x": 606,
+              "y": 1348,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "座標・地名",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 565,
+              "y": 1433,
+              "w": 239,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "座標・地名",
+              "x": 606,
+              "y": 1432,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "日付",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 565,
+              "y": 1517,
+              "w": 239,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "日付",
+              "x": 606,
+              "y": 1516,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "地図",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 565,
+              "y": 1601,
+              "w": 239,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "地図",
+              "x": 606,
+              "y": 1600,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "地図内部ズーム",
+            "value": 1,
+            "min": 0.5,
+            "max": 5,
+            "valueText": "1.00×",
+            "box": {
+              "x": 565,
+              "y": 1685,
+              "w": 239,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "地図内部ズーム",
+              "x": 575,
+              "y": 1684,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          }
+        ],
+        "targets": [
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "閉じる",
+            "x": 776,
+            "y": 16,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "select-trigger",
+            "type": "button",
+            "label": "フォント",
+            "x": 565,
+            "y": 137,
+            "w": 239,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色のスポイト",
+            "x": 708,
+            "y": 261,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "INPUT",
+            "slot": null,
+            "type": "color",
+            "label": "文字色を選択",
+            "x": 760,
+            "y": 261,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #ffffff",
+            "x": 565,
+            "y": 313,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #1a1a1a",
+            "x": 617,
+            "y": 313,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #767676",
+            "x": 669,
+            "y": 313,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #0078d7",
+            "x": 721,
+            "y": 313,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #002050",
+            "x": 565,
+            "y": 365,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #ffb900",
+            "x": 617,
+            "y": 365,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #d83b01",
+            "x": 669,
+            "y": 365,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #008272",
+            "x": 721,
+            "y": 365,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #107c10",
+            "x": 565,
+            "y": 417,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色のスポイト",
+            "x": 708,
+            "y": 473,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "INPUT",
+            "slot": null,
+            "type": "color",
+            "label": "ルート線色を選択",
+            "x": 760,
+            "y": 473,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #ffffff",
+            "x": 565,
+            "y": 525,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #1a1a1a",
+            "x": 617,
+            "y": 525,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #767676",
+            "x": 669,
+            "y": 525,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #0078d7",
+            "x": 721,
+            "y": 525,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #002050",
+            "x": 565,
+            "y": 577,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #ffb900",
+            "x": 617,
+            "y": 577,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #d83b01",
+            "x": 669,
+            "y": 577,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #008272",
+            "x": 721,
+            "y": 577,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #107c10",
+            "x": 565,
+            "y": 629,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色のスポイト",
+            "x": 708,
+            "y": 685,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "INPUT",
+            "slot": null,
+            "type": "color",
+            "label": "海岸線色を選択",
+            "x": 760,
+            "y": 685,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #ffffff",
+            "x": 565,
+            "y": 737,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #1a1a1a",
+            "x": 617,
+            "y": 737,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #767676",
+            "x": 669,
+            "y": 737,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #0078d7",
+            "x": 721,
+            "y": 737,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #002050",
+            "x": 565,
+            "y": 789,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #ffb900",
+            "x": 617,
+            "y": 789,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #d83b01",
+            "x": 669,
+            "y": 789,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #008272",
+            "x": 721,
+            "y": 789,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #107c10",
+            "x": 565,
+            "y": 841,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "switch",
+            "type": "button",
+            "label": "地図透かしを表示",
+            "x": 757,
+            "y": 965,
+            "w": 62,
+            "h": 48,
+            "expanded": true
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "switch",
+            "type": "button",
+            "label": "出発地の飛行機バッジ",
+            "x": 757,
+            "y": 1025,
+            "w": 62,
+            "h": 48,
+            "expanded": true
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "文字全体",
+            "x": 565,
+            "y": 1181,
+            "w": 239,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "タイトル",
+            "x": 565,
+            "y": 1265,
+            "w": 239,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "サブタイトル",
+            "x": 565,
+            "y": 1349,
+            "w": 239,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "座標・地名",
+            "x": 565,
+            "y": 1433,
+            "w": 239,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "日付",
+            "x": 565,
+            "y": 1517,
+            "w": 239,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "地図",
+            "x": 565,
+            "y": 1601,
+            "w": 239,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "地図内部ズーム",
+            "x": 565,
+            "y": 1685,
+            "w": 239,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "toggle-group-item",
+            "type": "button",
+            "label": "左上",
+            "x": 569,
+            "y": 1845,
+            "w": 58,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "toggle-group-item",
+            "type": "button",
+            "label": "右上",
+            "x": 627,
+            "y": 1845,
+            "w": 58,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "toggle-group-item",
+            "type": "button",
+            "label": "左下",
+            "x": 685,
+            "y": 1845,
+            "w": 58,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "toggle-group-item",
+            "type": "button",
+            "label": "右下",
+            "x": 742,
+            "y": 1845,
+            "w": 58,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "位置・サイズをリセット",
+            "x": 565,
+            "y": 1905,
+            "w": 239,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "保存",
+            "x": 724,
+            "y": 1997,
+            "w": 80,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "Sukashi Classic (Outfit)",
+            "x": 578,
+            "y": 2066,
+            "w": 90,
+            "h": 80,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "Shinkansen Amber (Barlow)",
+            "x": 702,
+            "y": 2066,
+            "w": 90,
+            "h": 80,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "Kaisei 旅情明朝",
+            "x": 578,
+            "y": 2185,
+            "w": 90,
+            "h": 60,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "White Frame Ink",
+            "x": 702,
+            "y": 2185,
+            "w": 90,
+            "h": 60,
+            "expanded": false
+          }
+        ],
+        "overflow": 0,
+        "selectOptions": [
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "Outfit",
+            "x": 570,
+            "y": 137,
+            "w": 234,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "Barlow",
+            "x": 570,
+            "y": 181,
+            "w": 234,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "JetBrains Mono",
+            "x": 570,
+            "y": 225,
+            "w": 234,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "DM Sans",
+            "x": 570,
+            "y": 269,
+            "w": 234,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "Kaisei Tokumin",
+            "x": 570,
+            "y": 313,
+            "w": 234,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "ARTEMIS INTER",
+            "x": 570,
+            "y": 357,
+            "w": 234,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "Default",
+            "x": 570,
+            "y": 401,
+            "w": 234,
+            "h": 44,
+            "expanded": false
+          }
+        ]
+      },
+      "errors": []
+    },
+    {
+      "name": "desktop-1440",
+      "base": {
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "coarse": false,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "w": 1440,
+          "h": 65,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "16px"
+        },
+        "headerTitle": {
+          "x": 654,
+          "y": 18,
+          "w": 132,
+          "h": 28,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "22px"
+        },
+        "emptyCard": {
+          "x": 496,
+          "y": 321,
+          "w": 448,
+          "h": 424,
+          "padding": "32px",
+          "gap": "0px",
+          "radius": "32px",
+          "fontSize": "14px"
+        },
+        "emptyTitle": {
+          "x": 626,
+          "y": 437,
+          "w": 187,
+          "h": 32,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "24px"
+        },
+        "primaryCta": {
+          "x": 528,
+          "y": 545,
+          "w": 384,
+          "h": 48,
+          "padding": "0px 20px",
+          "gap": "8px",
+          "radius": "3.35544e+07px",
+          "fontSize": "14px"
+        },
+        "secondaryCta": {
+          "x": 528,
+          "y": 609,
+          "w": 384,
+          "h": 44,
+          "padding": "0px 20px",
+          "gap": "8px",
+          "radius": "3.35544e+07px",
+          "fontSize": "14px"
+        },
+        "headerInner": {
+          "x": 80,
+          "y": 0,
+          "w": 1280,
+          "h": 64,
+          "padding": "0px 16px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "16px"
+        },
+        "documentHeight": 1000,
+        "targets": [
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "設定",
+            "x": 1300,
+            "y": 10,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "写真・動画を選ぶ",
+            "x": 528,
+            "y": 545,
+            "w": 384,
+            "h": 48,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "カメラで撮影する",
+            "x": 528,
+            "y": 609,
+            "w": 384,
+            "h": 44,
+            "expanded": false
+          }
+        ],
+        "overflow": 0
+      },
+      "editor": {
+        "stage": {
+          "x": 262,
+          "y": 129,
+          "w": 916,
+          "h": 687,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "32px",
+          "fontSize": "16px"
+        },
+        "stageSlot": {
+          "top": "24px",
+          "right": "24px",
+          "bottom": "24px",
+          "left": "24px"
+        },
+        "headerTitle": {
+          "x": 654,
+          "y": 18,
+          "w": 132,
+          "h": 28,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "22px"
+        },
+        "leftIconRight": 188,
+        "toolbar": {
+          "x": 557,
+          "y": 910,
+          "w": 327,
+          "h": 74,
+          "padding": "8px",
+          "gap": "4px",
+          "radius": "3.35544e+07px",
+          "fontSize": "16px"
+        },
+        "hint": {
+          "fontSize": "12px"
+        },
+        "targets": [
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "別の写真・動画を選択",
+            "x": 96,
+            "y": 10,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "カメラ",
+            "x": 144,
+            "y": 10,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "設定",
+            "x": 1300,
+            "y": 10,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "NH 1731 · KIX ✈ OKA",
+            "x": 625,
+            "y": 65,
+            "w": 190,
+            "h": 40,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "ルート・透かし情報",
+            "x": 566,
+            "y": 925,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "スタイル",
+            "x": 614,
+            "y": 925,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "切り抜き・余白枠",
+            "x": 662,
+            "y": 925,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "保存して共有",
+            "x": 710,
+            "y": 925,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": "button",
+            "label": "その他の保存メニュー",
+            "x": 758,
+            "y": 925,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "tooltip-trigger",
+            "type": null,
+            "label": "保存",
+            "x": 819,
+            "y": 919,
+            "w": 56,
+            "h": 56,
+            "expanded": false
+          }
+        ],
+        "overflow": 0
+      },
+      "sheet": {
+        "content": {
+          "x": 1040,
+          "y": 0,
+          "w": 400,
+          "h": 1000,
+          "padding": "0px",
+          "gap": "0px",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "side": "right",
+        "appTitle": {
+          "x": 454,
+          "y": 18,
+          "w": 132,
+          "h": 28,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "22px"
+        },
+        "header": {
+          "x": 1041,
+          "y": 0,
+          "w": 399,
+          "h": 73,
+          "padding": "16px 24px 12px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "body": {
+          "x": 1041,
+          "y": 73,
+          "w": 399,
+          "h": 927,
+          "padding": "16px 24px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "title": {
+          "x": 1065,
+          "y": 16,
+          "w": 156,
+          "h": 28,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "0px",
+          "fontSize": "22px"
+        },
+        "titleRow": {
+          "x": 1065,
+          "y": 16,
+          "w": 351,
+          "h": 44,
+          "padding": "0px",
+          "gap": "12px",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "close": {
+          "x": 1372,
+          "y": 16,
+          "w": 44,
+          "h": 44,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "3.35544e+07px",
+          "fontSize": "14px"
+        },
+        "select": {
+          "x": 1081,
+          "y": 137,
+          "w": 319,
+          "h": 40,
+          "padding": "8px 8px 8px 10px",
+          "gap": "6px",
+          "radius": "20px",
+          "fontSize": "14px"
+        },
+        "presetCard": {
+          "x": 1081,
+          "y": 1881,
+          "w": 156,
+          "h": 91,
+          "padding": "12px",
+          "gap": "normal",
+          "radius": "28px",
+          "fontSize": "14px"
+        },
+        "card": {
+          "x": 1065,
+          "y": 89,
+          "w": 351,
+          "h": 104,
+          "padding": "0px",
+          "gap": "0px",
+          "radius": "24px",
+          "fontSize": "14px"
+        },
+        "cardHeader": {
+          "x": 1065,
+          "y": 89,
+          "w": 351,
+          "h": 48,
+          "padding": "16px 16px 12px",
+          "gap": "8px",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "cardBody": {
+          "x": 1065,
+          "y": 137,
+          "w": 351,
+          "h": 56,
+          "padding": "0px 16px 16px",
+          "gap": "12px",
+          "radius": "0px",
+          "fontSize": "14px"
+        },
+        "stage": {
+          "x": 74,
+          "y": 129,
+          "w": 916,
+          "h": 687,
+          "padding": "0px",
+          "gap": "normal",
+          "radius": "32px",
+          "fontSize": "16px"
+        },
+        "toolbarVisible": true,
+        "sliders": [
+          {
+            "label": "文字全体",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 1081,
+              "y": 1021,
+              "w": 319,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "文字全体",
+              "x": 1142,
+              "y": 1020,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "タイトル",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 1081,
+              "y": 1105,
+              "w": 319,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "タイトル",
+              "x": 1142,
+              "y": 1104,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "サブタイトル",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 1081,
+              "y": 1189,
+              "w": 319,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "サブタイトル",
+              "x": 1142,
+              "y": 1188,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "座標・地名",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 1081,
+              "y": 1273,
+              "w": 319,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "座標・地名",
+              "x": 1142,
+              "y": 1272,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "日付",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 1081,
+              "y": 1357,
+              "w": 319,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "日付",
+              "x": 1142,
+              "y": 1356,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "地図",
+            "value": 1,
+            "min": 0.5,
+            "max": 2.5,
+            "valueText": "100%",
+            "box": {
+              "x": 1081,
+              "y": 1441,
+              "w": 319,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "地図",
+              "x": 1142,
+              "y": 1440,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          },
+          {
+            "label": "地図内部ズーム",
+            "value": 1,
+            "min": 0.5,
+            "max": 5,
+            "valueText": "1.00×",
+            "box": {
+              "x": 1081,
+              "y": 1525,
+              "w": 319,
+              "h": 44,
+              "padding": "0px",
+              "gap": "normal",
+              "radius": "0px",
+              "fontSize": "14px"
+            },
+            "hit": {
+              "tag": "SPAN",
+              "slot": "slider-thumb",
+              "type": null,
+              "label": "地図内部ズーム",
+              "x": 1100,
+              "y": 1524,
+              "w": 46,
+              "h": 46,
+              "expanded": true
+            }
+          }
+        ],
+        "targets": [
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "閉じる",
+            "x": 1372,
+            "y": 16,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "select-trigger",
+            "type": "button",
+            "label": "フォント",
+            "x": 1081,
+            "y": 137,
+            "w": 319,
+            "h": 40,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色のスポイト",
+            "x": 1304,
+            "y": 257,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "INPUT",
+            "slot": null,
+            "type": "color",
+            "label": "文字色を選択",
+            "x": 1356,
+            "y": 257,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #ffffff",
+            "x": 1081,
+            "y": 309,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #1a1a1a",
+            "x": 1133,
+            "y": 309,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #767676",
+            "x": 1185,
+            "y": 309,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #0078d7",
+            "x": 1237,
+            "y": 309,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #002050",
+            "x": 1289,
+            "y": 309,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #ffb900",
+            "x": 1341,
+            "y": 309,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #d83b01",
+            "x": 1081,
+            "y": 361,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #008272",
+            "x": 1133,
+            "y": 361,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "文字色 #107c10",
+            "x": 1185,
+            "y": 361,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色のスポイト",
+            "x": 1304,
+            "y": 417,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "INPUT",
+            "slot": null,
+            "type": "color",
+            "label": "ルート線色を選択",
+            "x": 1356,
+            "y": 417,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #ffffff",
+            "x": 1081,
+            "y": 469,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #1a1a1a",
+            "x": 1133,
+            "y": 469,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #767676",
+            "x": 1185,
+            "y": 469,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #0078d7",
+            "x": 1237,
+            "y": 469,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #002050",
+            "x": 1289,
+            "y": 469,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #ffb900",
+            "x": 1341,
+            "y": 469,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #d83b01",
+            "x": 1081,
+            "y": 521,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #008272",
+            "x": 1133,
+            "y": 521,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "ルート線色 #107c10",
+            "x": 1185,
+            "y": 521,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色のスポイト",
+            "x": 1304,
+            "y": 577,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "INPUT",
+            "slot": null,
+            "type": "color",
+            "label": "海岸線色を選択",
+            "x": 1356,
+            "y": 577,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #ffffff",
+            "x": 1081,
+            "y": 629,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #1a1a1a",
+            "x": 1133,
+            "y": 629,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #767676",
+            "x": 1185,
+            "y": 629,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #0078d7",
+            "x": 1237,
+            "y": 629,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #002050",
+            "x": 1289,
+            "y": 629,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #ffb900",
+            "x": 1341,
+            "y": 629,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #d83b01",
+            "x": 1081,
+            "y": 681,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #008272",
+            "x": 1133,
+            "y": 681,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "海岸線色 #107c10",
+            "x": 1185,
+            "y": 681,
+            "w": 44,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "switch",
+            "type": "button",
+            "label": "地図透かしを表示",
+            "x": 1353,
+            "y": 805,
+            "w": 62,
+            "h": 48,
+            "expanded": true
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "switch",
+            "type": "button",
+            "label": "出発地の飛行機バッジ",
+            "x": 1353,
+            "y": 865,
+            "w": 62,
+            "h": 48,
+            "expanded": true
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "文字全体",
+            "x": 1081,
+            "y": 1021,
+            "w": 319,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "タイトル",
+            "x": 1081,
+            "y": 1105,
+            "w": 319,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "サブタイトル",
+            "x": 1081,
+            "y": 1189,
+            "w": 319,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "座標・地名",
+            "x": 1081,
+            "y": 1273,
+            "w": 319,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "日付",
+            "x": 1081,
+            "y": 1357,
+            "w": 319,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "地図",
+            "x": 1081,
+            "y": 1441,
+            "w": 319,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "SPAN",
+            "slot": "slider",
+            "type": null,
+            "label": "地図内部ズーム",
+            "x": 1081,
+            "y": 1525,
+            "w": 319,
+            "h": 44,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "toggle-group-item",
+            "type": "button",
+            "label": "左上",
+            "x": 1085,
+            "y": 1685,
+            "w": 78,
+            "h": 40,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "toggle-group-item",
+            "type": "button",
+            "label": "右上",
+            "x": 1163,
+            "y": 1685,
+            "w": 78,
+            "h": 40,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "toggle-group-item",
+            "type": "button",
+            "label": "左下",
+            "x": 1241,
+            "y": 1685,
+            "w": 78,
+            "h": 40,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "toggle-group-item",
+            "type": "button",
+            "label": "右下",
+            "x": 1318,
+            "y": 1685,
+            "w": 78,
+            "h": 40,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "位置・サイズをリセット",
+            "x": 1081,
+            "y": 1741,
+            "w": 319,
+            "h": 40,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": "button",
+            "type": null,
+            "label": "保存",
+            "x": 1320,
+            "y": 1829,
+            "w": 80,
+            "h": 40,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "Sukashi Classic (Outfit)",
+            "x": 1094,
+            "y": 1894,
+            "w": 130,
+            "h": 60,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "Shinkansen Amber (Barlow)",
+            "x": 1258,
+            "y": 1894,
+            "w": 130,
+            "h": 60,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "Kaisei 旅情明朝",
+            "x": 1094,
+            "y": 1993,
+            "w": 130,
+            "h": 40,
+            "expanded": false
+          },
+          {
+            "tag": "BUTTON",
+            "slot": null,
+            "type": "button",
+            "label": "White Frame Ink",
+            "x": 1258,
+            "y": 1993,
+            "w": 130,
+            "h": 40,
+            "expanded": false
+          }
+        ],
+        "overflow": 0,
+        "selectOptions": [
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "Outfit",
+            "x": 1086,
+            "y": 137,
+            "w": 314,
+            "h": 40,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "Barlow",
+            "x": 1086,
+            "y": 177,
+            "w": 314,
+            "h": 40,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "JetBrains Mono",
+            "x": 1086,
+            "y": 217,
+            "w": 314,
+            "h": 40,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "DM Sans",
+            "x": 1086,
+            "y": 257,
+            "w": 314,
+            "h": 40,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "Kaisei Tokumin",
+            "x": 1086,
+            "y": 297,
+            "w": 314,
+            "h": 40,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "ARTEMIS INTER",
+            "x": 1086,
+            "y": 337,
+            "w": 314,
+            "h": 40,
+            "expanded": false
+          },
+          {
+            "tag": "DIV",
+            "slot": "select-item",
+            "type": null,
+            "label": "Default",
+            "x": 1086,
+            "y": 377,
+            "w": 314,
+            "h": 40,
+            "expanded": false
+          }
+        ]
+      },
+      "errors": []
+    }
+  ],
+  "elementControls": {
+    "results": {
+      "文字全体": {
+        "changed": true,
+        "value": "2.5",
+        "resetValue": "1"
+      },
+      "タイトル": {
+        "changed": true,
+        "value": "2.5",
+        "resetValue": "1"
+      },
+      "サブタイトル": {
+        "changed": true,
+        "value": "2.5",
+        "resetValue": "1"
+      },
+      "座標・地名": {
+        "changed": true,
+        "value": "2.5",
+        "resetValue": "1"
+      },
+      "日付": {
+        "changed": true,
+        "value": "2.5",
+        "resetValue": "1"
+      },
+      "地図": {
+        "changed": true,
+        "value": "2.5",
+        "resetValue": "1"
+      }
+    },
+    "persisted": 2.5,
+    "stepValue": "0.51",
+    "menuItems": [
+      {
+        "label": "JPEGで保存",
+        "h": 40
+      },
+      {
+        "label": "PNG（無劣化）で保存",
+        "h": 40
+      },
+      {
+        "label": "透かしの位置・拡大率をリセット",
+        "h": 48
+      }
+    ],
+    "errors": []
+  },
+  "reducedMotion": {
+    "matches": true,
+    "transitionDuration": "1e-06s",
+    "animationDuration": "1e-06s"
+  },
+  "sheetFocus": {
+    "bottom": "スタイル",
+    "compact-side": "スタイル"
+  }
+}

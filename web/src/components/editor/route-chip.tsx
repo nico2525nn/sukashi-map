@@ -1,5 +1,6 @@
 import { Car, MapPin, Plane, TrainFront } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import { summaryLabel, type TransportInfo } from '@/types'
 
 export function modeIcon(mode: TransportInfo['mode'], className = 'size-4') {
@@ -19,11 +20,12 @@ interface RouteChipProps {
   info: TransportInfo
   onClick: () => void
   computing?: boolean
+  className?: string
 }
 
-export function RouteChip({ info, onClick }: RouteChipProps) {
+export function RouteChip({ info, onClick, className }: RouteChipProps) {
   return (
-    <div className="flex min-h-10 items-center justify-center px-2">
+    <div className={cn('flex min-h-10 items-center justify-center px-2', className)}>
       <Button
         variant="outline"
         onClick={onClick}

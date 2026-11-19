@@ -6,8 +6,10 @@ import { computeCropRect } from '@/lib/export'
 import { hitTest, renderOverlay, type OverlayLayout } from '@/lib/renderer'
 import { useAppStore } from '@/store/app-store'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 interface PreviewStageProps {
+  className?: string
   media: MediaAsset
   source: HTMLImageElement | HTMLVideoElement | null
   aspect: number
@@ -80,7 +82,14 @@ function drawSelection(
   ctx.restore()
 }
 
-export function PreviewStage({ media, source, aspect, datasets, renderKey = 0 }: PreviewStageProps) {
+export function PreviewStage({
+  media,
+  source,
+  aspect,
+  datasets,
+  renderKey = 0,
+  className,
+}: PreviewStageProps) {
   const info = useAppStore((s) => s.info)
   const style = useAppStore((s) => s.style)
   const crop = useAppStore((s) => s.crop)
@@ -386,9 +395,12 @@ export function PreviewStage({ media, source, aspect, datasets, renderKey = 0 }:
   }, [updateStyle])
 
   return (
-    <div ref={stageSlotRef} className="absolute inset-3 flex items-center justify-center sm:inset-6">
     <div
-      className="relative select-none overflow-hidden rounded-[2rem] bg-muted shadow-2xl shadow-primary/10 ring-1 ring-border/70 sm:rounded-[2.25rem] checkerboard"
+      ref={stageSlotRef}
+      data-testid="stage-slot"
+      className={cn('absolute inset-4 flex items-center justify-center sm:inset-6', className)}>
+    <div
+      className="relative select-none overflow-hidden rounded-[2rem] bg-muted shadow-2xl shadow-primary/10 ring-1 ring-border/70 checkerboard"
       style={{ width: stageW, height: stageH }}
     >
       <canvas ref={bgRef} className="absolute inset-0 size-full" aria-hidden />

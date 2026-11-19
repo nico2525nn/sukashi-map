@@ -49,7 +49,7 @@ export function FloatingToolbar({
 }: FloatingToolbarProps) {
   return (
     <div className={`pointer-events-none fixed inset-x-0 bottom-0 z-30 flex justify-center pb-[max(1rem,env(safe-area-inset-bottom))] ${className ?? ''}`}>
-      <div className="pointer-events-auto flex items-center gap-0.5 rounded-full border border-border/60 bg-card/90 p-1.5 shadow-2xl shadow-primary/10 backdrop-blur-xl sm:gap-1 sm:p-2">
+      <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-border/60 bg-card/90 p-2 shadow-2xl shadow-primary/10 backdrop-blur-xl max-[359px]:gap-0 max-[359px]:p-1">
         <ToolbarButton label="ルート・透かし情報" onClick={onOpenInfo} disabled={disabled}>
           <Route className="size-5" />
         </ToolbarButton>
@@ -69,7 +69,7 @@ export function FloatingToolbar({
                 <Button
                   variant="ghost"
                   size="icon-lg"
-                  className="size-10 rounded-full sm:size-11"
+                  className="size-11 rounded-full"
                   aria-label="その他の保存メニュー"
                   disabled={disabled}
                 >
@@ -103,12 +103,12 @@ export function FloatingToolbar({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <div className="mx-1 h-8 w-px bg-border/70" />
+        <div className="mx-1 h-8 w-px bg-border/70 max-[359px]:mx-1" />
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               size="icon"
-              className="size-12 rounded-full shadow-lg shadow-primary/30 sm:size-14"
+              className="size-14 rounded-full shadow-lg shadow-primary/30 max-[359px]:size-12"
               onClick={onSave}
               disabled={disabled}
               aria-label="保存"
@@ -140,7 +140,7 @@ function ToolbarButton({
         <Button
           variant="ghost"
           size="icon-lg"
-          className="size-10 rounded-full sm:size-11"
+          className="size-11 rounded-full"
           onClick={onClick}
           disabled={disabled}
           aria-label={label}

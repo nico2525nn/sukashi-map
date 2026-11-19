@@ -805,6 +805,10 @@ object OverlayCanvasRenderer {
     ): RectF {
         val scale = style.textScale.coerceIn(0.5f, 2.5f)
         val u = unit * scale
+        val titleU = u * style.titleScale.coerceIn(0.5f, 2.5f)
+        val subtitleU = u * style.subtitleScale.coerceIn(0.5f, 2.5f)
+        val locationU = u * style.locationScale.coerceIn(0.5f, 2.5f)
+        val dateU = u * style.dateScale.coerceIn(0.5f, 2.5f)
         val customTypeface = style.font.resolveTypeface(context)
         val cjkBold = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         val cjkRegular = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
@@ -815,12 +819,18 @@ object OverlayCanvasRenderer {
             Color.argb(180, 0, 0, 0)
         }
 
-        fun makePaint(tf: Typeface, sizePx: Float, alpha: Int = 255, shadowMul: Float = 1f): Paint =
+        fun makePaint(
+            tf: Typeface,
+            sizePx: Float,
+            alpha: Int = 255,
+            shadowMul: Float = 1f,
+            shadowUnit: Float = u
+        ): Paint =
             Paint(Paint.ANTI_ALIAS_FLAG or Paint.SUBPIXEL_TEXT_FLAG).apply {
                 typeface = tf
                 textSize = sizePx
                 color = ColorUtils.setAlphaComponent(style.textColorArgb, alpha)
-                setShadowLayer(8f * u * shadowMul, 0f, 1.2f * u, shadowColor)
+                setShadowLayer(8f * shadowUnit * shadowMul, 0f, 1.2f * shadowUnit, shadowColor)
             }
 
         val rows = mutableListOf<TextRowSpec>()
@@ -831,83 +841,157 @@ object OverlayCanvasRenderer {
                 val reg = info.registrationNumber.trim()
                 if (flt.isNotBlank() || reg.isNotBlank()) {
                     if (flt.isNotBlank() && reg.isNotBlank()) {
-                        val pMain = makePaint(selectGlyphSafeTypeface(style.font, customTypeface, cjkBold, flt), 46f * u)
-                        val pSub = makePaint(selectGlyphSafeTypeface(style.font, customTypeface, cjkBold, reg), 39f * u, alpha = 235)
-                        val gap = 12f * u
+                        val rowU = maxOf(titleU, subtitleU)
+                        val pMain = makePaint(
+                            selectGlyphSafeTypeface(style.font, customTypeface, cjkBold, flt),
+                            46f * titleU,
+                            shadowUnit = titleU
+                        )
+                        val pSub = makePaint(
+                            selectGlyphSafeTypeface(style.font, customTypeface, cjkBold, reg),
+                            39f * subtitleU,
+                            alpha = 235,
+                            shadowUnit = subtitleU
+                        )
+                        val gap = 12f * rowU
                         val w = pMain.measureText(flt) + gap + pSub.measureText(reg)
-                        rows.add(TextRowSpec.DualColumnLine(flt, pMain, reg, pSub, gap, w, 54f * u))
+                        rows.add(TextRowSpec.DualColumnLine(flt, pMain, reg, pSub, gap, w, 54f * rowU))
+                    } else if (flt.isNotBlank()) {
+                        val pMain = makePaint(
+                            selectGlyphSafeTypeface(style.font, customTypeface, cjkBold, flt),
+                            46f * titleU,
+                            shadowUnit = titleU
+                        )
+                        rows.add(TextRowSpec.SimpleLine(flt, pMain, pMain.measureText(flt), 54f * titleU))
                     } else {
-                        val txt = flt.ifBlank { reg }
-                        val pMain = makePaint(selectGlyphSafeTypeface(style.font, customTypeface, cjkBold, txt), 46f * u)
-                        rows.add(TextRowSpec.SimpleLine(txt, pMain, pMain.measureText(txt), 54f * u))
+                        val pReg = makePaint(
+                            selectGlyphSafeTypeface(style.font, customTypeface, cjkBold, reg),
+                            39f * subtitleU,
+                            shadowUnit = subtitleU
+                        )
+                        rows.add(TextRowSpec.SimpleLine(reg, pReg, pReg.measureText(reg), 52f * subtitleU))
                     }
                 }
 
                 val dep = info.departureAirportCode.trim().uppercase()
                 val arr = info.arrivalAirportCode.trim().uppercase()
                 if (dep.isNotBlank() && arr.isNotBlank()) {
-                    val pCode = makePaint(selectGlyphSafeTypeface(style.font, customTypeface, cjkBold, "$dep$arr"), 52f * u)
-                    val iconSize = 42f * u
-                    val iconGap = 15f * u
+                    val pCode = makePaint(
+                        selectGlyphSafeTypeface(style.font, customTypeface, cjkBold, "$dep$arr"),
+                        52f * titleU,
+                        shadowUnit = titleU
+                    )
+                    val iconSize = 42f * titleU
+                    val iconGap = 15f * titleU
                     val w = pCode.measureText(dep) + iconGap + iconSize + iconGap + pCode.measureText(arr)
-                    rows.add(TextRowSpec.FlightIataLine(dep, arr, pCode, iconSize, iconGap, w, 62f * u))
+                    rows.add(TextRowSpec.FlightIataLine(dep, arr, pCode, iconSize, iconGap, w, 62f * titleU))
                 } else if (dep.isNotBlank() || arr.isNotBlank()) {
                     val only = dep.ifBlank { arr }
-                    val pCode = makePaint(selectGlyphSafeTypeface(style.font, customTypeface, cjkBold, only), 52f * u)
-                    rows.add(TextRowSpec.SimpleLine(only, pCode, pCode.measureText(only), 62f * u))
+                    val pCode = makePaint(
+                        selectGlyphSafeTypeface(style.font, customTypeface, cjkBold, only),
+                        52f * titleU,
+                        shadowUnit = titleU
+                    )
+                    rows.add(TextRowSpec.SimpleLine(only, pCode, pCode.measureText(only), 62f * titleU))
                 }
 
-                val pAirportSub = makePaint(cjkRegular, 24f * u, alpha = 225, shadowMul = 0.75f)
+                val pAirportSub = makePaint(cjkRegular, 24f * subtitleU, alpha = 225, shadowMul = 0.75f, shadowUnit = subtitleU)
                 if (info.departureAirportName.isNotBlank()) {
                     val t = info.departureAirportName.trim()
-                    rows.add(TextRowSpec.SubAirportLine(t, false, pAirportSub, pAirportSub.measureText(t), 30f * u))
+                    rows.add(TextRowSpec.SubAirportLine(t, false, pAirportSub, pAirportSub.measureText(t), 30f * subtitleU))
                 }
                 if (info.arrivalAirportName.isNotBlank()) {
                     val t = info.arrivalAirportName.trim()
-                    val w = pAirportSub.measureText(t) + 28f * u
-                    rows.add(TextRowSpec.SubAirportLine(t, true, pAirportSub, w, 32f * u))
+                    val w = pAirportSub.measureText(t) + 28f * subtitleU
+                    rows.add(TextRowSpec.SubAirportLine(t, true, pAirportSub, w, 32f * subtitleU))
                 }
             }
 
             TransportMode.TRAIN -> {
                 if (info.railwayLineName.isNotBlank()) {
                     val t = info.railwayLineName.trim()
-                    val pLine = makePaint(selectGlyphSafeTypeface(style.font, customTypeface, cjkBold, t), 46f * u)
-                    rows.add(TextRowSpec.SimpleLine(t, pLine, pLine.measureText(t), 54f * u))
+                    val pLine = makePaint(
+                        selectGlyphSafeTypeface(style.font, customTypeface, cjkBold, t),
+                        46f * titleU,
+                        shadowUnit = titleU
+                    )
+                    rows.add(TextRowSpec.SimpleLine(t, pLine, pLine.measureText(t), 54f * titleU))
                 }
                 val tName = info.trainName.trim()
                 val vModel = info.vehicleModel.trim()
                 if (tName.isNotBlank() || vModel.isNotBlank()) {
                     if (tName.isNotBlank() && vModel.isNotBlank()) {
-                        val pPrimary = makePaint(selectGlyphSafeTypeface(style.font, customTypeface, cjkBold, tName), 45f * u)
-                        val pModel = makePaint(selectGlyphSafeTypeface(style.font, customTypeface, cjkBold, vModel), 39f * u, alpha = 230)
-                        val gap = 12f * u
+                        val pPrimary = makePaint(
+                            selectGlyphSafeTypeface(style.font, customTypeface, cjkBold, tName),
+                            45f * subtitleU,
+                            shadowUnit = subtitleU
+                        )
+                        val pModel = makePaint(
+                            selectGlyphSafeTypeface(style.font, customTypeface, cjkBold, vModel),
+                            39f * subtitleU,
+                            alpha = 230,
+                            shadowUnit = subtitleU
+                        )
+                        val gap = 12f * subtitleU
                         val w = pPrimary.measureText(tName) + gap + pModel.measureText(vModel)
-                        rows.add(TextRowSpec.DualColumnLine(tName, pPrimary, vModel, pModel, gap, w, 52f * u))
+                        rows.add(TextRowSpec.DualColumnLine(tName, pPrimary, vModel, pModel, gap, w, 52f * subtitleU))
                     } else {
                         val single = tName.ifBlank { vModel }
-                        val pSingle = makePaint(selectGlyphSafeTypeface(style.font, customTypeface, cjkBold, single), 45f * u)
-                        rows.add(TextRowSpec.SimpleLine(single, pSingle, pSingle.measureText(single), 52f * u))
+                        val pSingle = makePaint(
+                            selectGlyphSafeTypeface(style.font, customTypeface, cjkBold, single),
+                            45f * subtitleU,
+                            shadowUnit = subtitleU
+                        )
+                        rows.add(TextRowSpec.SimpleLine(single, pSingle, pSingle.measureText(single), 52f * subtitleU))
                     }
                 }
-                addArrowEndpointRows(rows, info.departureStationName, info.arrivalStationName, style.font, customTypeface, cjkBold, u, W, ::makePaint)
+                addArrowEndpointRows(
+                    rows,
+                    info.departureStationName,
+                    info.arrivalStationName,
+                    style.font,
+                    customTypeface,
+                    cjkBold,
+                    subtitleU,
+                    W
+                ) { tf, size, alpha, shadowMul -> makePaint(tf, size, alpha, shadowMul, subtitleU) }
             }
 
             TransportMode.OTHER -> {
                 if (info.transportName.isNotBlank()) {
                     val t = info.transportName.trim()
-                    val pTr = makePaint(selectGlyphSafeTypeface(style.font, customTypeface, cjkBold, t), 46f * u)
-                    rows.add(TextRowSpec.SimpleLine(t, pTr, pTr.measureText(t), 54f * u))
+                    val pTr = makePaint(
+                        selectGlyphSafeTypeface(style.font, customTypeface, cjkBold, t),
+                        46f * titleU,
+                        shadowUnit = titleU
+                    )
+                    rows.add(TextRowSpec.SimpleLine(t, pTr, pTr.measureText(t), 54f * titleU))
                 }
-                addArrowEndpointRows(rows, info.departurePlaceName, info.destinationPlaceName, style.font, customTypeface, cjkBold, u, W, ::makePaint)
+                addArrowEndpointRows(
+                    rows,
+                    info.departurePlaceName,
+                    info.destinationPlaceName,
+                    style.font,
+                    customTypeface,
+                    cjkBold,
+                    subtitleU,
+                    W
+                ) { tf, size, alpha, shadowMul -> makePaint(tf, size, alpha, shadowMul, subtitleU) }
             }
 
             TransportMode.SPOT -> {
+                var rendered = 0
                 for (raw in listOf(info.spotLine1, info.spotLine2, info.spotLine3)) {
                     val t = raw.trim()
                     if (t.isNotBlank()) {
-                        val pSpot = makePaint(selectGlyphSafeTypeface(style.font, customTypeface, cjkBold, t), 48f * u)
-                        rows.add(TextRowSpec.SimpleLine(t, pSpot, pSpot.measureText(t), 56f * u))
+                        val lineU = if (rendered == 0) titleU else subtitleU
+                        rendered += 1
+                        val pSpot = makePaint(
+                            selectGlyphSafeTypeface(style.font, customTypeface, cjkBold, t),
+                            48f * lineU,
+                            shadowUnit = lineU
+                        )
+                        rows.add(TextRowSpec.SimpleLine(t, pSpot, pSpot.measureText(t), 56f * lineU))
                     }
                 }
             }
@@ -930,10 +1014,10 @@ object OverlayCanvasRenderer {
             }
         }
         if (!locText.isNullOrBlank()) {
-            val pLoc = makePaint(cjkBold, 28f * u, alpha = 255, shadowMul = 0.75f)
-            val pinSize = 26f * u
-            val w = pinSize + 8f * u + pLoc.measureText(locText)
-            rows.add(TextRowSpec.LocationPinLine(locText, pLoc, pinSize, w, 38f * u))
+            val pLoc = makePaint(cjkBold, 28f * locationU, alpha = 255, shadowMul = 0.75f, shadowUnit = locationU)
+            val pinSize = 26f * locationU
+            val w = pinSize + 8f * locationU + pLoc.measureText(locText)
+            rows.add(TextRowSpec.LocationPinLine(locText, pLoc, pinSize, w, 38f * locationU))
         }
 
         // Date / Time Line (Spec §5.5.B: Typeface.DEFAULT_BOLD, alpha = 200)
@@ -951,8 +1035,8 @@ object OverlayCanvasRenderer {
             )
         }
         if (!dtText.isNullOrBlank()) {
-            val pDt = makePaint(cjkBold, 25f * u, alpha = 205, shadowMul = 0.75f)
-            rows.add(TextRowSpec.SimpleLine(dtText, pDt, pDt.measureText(dtText), 34f * u))
+            val pDt = makePaint(cjkBold, 25f * dateU, alpha = 205, shadowMul = 0.75f, shadowUnit = dateU)
+            rows.add(TextRowSpec.SimpleLine(dtText, pDt, pDt.measureText(dtText), 34f * dateU))
         }
 
         if (rows.isEmpty()) {
@@ -1000,7 +1084,7 @@ object OverlayCanvasRenderer {
                     val depW = row.paint.measureText(row.dep)
                     val iconCx = rowLeft + depW + row.iconGap + row.iconSize * 0.5f
                     val iconCy = baseline - row.iconSize * 0.40f
-                    drawInlinePlaneGlyph(canvas, iconCx, iconCy, row.iconSize, style.textColorArgb, shadowColor, u)
+                    drawInlinePlaneGlyph(canvas, iconCx, iconCy, row.iconSize, style.textColorArgb, shadowColor, row.iconSize / 42f)
                     val arrX = rowLeft + depW + row.iconGap * 2f + row.iconSize
                     canvas.drawText(row.arr, arrX, baseline, row.paint)
                 }
@@ -1012,14 +1096,15 @@ object OverlayCanvasRenderer {
                         curX += row.paint.measureText(row.leftText) + row.arrowGap
                     }
                     val arrowCy = baseline - row.arrowWidth * 0.45f
-                    drawInlineArrowGlyph(canvas, curX, arrowCy, row.arrowWidth, style.textColorArgb, shadowColor, u)
+                    drawInlineArrowGlyph(canvas, curX, arrowCy, row.arrowWidth, style.textColorArgb, shadowColor, row.paint.textSize / 46f)
                     curX += row.arrowWidth + row.arrowGap
                     canvas.drawText(row.rightText, curX, baseline, row.paint)
                 }
 
                 is TextRowSpec.SubAirportLine -> {
                     if (row.withSmallPlane) {
-                        val smallSize = 19f * u
+                        val subU = row.paint.textSize / 24f
+                        val smallSize = 19f * subU
                         drawInlinePlaneGlyph(
                             canvas,
                             rowLeft + smallSize * 0.5f,
@@ -1027,19 +1112,20 @@ object OverlayCanvasRenderer {
                             smallSize,
                             ColorUtils.setAlphaComponent(style.textColorArgb, 230),
                             shadowColor,
-                            u * 0.6f
+                            subU * 0.6f
                         )
-                        canvas.drawText(row.name, rowLeft + 28f * u, baseline, row.paint)
+                        canvas.drawText(row.name, rowLeft + row.paint.textSize * (28f / 24f), baseline, row.paint)
                     } else {
                         canvas.drawText(row.name, rowLeft, baseline, row.paint)
                     }
                 }
 
                 is TextRowSpec.LocationPinLine -> {
+                    val locationU = row.paint.textSize / 28f
                     val pinCx = rowLeft + row.pinSize * 0.45f
-                    val pinBottomY = baseline + 2f * u
+                    val pinBottomY = baseline + 2f * locationU
                     drawRoundPushpinIcon(canvas, pinCx, pinBottomY, row.pinSize)
-                    canvas.drawText(row.text, rowLeft + row.pinSize + 8f * u, baseline, row.paint)
+                    canvas.drawText(row.text, rowLeft + row.pinSize + 8f * locationU, baseline, row.paint)
                 }
             }
             cursorY += row.height

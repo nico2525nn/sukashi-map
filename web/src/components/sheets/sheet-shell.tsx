@@ -7,7 +7,8 @@ import {
   SheetDescription,
   SheetTitle,
 } from '@/components/ui/sheet'
-import { useIsMobile } from '@/hooks/use-media-query'
+import { useIsCoarsePointer, useIsMobile, useIsShortLandscape } from '@/hooks/use-media-query'
+import { useUiStore } from '@/store/ui-store'
 import { cn } from '@/lib/utils'
 
 interface SheetShellProps {
@@ -32,36 +33,68 @@ export function SheetShell({
   compact,
 }: SheetShellProps) {
   const isMobile = useIsMobile()
+  const shortLandscape = useIsShortLandscape()
+  const coarse = useIsCoarsePointer()
+  const compactSide = shortLandscape && coarse
+  const sideSheet = !isMobile || shortLandscape
+  const sheetOpener = useUiStore((state) => state.sheetOpener)
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
-        side={isMobile ? 'bottom' : 'right'}
+        side={sideSheet ? 'right' : 'bottom'}
         showCloseButton={false}
+        style={compactSide ? { width: 'min(20rem, 70vw)' } : undefined}
+        onCloseAutoFocus={(event) => {
+          if (!sheetOpener) return
+          const label = sheetOpener.label
+          if (sheetOpener.element.isConnected) {
+            event.preventDefault()
+            sheetOpener.element.focus()
+            return
+          }
+          if (!label) return
+          event.preventDefault()
+          const focusFallback = (attempt = 0) => {
+            const next = [...document.querySelectorAll<HTMLElement>('[aria-label]')].find(
+              (element) =>
+                element.getAttribute('aria-label') === label &&
+                element.getBoundingClientRect().width > 0,
+            )
+            if (next) {
+              next.focus()
+              return
+            }
+            if (attempt < 12) window.setTimeout(() => focusFallback(attempt + 1), 50)
+          }
+          window.setTimeout(() => focusFallback(), 50)
+        }}
         className={cn(
           'flex flex-col gap-0 bg-card p-0',
-          isMobile
-            ? compact
-              ? 'max-h-[58dvh] rounded-t-[2rem] border-t-0'
-              : 'max-h-[92dvh] rounded-t-[2rem] border-t-0'
-            : 'w-full border-l-0 p-0 sm:max-w-[30rem]!',
+          sideSheet
+            ? compactSide
+              ? 'border-l-0 p-0'
+              : 'w-full border-l-0 p-0 sm:max-w-[25rem]!'
+            : compact
+              ? 'max-h-[50dvh] rounded-t-[2rem] border-t-0'
+              : 'max-h-[92dvh] rounded-t-[2rem] border-t-0',
           className,
         )}
       >
-        <div className="shrink-0 border-b border-border/60 bg-card/95 px-4 pt-2.5 pb-2 backdrop-blur-xl sm:px-5">
-          {isMobile && <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-muted-foreground/25" />}
-          <div className="flex items-center justify-between gap-3">
+        <div data-testid="sheet-header-bar" className="safe-x shrink-0 border-b border-border/60 bg-card/95 pt-4 pb-3 backdrop-blur-xl">
+          {!sideSheet && <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-muted-foreground/25" />}
+          <div data-testid="sheet-title-row" className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <SheetTitle className="truncate text-lg font-bold tracking-tight">{title}</SheetTitle>
+              <SheetTitle className="line-clamp-2 break-words text-[22px] leading-7 font-bold tracking-tight">{title}</SheetTitle>
               {description && (
-                <SheetDescription className="truncate text-xs">{description}</SheetDescription>
+                <SheetDescription className="truncate text-xs leading-4">{description}</SheetDescription>
               )}
             </div>
-            <div className="flex shrink-0 items-center gap-1.5">
+            <div className="flex shrink-0 items-center gap-2">
               {action}
               <Button
                 variant="ghost"
-                size="icon-sm"
-                className="rounded-full"
+                size="icon"
+                className="size-11 rounded-full"
                 onClick={() => onOpenChange(false)}
                 aria-label="閉じる"
               >
@@ -70,7 +103,7 @@ export function SheetShell({
             </div>
           </div>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-5">
+        <div data-testid="sheet-body" className="safe-x min-h-0 flex-1 overflow-y-auto overscroll-contain pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
           {children}
         </div>
       </SheetContent>

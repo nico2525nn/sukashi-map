@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { useMediaElement } from '@/hooks/use-media-element'
-import { useIsMobile } from '@/hooks/use-media-query'
+import { useIsCoarsePointer, useIsMobile, useIsShortLandscape } from '@/hooks/use-media-query'
 import {
   canExportVideo,
   canvasToBlob,
@@ -43,7 +43,21 @@ export function Editor({ datasets, renderKey = 0, onRetryMap }: EditorProps) {
   const openSheet = useUiStore((s) => s.openSheet)
   const sheet = useUiStore((s) => s.sheet)
   const isMobile = useIsMobile()
-  const sheetShift = !isMobile && sheet ? 'md:pr-[30rem]' : ''
+  const shortLandscape = useIsShortLandscape()
+  const coarse = useIsCoarsePointer()
+  const compactSide = shortLandscape && coarse
+  const sideSheet = !isMobile || shortLandscape
+  const sheetShift = sideSheet && sheet
+    ? compactSide
+      ? 'pr-[min(20rem,70vw)]'
+      : 'md:pr-[25rem]'
+    : ''
+  const stageShift = sideSheet && sheet
+    ? compactSide
+      ? 'right-[min(20rem,70vw)] md:right-[min(20rem,70vw)]'
+      : 'md:right-[25rem]'
+    : ''
+  const compactSheetOpen = isMobile && !shortLandscape && (sheet === 'style' || sheet === 'crop')
   const { image, video, error: mediaError } = useMediaElement(media)
   useEffect(() => {
     if (mediaError) toast.error(mediaError)
@@ -168,42 +182,63 @@ export function Editor({ datasets, renderKey = 0, onRetryMap }: EditorProps) {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col pb-28">
-      <RouteChip info={info} onClick={() => openSheet('info')} />
+    <div className={cn('flex min-h-0 flex-1 flex-col', compactSide && sheet ? 'pb-0' : 'pb-24')}>
+      <RouteChip info={info} onClick={() => openSheet('info')} className={sheetShift} />
       {!datasets && (
         <div className="mx-auto mt-1 flex items-center gap-2 rounded-full border border-border/70 bg-card/80 px-3 py-1 text-xs text-muted-foreground">
           地図データを読み込めませんでした
           {onRetryMap && (
-            <Button variant="ghost" size="xs" className="h-6 rounded-full" onClick={onRetryMap}>
+            <Button variant="ghost" size="sm" className="px-3 rounded-full" onClick={onRetryMap}>
               再試行
             </Button>
           )}
         </div>
       )}
-      <div className={cn("relative flex min-h-0 flex-1 items-center justify-center px-3 pb-2 sm:px-6", sheetShift)}>
-        <PreviewStage key={media.url} media={media} source={source} aspect={aspect} datasets={datasets} renderKey={renderKey} />
+      <div
+        className={cn(
+          "relative flex min-h-0 flex-1 items-center justify-center px-3 pb-2 sm:px-6",
+          sheetShift,
+          compactSheetOpen &&
+            (datasets
+              ? "max-md:max-h-[calc(50dvh-8.5rem)]"
+              : "max-md:max-h-[calc(50dvh-11rem)]"),
+        )}
+      >
+        <PreviewStage
+          key={media.url}
+          media={media}
+          source={source}
+          aspect={aspect}
+          datasets={datasets}
+          renderKey={renderKey}
+          className={stageShift}
+        />
       </div>
-      <div className="hidden flex-col items-center gap-1 px-4 pb-3 text-center [@media(min-height:520px)]:flex">
-        <p className="text-[11px] text-muted-foreground sm:text-xs">
-          テキスト・地図をドラッグ / 右上のハンドルでサイズ変更
-        </p>
-        <p className="text-xs text-muted-foreground">
-          元画像 {asset.width} × {asset.height}
-        </p>
-      </div>
-      <FloatingToolbar
-        isVideo={asset.type === 'video'}
-        onOpenInfo={() => openSheet('info')}
-        onOpenStyle={() => openSheet('style')}
-        onOpenCrop={() => openSheet('crop')}
-        onShare={() => void exportCurrent(settings.exportFormat, true)}
-        onSave={() => void exportCurrent(settings.exportFormat, false)}
-        onSaveFormat={(format) => void exportCurrent(format, false)}
-        onSaveVideo={() => void exportCurrent(settings.exportFormat, false)}
-        onResetLayout={() => useAppStore.getState().resetLayout()}
-        disabled={exporting}
-        className={sheetShift}
-      />
+      {!compactSheetOpen && (
+        <div className={cn("hidden flex-col items-center gap-2 px-6 pb-4 text-center [@media(min-height:520px)]:flex", sheetShift)}>
+          <p className="text-xs leading-5 text-muted-foreground">
+            テキスト・地図をドラッグ / 右上のハンドルでサイズ変更
+          </p>
+          <p className="text-xs leading-5 text-muted-foreground">
+            元画像 {asset.width} × {asset.height}
+          </p>
+        </div>
+      )}
+      {!(compactSide && sheet) && (
+        <FloatingToolbar
+          isVideo={asset.type === 'video'}
+          onOpenInfo={() => openSheet('info')}
+          onOpenStyle={() => openSheet('style')}
+          onOpenCrop={() => openSheet('crop')}
+          onShare={() => void exportCurrent(settings.exportFormat, true)}
+          onSave={() => void exportCurrent(settings.exportFormat, false)}
+          onSaveFormat={(format) => void exportCurrent(format, false)}
+          onSaveVideo={() => void exportCurrent(settings.exportFormat, false)}
+          onResetLayout={() => useAppStore.getState().resetLayout()}
+          disabled={exporting}
+          className={sheetShift}
+        />
+      )}
       <InfoSheet />
       <StyleSheet />
       <CropSheet />
@@ -216,7 +251,7 @@ export function Editor({ datasets, renderKey = 0, onRetryMap }: EditorProps) {
                 {asset.type === 'video' ? '動画を書き出し中…' : '画像を保存中…'}
               </p>
               {asset.type === 'video' && <Progress value={progress * 100} />}
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs leading-5 text-muted-foreground">
                 このままタブを閉じずにお待ちください。タブを切り替えると動画が乱れる場合があります。
               </p>
               {asset.type === 'video' && (

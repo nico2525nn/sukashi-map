@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
+import { useDialogFocusReturn } from '@/hooks/use-dialog-focus'
 import { useAppStore } from '@/store/app-store'
 import { useUiStore } from '@/store/ui-store'
 import {
@@ -43,6 +44,7 @@ export function StyleSheet() {
   const deletePreset = useAppStore((s) => s.deletePreset)
   const [presetOpen, setPresetOpen] = useState(false)
   const [presetName, setPresetName] = useState('')
+  const presetFocus = useDialogFocusReturn()
 
   return (
     <>
@@ -63,7 +65,7 @@ export function StyleSheet() {
                 void document.fonts?.load(`700 40px ${family}`).then(() => updateStyle({ font: value }))
               }}
             >
-              <SelectTrigger aria-label="フォント" className="w-full rounded-xl">
+              <SelectTrigger aria-label="フォント" className="w-full rounded-[20px]">
                 <SelectValue placeholder="フォントを選択" />
               </SelectTrigger>
               <SelectContent>
@@ -95,7 +97,7 @@ export function StyleSheet() {
           </SectionCard>
 
           <SectionCard title="表示">
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex min-h-12 items-center justify-between gap-3">
               <p className="text-sm font-medium">地図透かしを表示</p>
               <Switch
                 aria-label="地図透かしを表示"
@@ -103,7 +105,7 @@ export function StyleSheet() {
                 onCheckedChange={(showMap) => updateStyle({ showMap })}
               />
             </div>
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex min-h-12 items-center justify-between gap-3">
               <p className="text-sm font-medium">出発地の飛行機バッジ</p>
               <Switch
                 aria-label="出発地の飛行機バッジ"
@@ -113,23 +115,57 @@ export function StyleSheet() {
             </div>
           </SectionCard>
 
-          <SectionCard title="サイズ">
+          <SectionCard title="サイズ（%）">
             <ScaleSlider
-              label="テキスト"
+              label="文字全体"
               value={style.textScale}
               min={0.5}
               max={2.5}
+              percent
               onChange={(textScale) => updateStyle({ textScale })}
             />
             <ScaleSlider
-              label="地図ボックス"
+              label="タイトル"
+              value={style.titleScale}
+              min={0.5}
+              max={2.5}
+              percent
+              onChange={(titleScale) => updateStyle({ titleScale })}
+            />
+            <ScaleSlider
+              label="サブタイトル"
+              value={style.subtitleScale}
+              min={0.5}
+              max={2.5}
+              percent
+              onChange={(subtitleScale) => updateStyle({ subtitleScale })}
+            />
+            <ScaleSlider
+              label="座標・地名"
+              value={style.locationScale}
+              min={0.5}
+              max={2.5}
+              percent
+              onChange={(locationScale) => updateStyle({ locationScale })}
+            />
+            <ScaleSlider
+              label="日付"
+              value={style.dateScale}
+              min={0.5}
+              max={2.5}
+              percent
+              onChange={(dateScale) => updateStyle({ dateScale })}
+            />
+            <ScaleSlider
+              label="地図"
               value={style.mapBoxScale}
               min={0.5}
               max={2.5}
+              percent
               onChange={(mapBoxScale) => updateStyle({ mapBoxScale })}
             />
             <ScaleSlider
-              label="地図ズーム"
+              label="地図内部ズーム"
               value={style.mapInternalZoom}
               min={0.5}
               max={5}
@@ -161,7 +197,7 @@ export function StyleSheet() {
                 })
               }}
             />
-            <Button variant="outline" className="w-full rounded-xl" onClick={resetLayout}>
+            <Button variant="outline" className="w-full rounded-[20px]" onClick={resetLayout}>
               <RotateCcw className="size-4" />
               位置・サイズをリセット
             </Button>
@@ -174,7 +210,8 @@ export function StyleSheet() {
                 variant="ghost"
                 size="sm"
                 className="rounded-full"
-                onClick={() => {
+                onClick={(event) => {
+                  presetFocus.capture(event.currentTarget)
                   setPresetName('')
                   setPresetOpen(true)
                 }}
@@ -190,7 +227,7 @@ export function StyleSheet() {
                 return (
                   <div
                     key={preset.id}
-                    className="relative rounded-2xl border border-border/70 bg-background/60 p-2.5"
+                    data-testid="preset-card" className="relative rounded-[28px] border border-border/70 bg-background/60 p-3"
                   >
                     <button
                       type="button"
@@ -198,7 +235,7 @@ export function StyleSheet() {
                       aria-pressed={active}
                       onClick={() => updateStyle(preset.style)}
                     >
-                      <span className="mb-1.5 block text-sm font-semibold text-foreground">
+                      <span className="mb-2 block text-sm leading-5 font-semibold text-foreground">
                         {preset.name}
                       </span>
                       <span className="flex gap-1">
@@ -211,12 +248,13 @@ export function StyleSheet() {
                     {preset.id.startsWith('custom_') && (
                       <Button
                         variant="ghost"
-                        size="icon-xs"
-                        className="absolute right-1 bottom-1 rounded-full text-muted-foreground"
+                        size="sm"
+                        className="mt-2 h-11 w-full justify-start rounded-xl px-2 text-muted-foreground"
                         onClick={() => deletePreset(preset.id)}
                         aria-label={`${preset.name}を削除`}
                       >
-                        <Trash2 className="size-3.5" />
+                        <Trash2 className="size-4" />
+                        削除
                       </Button>
                     )}
                   </div>
@@ -228,7 +266,7 @@ export function StyleSheet() {
       </SheetShell>
 
       <Dialog open={presetOpen} onOpenChange={setPresetOpen}>
-        <DialogContent className="max-w-sm rounded-3xl">
+        <DialogContent className="rounded-[32px]" onCloseAutoFocus={presetFocus.onCloseAutoFocus}>
           <DialogHeader>
             <DialogTitle>プリセットを保存</DialogTitle>
           </DialogHeader>
@@ -293,10 +331,10 @@ function ColorField({
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium">{label}</p>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           <button
             type="button"
-            className="size-9 min-h-0! rounded-full border border-border"
+            className="size-11 min-h-0! rounded-full border border-border"
             style={{ background: value }}
             aria-label={`${label}のスポイト`}
             onClick={() => void pickFromScreen()}
@@ -307,17 +345,17 @@ function ColorField({
             type="color"
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            className="size-9 min-h-0! cursor-pointer rounded-full border-0 bg-transparent p-0"
+            className="color-swatch size-11 min-h-0! cursor-pointer rounded-full border border-border/70 bg-transparent p-0"
             aria-label={`${label}を選択`}
           />
         </div>
       </div>
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-2">
         {COLOR_SWATCHES.map((swatch) => (
           <button
             key={swatch}
             type="button"
-            className={`size-7 rounded-full border ${value.toLowerCase() === swatch ? 'ring-2 ring-primary ring-offset-2 ring-offset-card' : 'border-border/70'}`}
+            className={`size-11 min-h-0! rounded-full border ${value.toLowerCase() === swatch ? 'ring-2 ring-primary ring-offset-2 ring-offset-card' : 'border-border/70'}`}
             style={{ background: swatch }}
             aria-pressed={value.toLowerCase() === swatch}
             onClick={() => onChange(swatch)}
@@ -334,22 +372,27 @@ function ScaleSlider({
   value,
   min,
   max,
+  percent = false,
   onChange,
 }: {
   label: string
   value: number
   min: number
   max: number
+  percent?: boolean
   onChange: (value: number) => void
 }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between text-sm">
         <p className="font-medium">{label}</p>
-        <span className="tabular-nums text-muted-foreground">{value.toFixed(2)}×</span>
+        <span className="tabular-nums text-muted-foreground">
+          {percent ? `${Math.round(value * 100)}%` : `${value.toFixed(2)}×`}
+        </span>
       </div>
       <Slider
         aria-label={label}
+        aria-valuetext={percent ? `${Math.round(value * 100)}%` : `${value.toFixed(2)}×`}
         value={[value]}
         min={min}
         max={max}

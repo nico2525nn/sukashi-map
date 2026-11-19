@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useAppStore } from '@/store/app-store'
 import { useUiStore } from '@/store/ui-store'
+import { useIsCoarsePointer, useIsMobile, useIsShortLandscape } from '@/hooks/use-media-query'
+import { cn } from '@/lib/utils'
 
 interface TopBarProps {
   onPick: () => void
@@ -12,14 +14,25 @@ interface TopBarProps {
 export function TopBar({ onPick, onCamera }: TopBarProps) {
   const media = useAppStore((s) => s.media)
   const openSheet = useUiStore((s) => s.openSheet)
+  const sheet = useUiStore((s) => s.sheet)
+  const isMobile = useIsMobile()
+  const shortLandscape = useIsShortLandscape()
+  const coarse = useIsCoarsePointer()
+  const compactSideOpen = shortLandscape && coarse && sheet != null
+  const sideSheetOpen = sheet != null && (!isMobile || shortLandscape)
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/50 bg-background/80 pt-[env(safe-area-inset-top)] backdrop-blur-xl">
       <div
-        className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between sm:h-16 sm:px-6"
+        data-testid="app-bar-inner"
+        className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6"
         style={{
-          paddingLeft: 'max(0.75rem, env(safe-area-inset-left))',
-          paddingRight: 'max(0.75rem, env(safe-area-inset-right))',
+          paddingLeft: 'max(1rem, env(safe-area-inset-left))',
+          paddingRight: sideSheetOpen
+            ? compactSideOpen
+              ? 'calc(min(20rem, 70vw) + 1rem)'
+              : 'calc(25rem + 1rem)'
+            : 'max(1rem, env(safe-area-inset-right))',
         }}
       >
         <div className="flex min-w-0 flex-1 items-center gap-1">
@@ -45,7 +58,10 @@ export function TopBar({ onPick, onCamera }: TopBarProps) {
           )}
         </div>
         <div className="flex flex-1 items-center justify-center">
-          <h1 className="whitespace-nowrap text-base font-bold tracking-tight sm:text-xl">Sukashi Map</h1>
+          <h1 className={cn(
+            'whitespace-nowrap text-base leading-5 font-bold tracking-tight min-[360px]:text-[22px] min-[360px]:leading-7',
+            compactSideOpen && 'hidden',
+          )}>Sukashi Map</h1>
         </div>
         <div className="flex flex-1 items-center justify-end">
           <Tooltip>

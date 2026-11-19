@@ -31,6 +31,17 @@ npm run build:wasm
 python3 web/scripts/build-rail-geometry.py
 ```
 
+## M3 Expressive 監査
+
+```bash
+npm run dev       # 別ターミナル
+npm run audit:m3  # 6ビューポートを実測し docs/m3-audit-latest.json を更新
+```
+
+Chrome が `/usr/bin/google-chrome` 以外にある場合: `CHROME_PATH=/path/to/chrome npm run audit:m3`
+
+測定結果と4パスの監査記録: [docs/m3-expressive-audit.md](docs/m3-expressive-audit.md)
+
 ## テスト・ビルド
 
 ```bash
@@ -57,6 +68,7 @@ GitHub リポジトリの Settings → Pages → Source は **GitHub Actions** �
 - 鉄道: N02 の路線形状を路線ごとの圧縮ポリラインで描画。全路線合計でも約186KB、選択した路線だけを約2〜3KB取得
 - 撮影地: EXIF GPS 自動読み取り、場所検索、緯度・経度（小数・度分秒）、現在地、クリア
 - 表示: 地名 / 緯度・経度 / 非表示、日付 / 日時、文字・地図の四隅配置
+- サイズ: 全体・タイトル・サブタイトル・座標/地名・日付・地図をそれぞれ50〜250%で調整（モバイル/デスクトップ共通）
 - スタイル: 7フォント、文字/ルート/海岸線色、地図・飛行機バッジ表示、プリセット
 - 切り抜き: 元画像 / フリー / 4:5 / 9:16 / 2:3 / 1:1、ズーム・位置、余白枠
 - 編集: テキスト・地図のドラッグ、角ハンドル拡大縮小、地図のホイール/ピンチズーム

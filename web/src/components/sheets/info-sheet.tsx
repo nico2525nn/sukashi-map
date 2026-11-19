@@ -43,6 +43,7 @@ import {
 } from '@/lib/data'
 import { formatLatLon, parseLat, parseLon } from '@/lib/geo'
 import { loadTrainRoute } from '@/lib/rail-geometry'
+import { useDialogFocusReturn } from '@/hooks/use-dialog-focus'
 import { useAppStore } from '@/store/app-store'
 import { useUiStore } from '@/store/ui-store'
 import {
@@ -115,6 +116,8 @@ export function InfoSheet() {
   const [coordLat, setCoordLat] = useState('')
   const [coordLon, setCoordLon] = useState('')
   const [coordError, setCoordError] = useState<string | null>(null)
+  const coordFocus = useDialogFocusReturn()
+  const searchFocus = useDialogFocusReturn()
   const [locating, setLocating] = useState(false)
   const [applying, setApplying] = useState(false)
   const locToken = useRef(0)
@@ -257,6 +260,11 @@ export function InfoSheet() {
       },
       { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 },
     )
+  }
+
+  function openSearch(kind: SearchKind) {
+    searchFocus.capture()
+    setSearchKind(kind)
   }
 
   function openCoordinateDialog() {
@@ -526,7 +534,7 @@ export function InfoSheet() {
                 }
                 placeholder="空港を検索 (例: HND, KIX)"
                 icon={<Plane className="size-4" />}
-                onClick={() => setSearchKind('dep-airport')}
+                onClick={() => openSearch('dep-airport')}
               />
               <PickerField
                 label="到着空港"
@@ -537,17 +545,17 @@ export function InfoSheet() {
                 }
                 placeholder="空港を検索 (例: OKA, CTS)"
                 icon={<Plane className="size-4 rotate-180" />}
-                onClick={() => setSearchKind('arr-airport')}
+                onClick={() => openSearch('arr-airport')}
               />
               <PickerField
                 label="航空会社"
                 value={draft.airlineCode ? `${draft.airlineCode} · ${draft.airlineDisplayName}` : ''}
                 placeholder="航空会社を選択 (任意)"
                 icon={<Search className="size-4" />}
-                onClick={() => setSearchKind('airline')}
+                onClick={() => openSearch('airline')}
                 onClear={() => update({ airlineCode: '', airlineDisplayName: '' })}
               />
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="flight-number">便名</Label>
                   <Input
@@ -613,7 +621,7 @@ export function InfoSheet() {
                   value={draft.railwayLineName}
                   placeholder="路線を検索（駅選択で自動判定も可）"
                   icon={<TrainFront className="size-4" />}
-                  onClick={() => setSearchKind('line')}
+                  onClick={() => openSearch('line')}
                   onClear={() => update({ railwayLineName: '', railwayCompany: '' })}
                 />
               ) : (
@@ -640,10 +648,10 @@ export function InfoSheet() {
                 icon={<MapPin className="size-4" />}
                 onClick={() => setSearchKind(draft.isDomesticJapanRail ? 'arr-station' : 'dest-place')}
               />
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-xs leading-5 text-muted-foreground">
                 Web版の線路形状・経由路線は簡易表示です。
               </p>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="train-name">列車名 (任意)</Label>
                   <Input
@@ -707,14 +715,14 @@ export function InfoSheet() {
                 value={draft.departurePlaceName}
                 placeholder="場所を検索"
                 icon={<MapPin className="size-4" />}
-                onClick={() => setSearchKind('dep-place')}
+                onClick={() => openSearch('dep-place')}
               />
               <PickerField
                 label="目的地"
                 value={draft.destinationPlaceName}
                 placeholder="場所を検索"
                 icon={<MapPin className="size-4" />}
-                onClick={() => setSearchKind('dest-place')}
+                onClick={() => openSearch('dest-place')}
               />
             </SectionCard>
           )}
@@ -760,7 +768,7 @@ export function InfoSheet() {
               onValueChange={(value) => update({ dateTimeDisplayMode: value as DateTimeDisplayMode })}
             />
             {draft.dateTimeDisplayMode !== 'NONE' && (
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-3">
                 <div className="relative">
                   <Calendar className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
                   <Input
@@ -813,12 +821,12 @@ export function InfoSheet() {
                     variant="outline"
                     size="sm"
                     className="shrink-0 rounded-full"
-                    onClick={() => setSearchKind('photo-place')}
+                    onClick={() => openSearch('photo-place')}
                   >
                     <Search className="size-3.5" />
                     場所を検索
                   </Button>
-                  <Button variant="outline" size="sm" className="shrink-0 rounded-full" onClick={openCoordinateDialog}>
+                  <Button variant="outline" size="sm" className="shrink-0 rounded-full" onClick={(event) => { coordFocus.capture(event.currentTarget); openCoordinateDialog() }}>
                     <MapPin className="size-3.5" />
                     座標入力
                   </Button>
@@ -922,12 +930,16 @@ export function InfoSheet() {
         biasLat={draft.photoLat}
         biasLon={draft.photoLon}
         onClose={() => setSearchKind(null)}
+        onCloseAutoFocus={searchFocus.onCloseAutoFocus}
         onSelect={onSearchSelect}
         onFreeText={(kind, text) => void handleFreeText(kind, text)}
       />
 
       <Dialog open={coordOpen} onOpenChange={setCoordOpen}>
-        <DialogContent className="max-h-[min(90dvh,32rem)] max-w-sm overflow-y-auto rounded-3xl pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <DialogContent
+          className="max-h-[min(90dvh,32rem)] overflow-y-auto rounded-[28px] pb-[max(1.25rem,env(safe-area-inset-bottom))]"
+          onCloseAutoFocus={coordFocus.onCloseAutoFocus}
+        >
           <DialogHeader>
             <DialogTitle>緯度・経度を入力</DialogTitle>
             <DialogDescription>
@@ -996,7 +1008,7 @@ function PickerField({
   onClear?: () => void
 }) {
   return (
-    <div className="flex items-center gap-2 rounded-2xl border border-border/70 bg-background/60 px-3 py-2.5">
+    <div className="flex items-center gap-3 rounded-2xl border border-border/70 bg-background/60 px-3 py-3">
       <span className="text-primary">{icon}</span>
       <button
         type="button"
@@ -1004,7 +1016,7 @@ function PickerField({
         onClick={onClick}
         aria-label={`${label}を選択`}
       >
-        <span className="block text-[10px] font-medium text-muted-foreground">{label}</span>
+        <span className="block text-xs leading-4 font-medium text-muted-foreground">{label}</span>
         <span className={value ? 'block truncate text-sm font-semibold' : 'block truncate text-sm text-muted-foreground'}>
           {value || placeholder}
         </span>
@@ -1031,11 +1043,12 @@ interface EntitySearchDialogProps {
   biasLat: number | null
   biasLon: number | null
   onClose: () => void
+  onCloseAutoFocus?: (event: Event) => void
   onSelect: (kind: SearchKind, value: unknown) => void
   onFreeText: (kind: SearchKind, text: string) => void
 }
 
-function EntitySearchDialog({ kind, lineFilter, biasLat, biasLon, onClose, onSelect, onFreeText }: EntitySearchDialogProps) {
+function EntitySearchDialog({ kind, lineFilter, biasLat, biasLon, onClose, onCloseAutoFocus, onSelect, onFreeText }: EntitySearchDialogProps) {
   const isMobile = useIsMobile()
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(false)
@@ -1103,6 +1116,7 @@ function EntitySearchDialog({ kind, lineFilter, biasLat, biasLon, onClose, onSel
             ? 'top-auto bottom-0 max-h-[86dvh] w-full max-w-full translate-y-0 rounded-t-[2rem] rounded-b-none p-0'
             : 'max-w-md rounded-3xl p-0'
         }
+        onCloseAutoFocus={onCloseAutoFocus}
       >
         <DialogHeader className="min-w-0 border-b border-border/60 px-5 py-4">
           <DialogTitle>{title}</DialogTitle>

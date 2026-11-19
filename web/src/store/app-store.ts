@@ -4,6 +4,7 @@ import {
   defaultCropFrame,
   defaultOverlayStyle,
   defaultTransportInfo,
+  normalizeOverlayStyle,
   type AppSettings,
   type CropFrameSettings,
   type MediaAsset,
@@ -97,8 +98,12 @@ function compactHistory(history: TransportInfo[], entry: TransportInfo): Transpo
 
 function mergePresets(old: StylePreset[] | undefined): StylePreset[] {
   const byId = new Map<string, StylePreset>()
-  for (const preset of defaultPresets) byId.set(preset.id, preset)
-  for (const preset of old ?? []) byId.set(preset.id, preset)
+  for (const preset of defaultPresets) {
+    byId.set(preset.id, { ...preset, style: normalizeOverlayStyle(preset.style) })
+  }
+  for (const preset of old ?? []) {
+    byId.set(preset.id, { ...preset, style: normalizeOverlayStyle(preset.style) })
+  }
   return Array.from(byId.values())
 }
 
@@ -143,6 +148,10 @@ export const useAppStore = create<AppState>()(
             textFreePos: null,
             mapFreePos: null,
             textScale: 1,
+            titleScale: 1,
+            subtitleScale: 1,
+            locationScale: 1,
+            dateScale: 1,
             mapBoxScale: 1,
             mapInternalZoom: 1,
             mapInternalPanX: 0,
@@ -183,11 +192,11 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'sukashi-map-web',
-      version: 2,
+      version: 3,
       migrate: (persisted) => {
         const old = persisted as Partial<AppState>
         return {
-          style: { ...defaultOverlayStyle, ...old.style },
+          style: normalizeOverlayStyle(old.style),
           settings: { ...defaultSettings, ...old.settings },
           history: old.history ?? [],
           presets: mergePresets(old.presets),
