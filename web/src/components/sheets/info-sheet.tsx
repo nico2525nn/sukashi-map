@@ -42,6 +42,7 @@ import {
   reverseGeocode,
 } from '@/lib/data'
 import { formatLatLon, parseLat, parseLon } from '@/lib/geo'
+import { loadTrainRoute } from '@/lib/rail-geometry'
 import { useAppStore } from '@/store/app-store'
 import { useUiStore } from '@/store/ui-store'
 import {
@@ -115,6 +116,7 @@ export function InfoSheet() {
   const [coordLon, setCoordLon] = useState('')
   const [coordError, setCoordError] = useState<string | null>(null)
   const [locating, setLocating] = useState(false)
+  const [applying, setApplying] = useState(false)
   const locToken = useRef(0)
   const routeToken = useRef(0)
   const applyingRef = useRef(false)
@@ -147,11 +149,35 @@ export function InfoSheet() {
     setDraft((d) => ({ ...d, ...patch }))
   }
 
-  function apply() {
+  async function apply() {
     if (applyingRef.current) return
     applyingRef.current = true
-    window.setTimeout(() => { applyingRef.current = false }, 600)
-    const next: TransportInfo = { ...draft, routePolylines: [] }
+    let next: TransportInfo = { ...draft, routePolylines: [] }
+    try {
+      if (draft.mode === 'TRAIN' && draft.isDomesticJapanRail) {
+        const depLat = draft.departureStationLat
+        const depLon = draft.departureStationLon
+        const arrLat = draft.arrivalStationLat
+        const arrLon = draft.arrivalStationLon
+        if (depLat != null && depLon != null && arrLat != null && arrLon != null) {
+          setApplying(true)
+          try {
+            const route = await loadTrainRoute(
+              draft.railwayLineName,
+              { lat: depLat, lon: depLon },
+              { lat: arrLat, lon: arrLon },
+            )
+            if (route.length) next = { ...next, routePolylines: route }
+          } catch (err) {
+            console.error(err)
+          } finally {
+            setApplying(false)
+          }
+        }
+      }
+    } finally {
+      applyingRef.current = false
+    }
     locToken.current++
     updateStyle({
       textCorner: styleDraft.textCorner,
@@ -414,7 +440,13 @@ export function InfoSheet() {
         onOpenChange={(next) => (next ? undefined : closeSheet())}
         title="透かし情報"
         action={
-          <Button size="sm" className="rounded-full px-4 font-semibold" onClick={apply}>
+          <Button
+            size="sm"
+            className="rounded-full px-4 font-semibold"
+            onClick={() => void apply()}
+            disabled={applying}
+          >
+            {applying && <Loader2 className="size-3.5 animate-spin" />}
             適用
           </Button>
         }

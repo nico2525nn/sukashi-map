@@ -41,6 +41,9 @@ export interface StationRecord {
 export interface RailLineEntry {
   line: string
   company: string
+  geometryKey?: string
+  geometryPoints?: number
+  geometryChains?: number
 }
 
 export interface AirlineEntry {
