@@ -15,6 +15,16 @@ Material Design 3 Expressive (`androidx.compose.material3:material3:1.5.0-rc01`)
 - **スタイル調整**: 文字色・ルート線色・海岸線色（プリセット・カスタムHSV/HEX・写真スポイト）、7種のフォント、切り抜き・余白枠
 - **高画質保存・カメラ撮影**: 写真（JPEG / PNG、Android 14+ Ultra HDR 保持）、動画（Media3 Transformer 元解像度オーバーレイ書き出し）、CameraX ライブ透過プレビュー撮影
 
+## バージョニング
+
+Android と Web は同じバージョンを使用します。
+
+- 新機能: `0.1` を加算（例: `0.1.3` → `0.2.0`）
+- 不具合修正: `0.0.1` を加算（例: `0.2.0` → `0.2.1`）
+- GitHub Release は `vX.Y.Z` タグで作成し、Android APK と Web ビルドを同一リリースに含める
+- Android の `versionName` と Web の `package.json` の `version` は常に一致させる
+- Android の `versionCode` はリリースごとに +1 する
+
 ## ビルド
 
 ```bash
