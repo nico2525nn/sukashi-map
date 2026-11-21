@@ -115,7 +115,7 @@ export function SettingsSheet() {
             <Info className="mt-0.5 size-4 shrink-0 text-primary" />
             <div className="space-y-1 text-xs leading-relaxed text-muted-foreground">
               <p>
-                Sukashi Map Web v0.2.1 — 写真・動画にフライト、鉄道、移動ルート、スポットの透かしを合成します。
+                Sukashi Map Web v0.2.2 — 写真・動画にフライト、鉄道、移動ルート、スポットの透かしを合成します。
               </p>
               <p>
                 地図: 国土交通省 国土数値情報 (N02/N03)、国土地理院、Natural Earth、U.S. Census Bureau

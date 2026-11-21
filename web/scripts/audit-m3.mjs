@@ -296,7 +296,7 @@ async function verifyElementControls(browser) {
   })
   await page.getByRole('button', { name: '閉じる' }).click()
   await page.waitForTimeout(200)
-  await page.getByRole('button', { name: 'その他の保存メニュー' }).click()
+  await page.getByRole('button', { name: '保存メニュー' }).click()
   await page.waitForTimeout(200)
   const menuItems = await page.evaluate(() =>
     [...document.querySelectorAll('[data-slot="dropdown-menu-item"]')].map((element) => {

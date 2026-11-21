@@ -55,8 +55,8 @@ import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.RestartAlt
 import androidx.compose.material.icons.rounded.Route
-import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Train
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
@@ -613,18 +613,12 @@ fun EditorScreen(
                         ) {
                             Icon(Icons.Rounded.Crop, contentDescription = "切り抜き・余白枠")
                         }
-                        IconButton(
-                            onClick = { viewModel.exportCurrentMedia(shareAfterSave = true) },
-                            shapes = IconButtonDefaults.shapes()
-                        ) {
-                            Icon(Icons.Rounded.Share, contentDescription = "保存して共有")
-                        }
                         Box {
                             IconButton(
                                 onClick = { showExportMenu = true },
                                 shapes = IconButtonDefaults.shapes()
                             ) {
-                                Icon(Icons.Rounded.MoreVert, contentDescription = "その他の保存メニュー")
+                                Icon(Icons.Rounded.MoreVert, contentDescription = "保存メニュー")
                             }
                             DropdownMenu(
                                 expanded = showExportMenu,
@@ -654,6 +648,14 @@ fun EditorScreen(
                                         }
                                     )
                                 }
+                                DropdownMenuItem(
+                                    text = { Text("共有して保存") },
+                                    leadingIcon = { Icon(Icons.Rounded.Share, contentDescription = null) },
+                                    onClick = {
+                                        showExportMenu = false
+                                        viewModel.exportCurrentMedia(shareAfterSave = true)
+                                    }
+                                )
                                 DropdownMenuItem(
                                     text = { Text("透かしの位置・拡大率をリセット") },
                                     onClick = {

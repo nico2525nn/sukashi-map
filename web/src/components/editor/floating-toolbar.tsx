@@ -59,9 +59,6 @@ export function FloatingToolbar({
         <ToolbarButton label="切り抜き・余白枠" onClick={onOpenCrop} disabled={disabled}>
           <Crop className="size-5" />
         </ToolbarButton>
-        <ToolbarButton label="保存して共有" onClick={onShare} disabled={disabled}>
-          <Share2 className="size-5" />
-        </ToolbarButton>
         <DropdownMenu>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -70,7 +67,7 @@ export function FloatingToolbar({
                   variant="ghost"
                   size="icon-lg"
                   className="size-11 rounded-full"
-                  aria-label="その他の保存メニュー"
+                  aria-label="保存メニュー"
                   disabled={disabled}
                 >
                   <MoreVertical className="size-5" />
@@ -97,6 +94,10 @@ export function FloatingToolbar({
               </DropdownMenuItem>
             )}
             <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={onShare}>
+              <Share2 className="size-4" />
+              共有して保存
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={onResetLayout}>
               <RotateCcw className="size-4" />
               透かしの位置・拡大率をリセット
