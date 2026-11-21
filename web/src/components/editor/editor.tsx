@@ -23,10 +23,11 @@ import {
   shareOrDownload,
 } from '@/lib/export'
 import { EMPTY_MAP_DATASETS, type MapDatasets } from '@/lib/map-data'
+import { loadOverlayFont, overlayText } from '@/lib/fonts'
 import { cn } from '@/lib/utils'
 import { useAppStore } from '@/store/app-store'
 import { useUiStore } from '@/store/ui-store'
-import { FONT_OPTIONS, type ExportFormat } from '@/types'
+import type { ExportFormat } from '@/types'
 
 interface EditorProps {
   datasets: MapDatasets | null
@@ -87,8 +88,7 @@ export function Editor({ datasets, renderKey = 0, onRetryMap }: EditorProps) {
     }
     setExporting(true)
     setProgress(0)
-    const fontFamily = FONT_OPTIONS.find((f) => f.value === style.font)?.family ?? 'system-ui'
-    await document.fonts?.load(`700 40px ${fontFamily}`).catch(() => undefined)
+    await loadOverlayFont(style.font, overlayText(info)).catch(() => undefined)
     const controller = new AbortController()
     abortRef.current = controller
     let exportUrl: string | null = null

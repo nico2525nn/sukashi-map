@@ -162,7 +162,15 @@ fun EditorScreen(
     val metricsHolder = remember { LayoutMetricsHolder() }
     val configuration = LocalConfiguration.current
     val portraitMedia = state.mediaHeight > state.mediaWidth
-    val stylePanelHeight = (configuration.screenHeightDp * if (portraitMedia) 0.50f else 0.55f).dp
+    val shortWindow = configuration.screenHeightDp < 480
+    val stylePanelHeight = (
+        configuration.screenHeightDp * when {
+            shortWindow -> 0.45f
+            portraitMedia -> 0.50f
+            else -> 0.55f
+        }
+    ).dp
+    var stylePanelMeasured by remember { mutableStateOf(0.dp) }
     val mapCache = remember { OverlayMapCache() }
     var mapSettleToken by remember { mutableIntStateOf(0) }
     LaunchedEffect(state.overlayStyle, state.transportInfo, state.mapSlice) {
@@ -293,7 +301,9 @@ fun EditorScreen(
                 )
             } else {
                 val stageBottomInset by animateDpAsState(
-                    targetValue = if (showStyleSheet) stylePanelHeight + 24.dp else 96.dp,
+                    targetValue = if (showStyleSheet) {
+                        (if (stylePanelMeasured > 0.dp) stylePanelMeasured else stylePanelHeight) + 24.dp
+                    } else 96.dp,
                     label = "stageBottomInset"
                 )
                 Column(
@@ -729,7 +739,8 @@ fun EditorScreen(
             onSavePreset = { name -> viewModel.saveStylePreset(name) },
             onDeletePreset = { id -> viewModel.deleteStylePreset(id) },
             onDismiss = { showStyleSheet = false },
-            panelMaxHeight = stylePanelHeight
+            panelMaxHeight = stylePanelHeight,
+            onHeightChanged = { stylePanelMeasured = it }
         )
     }
 

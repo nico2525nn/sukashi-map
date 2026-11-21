@@ -51,6 +51,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import jp.nico2525.sukashimap.model.OverlayCorner
@@ -75,8 +77,10 @@ fun StyleSettingsSheet(
     onSavePreset: (String) -> Unit,
     onDeletePreset: (String) -> Unit,
     onDismiss: () -> Unit,
-    panelMaxHeight: Dp = 460.dp
+    panelMaxHeight: Dp = 460.dp,
+    onHeightChanged: (Dp) -> Unit = {}
 ) {
+    val density = LocalDensity.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     var selectedTab by remember { mutableIntStateOf(0) }
     var showSavePresetDialog by remember { mutableStateOf(false) }
@@ -94,6 +98,7 @@ fun StyleSettingsSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(max = panelMaxHeight)
+                .onSizeChanged { onHeightChanged(with(density) { it.height.toDp() }) }
                 .navigationBarsPadding()
         ) {
             Row(
@@ -190,7 +195,7 @@ fun StyleSettingsSheet(
                     }
 
                     1 -> {
-                        ExpressiveSectionCard(title = "欧文・数値フォント") {
+                        ExpressiveSectionCard(title = "フォント") {
                             OverlayFont.entries.forEach { fontEntry ->
                                 val isSelected = style.font == fontEntry
                                 val previewFamily = fontEntry.toComposeFontFamily()
@@ -204,7 +209,11 @@ fun StyleSettingsSheet(
                                     },
                                     supportingContent = {
                                         Text(
-                                            text = "NH 1731 · KIX → OKA · 2026/05/25",
+                                            text = if (fontEntry == OverlayFont.JP_SANS || fontEntry == OverlayFont.JP_SERIF) {
+                                                "日本語の透かし · 京都駅 · 2026/05/25"
+                                            } else {
+                                                "NH 1731 · KIX → OKA · 2026/05/25"
+                                            },
                                             fontFamily = previewFamily,
                                             style = MaterialTheme.typography.bodySmall
                                         )
@@ -230,6 +239,7 @@ fun StyleSettingsSheet(
                             ExpressiveConnectedSegmentedRow(
                                 options = OverlayCorner.entries.toList(),
                                 selected = style.textCorner,
+                                groupLabel = "テキストの基準位置",
                                 onSelect = { corner ->
                                     onStyleChange(style.copy(textCorner = corner, textFreePos = null))
                                 },
@@ -239,6 +249,7 @@ fun StyleSettingsSheet(
                             ExpressiveConnectedSegmentedRow(
                                 options = OverlayCorner.entries.toList(),
                                 selected = style.mapCorner,
+                                groupLabel = "地図の基準位置",
                                 onSelect = { corner ->
                                     onStyleChange(style.copy(mapCorner = corner, mapFreePos = null))
                                 },

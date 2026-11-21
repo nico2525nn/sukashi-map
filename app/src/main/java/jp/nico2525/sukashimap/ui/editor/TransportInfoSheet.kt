@@ -717,17 +717,30 @@ fun TransportInfoSheet(
                     ExpressiveConnectedSegmentedRow(
                         options = OverlayCorner.entries,
                         selected = styleDraft.textCorner,
+                        groupLabel = "テキストの基準位置",
                         onSelect = { corner ->
-                            val opposite = when (corner) {
-                                OverlayCorner.BOTTOM_RIGHT -> OverlayCorner.BOTTOM_LEFT
-                                OverlayCorner.BOTTOM_LEFT -> OverlayCorner.BOTTOM_RIGHT
-                                OverlayCorner.TOP_RIGHT -> OverlayCorner.TOP_LEFT
-                                OverlayCorner.TOP_LEFT -> OverlayCorner.TOP_RIGHT
-                            }
                             styleDraft = styleDraft.copy(
                                 textCorner = corner,
-                                mapCorner = opposite,
-                                textFreePos = null,
+                                textFreePos = null
+                            )
+                        },
+                        labelProvider = {
+                            when (it) {
+                                OverlayCorner.TOP_LEFT -> "左上"
+                                OverlayCorner.TOP_RIGHT -> "右上"
+                                OverlayCorner.BOTTOM_LEFT -> "左下"
+                                OverlayCorner.BOTTOM_RIGHT -> "右下"
+                            }
+                        }
+                    )
+                    Text("地図の基準位置", style = MaterialTheme.typography.bodyMediumEmphasized)
+                    ExpressiveConnectedSegmentedRow(
+                        options = OverlayCorner.entries,
+                        selected = styleDraft.mapCorner,
+                        groupLabel = "地図の基準位置",
+                        onSelect = { corner ->
+                            styleDraft = styleDraft.copy(
+                                mapCorner = corner,
                                 mapFreePos = null
                             )
                         },

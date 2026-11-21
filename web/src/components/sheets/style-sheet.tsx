@@ -59,11 +59,7 @@ export function StyleSheet() {
           <SectionCard title="フォント">
             <Select
               value={style.font}
-              onValueChange={(value) => {
-                const family = FONT_OPTIONS.find((f) => f.value === value)?.family ?? 'system-ui'
-                updateStyle({ font: value })
-                void document.fonts?.load(`700 40px ${family}`).then(() => updateStyle({ font: value }))
-              }}
+              onValueChange={(value) => updateStyle({ font: value })}
             >
               <SelectTrigger aria-label="フォント" className="w-full rounded-[20px]">
                 <SelectValue placeholder="フォントを選択" />

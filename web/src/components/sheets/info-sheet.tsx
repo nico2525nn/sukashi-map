@@ -896,21 +896,29 @@ export function InfoSheet() {
                 label: CORNER_LABELS[corner],
               }))}
               value={styleDraft.textCorner}
-              onValueChange={(corner) => {
-                const opposite: Record<OverlayCorner, OverlayCorner> = {
-                  BOTTOM_RIGHT: 'BOTTOM_LEFT',
-                  BOTTOM_LEFT: 'BOTTOM_RIGHT',
-                  TOP_RIGHT: 'TOP_LEFT',
-                  TOP_LEFT: 'TOP_RIGHT',
-                }
+              onValueChange={(corner) =>
                 setStyleDraft((s) => ({
                   ...s,
                   textCorner: corner as OverlayCorner,
-                  mapCorner: opposite[corner as OverlayCorner],
                   textFreePos: null,
+                }))
+              }
+            />
+            <p className="text-sm font-medium">地図の基準位置</p>
+            <Segmented
+              ariaLabel="地図の基準位置"
+              options={(Object.keys(CORNER_LABELS) as OverlayCorner[]).map((corner) => ({
+                value: corner,
+                label: CORNER_LABELS[corner],
+              }))}
+              value={styleDraft.mapCorner}
+              onValueChange={(corner) =>
+                setStyleDraft((s) => ({
+                  ...s,
+                  mapCorner: corner as OverlayCorner,
                   mapFreePos: null,
                 }))
-              }}
+              }
             />
             <div className="flex items-center justify-between gap-3">
               <p className="text-sm font-medium">地図透かしを表示</p>

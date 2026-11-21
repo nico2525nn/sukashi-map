@@ -48,8 +48,8 @@ enum class OverlayFont(val id: String, val displayName: String, val fontResId: I
     OUTFIT("outfit", "Outfit", R.font.outfit_bold),
     ARTEMIS_INTER("artemis", "ARTEMIS INTER", R.font.artemis_inter),
     KAISEI_TOKUMIN("kaisei_tokumin", "Kaisei Tokumin", R.font.kaisei_tokumin_bold),
-    JP_SANS("jp_sans", "Noto Sans JP", null),
-    JP_SERIF("jp_serif", "Noto Serif JP", null);
+    JP_SANS("jp_sans", "Noto Sans JP（システム）", null),
+    JP_SERIF("jp_serif", "Noto Serif JP（システム）", null);
 
     fun resolveTypeface(context: Context): Typeface {
         if (this == JP_SANS) return Typeface.create("sans-serif", Typeface.BOLD)

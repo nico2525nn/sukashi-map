@@ -30,7 +30,7 @@ export function Segmented<T extends string>({
       type="single"
       value={value}
       onValueChange={(next) => {
-        if (next) onValueChange(next as T)
+        onValueChange((next || value) as T)
       }}
       variant="outline"
       spacing={1}

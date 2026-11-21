@@ -16,7 +16,8 @@ import { isMediaFile, mediaFromFile } from '@/lib/media'
 import { ensureMapDatasetsFor, type MapDatasets } from '@/lib/map-data'
 import { formatLatLon } from '@/lib/geo'
 import { reverseGeocode } from '@/lib/data'
-import { FONT_OPTIONS, type TransportInfo } from '@/types'
+import { type TransportInfo } from '@/types'
+import { loadOverlayFont, overlayText } from '@/lib/fonts'
 import { useAppStore } from '@/store/app-store'
 import { useUiStore } from '@/store/ui-store'
 
@@ -42,9 +43,10 @@ function App() {
   const [mapAttempt, setMapAttempt] = useState(0)
 
   useEffect(() => {
-    const family = FONT_OPTIONS.find((f) => f.value === font)?.family ?? 'system-ui'
-    void document.fonts?.load(`700 40px ${family}`).then(() => setFontVersion((v) => v + 1)).catch(() => undefined)
-  }, [font])
+    void loadOverlayFont(font, overlayText(info))
+      .then(() => setFontVersion((v) => v + 1))
+      .catch(() => undefined)
+  }, [font, info])
 
   useEffect(() => {
     void initGeoWasm()
