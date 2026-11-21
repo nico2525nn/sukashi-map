@@ -23,7 +23,7 @@ import { useUiStore } from '@/store/ui-store'
 function App() {
   const media = useAppStore((s) => s.media)
   const info = useAppStore((s) => s.info)
-  const style = useAppStore((s) => s.style)
+  const font = useAppStore((s) => s.style.font)
   const setMedia = useAppStore((s) => s.setMedia)
   const settings = useAppStore((s) => s.settings)
   const updateInfo = useAppStore((s) => s.updateInfo)
@@ -42,9 +42,9 @@ function App() {
   const [mapAttempt, setMapAttempt] = useState(0)
 
   useEffect(() => {
-    const family = FONT_OPTIONS.find((f) => f.value === style.font)?.family ?? 'system-ui'
+    const family = FONT_OPTIONS.find((f) => f.value === font)?.family ?? 'system-ui'
     void document.fonts?.load(`700 40px ${family}`).then(() => setFontVersion((v) => v + 1)).catch(() => undefined)
-  }, [style.font])
+  }, [font])
 
   useEffect(() => {
     void initGeoWasm()

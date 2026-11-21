@@ -7,7 +7,7 @@ import {
   type OverlayStyle,
   type TransportInfo,
 } from '@/types'
-import { formatLatLon, greatCircle } from '@/lib/geo'
+import { formatLatLon, greatCircle, wasmReady } from '@/lib/geo'
 import {
   boundsAround,
   findEnclosingRing,
@@ -40,6 +40,208 @@ export interface RenderOptions {
   /** When true the source image is already drawn; map/text use this context. */
   ctx: CanvasRenderingContext2D
   selected?: 'text' | 'map' | null
+  /** Optional preview-only cache so text changes do not redraw the map. */
+  mapLayer?: MapLayerCache
+  /** Preview map raster scale (1 = full backing-store resolution). */
+  mapScale?: number
+  /** Rebuild the map raster instead of using a transformed cache after idle. */
+  forceMapRedraw?: boolean
+}
+
+export interface MapLayerCache {
+  canvas: HTMLCanvasElement | null
+  rect: BoundsRect | null
+  mapInfo: MapInfoKey | null
+  world: Ring[] | null
+  japanCoast: Ring[] | null
+  japanPrefectures: Ring[] | null
+  japanWater: Ring[] | null
+  usStates: Ring[] | null
+  width: number
+  height: number
+  scale: number
+  wasmReady: boolean
+  mapBoxScale: number
+  mapInternalZoom: number
+  mapInternalPanX: number
+  mapInternalPanY: number
+  mapCorner: OverlayCorner
+  mapFreePos: OverlayStyle['mapFreePos']
+  routeColor: string
+  borderColor: string
+  showOriginPlaneBadge: boolean
+}
+
+export function createMapLayerCache(): MapLayerCache {
+  return {
+    canvas: null,
+    rect: null,
+    mapInfo: null,
+    world: null,
+    japanCoast: null,
+    japanPrefectures: null,
+    japanWater: null,
+    usStates: null,
+    width: 0,
+    height: 0,
+    scale: 1,
+    wasmReady: false,
+    mapBoxScale: 1,
+    mapInternalZoom: 1,
+    mapInternalPanX: 0,
+    mapInternalPanY: 0,
+    mapCorner: 'BOTTOM_LEFT',
+    mapFreePos: null,
+    routeColor: '#ffffff',
+    borderColor: '#ffffff',
+    showOriginPlaneBadge: true,
+  }
+}
+
+interface MapInfoKey {
+  mode: TransportInfo['mode']
+  startLat: number | null
+  startLon: number | null
+  endLat: number | null
+  endLon: number | null
+  currentLat: number | null
+  currentLon: number | null
+  routePolylines: TransportInfo['routePolylines']
+}
+
+function mapInfoKey(info: TransportInfo): MapInfoKey {
+  const start = startCoord(info)
+  const end = endCoord(info)
+  const current = currentGpsCoord(info)
+  return {
+    mode: info.mode,
+    startLat: start?.lat ?? null,
+    startLon: start?.lon ?? null,
+    endLat: end?.lat ?? null,
+    endLon: end?.lon ?? null,
+    currentLat: current?.lat ?? null,
+    currentLon: current?.lon ?? null,
+    routePolylines: info.routePolylines,
+  }
+}
+
+function sameMapInfo(a: MapInfoKey | null, b: MapInfoKey): boolean {
+  return (
+    a != null &&
+    a.mode === b.mode &&
+    a.startLat === b.startLat &&
+    a.startLon === b.startLon &&
+    a.endLat === b.endLat &&
+    a.endLon === b.endLon &&
+    a.currentLat === b.currentLat &&
+    a.currentLon === b.currentLon &&
+    a.routePolylines === b.routePolylines
+  )
+}
+
+function mapLayerContentValid(
+  cache: MapLayerCache,
+  width: number,
+  height: number,
+  scale: number,
+  info: TransportInfo,
+  style: OverlayStyle,
+  datasets: MapDatasets,
+): boolean {
+  return (
+    cache.canvas != null &&
+    cache.width === width &&
+    cache.height === height &&
+    cache.scale + 1e-6 >= scale &&
+    cache.wasmReady === wasmReady() &&
+    sameMapInfo(cache.mapInfo, mapInfoKey(info)) &&
+    cache.world === datasets.world &&
+    cache.japanCoast === datasets.japanCoast &&
+    cache.japanPrefectures === datasets.japanPrefectures &&
+    cache.japanWater === datasets.japanWater &&
+    cache.usStates === datasets.usStates &&
+    cache.routeColor === style.routeColor &&
+    cache.borderColor === style.borderColor &&
+    cache.showOriginPlaneBadge === style.showOriginPlaneBadge
+  )
+}
+
+function mapTransformMatches(cache: MapLayerCache, style: OverlayStyle): boolean {
+  return (
+    cache.mapBoxScale === style.mapBoxScale &&
+    cache.mapInternalZoom === style.mapInternalZoom &&
+    cache.mapInternalPanX === style.mapInternalPanX &&
+    cache.mapInternalPanY === style.mapInternalPanY &&
+    cache.mapCorner === style.mapCorner &&
+    cache.mapFreePos === style.mapFreePos
+  )
+}
+
+/** Approximate rect for a cached map while a drag/slider is in progress. */
+function transformedMapRect(
+  cache: MapLayerCache,
+  style: OverlayStyle,
+  width: number,
+  height: number,
+): BoundsRect | null {
+  const old = cache.rect
+  if (!old) return null
+  const ratio =
+    Number.isFinite(cache.mapBoxScale) && cache.mapBoxScale > 0
+      ? style.mapBoxScale / cache.mapBoxScale
+      : 1
+  const minBound = 0.03 * width * 0.4
+  const boxW = Math.min(Math.max(1, old.width * ratio), width - minBound * 2)
+  const boxH = Math.min(Math.max(1, old.height * ratio), height - minBound * 2)
+  let x: number
+  let y: number
+  if (style.mapFreePos) {
+    const centerX = style.mapFreePos.x * width
+    const centerY = style.mapFreePos.y * height
+    x = Math.min(Math.max(centerX - boxW / 2, minBound), Math.max(minBound, width - boxW - minBound))
+    y = Math.min(Math.max(centerY - boxH / 2, minBound), Math.max(minBound, height - boxH - minBound))
+  } else {
+    const landscape = width > height
+    const margin = 0.03 * width * (landscape ? 0.85 : 1)
+    const pos = mapCornerPosition(style.mapCorner, width, height, boxW, boxH, margin)
+    x = Math.min(Math.max(pos.left, minBound), Math.max(minBound, width - boxW - minBound))
+    y = Math.min(Math.max(pos.top, minBound), Math.max(minBound, height - boxH - minBound))
+  }
+  return { x, y, width: boxW, height: boxH }
+}
+
+function drawTransformedMap(
+  ctx: CanvasRenderingContext2D,
+  cache: MapLayerCache,
+  target: BoundsRect,
+  style: OverlayStyle,
+  width: number,
+  height: number,
+) {
+  if (!cache.canvas || !cache.rect) return
+  const old = cache.rect
+  const scaleX = target.width / old.width
+  const scaleY = target.height / old.height
+  const centerX = old.x + old.width / 2
+  const centerY = old.y + old.height / 2
+  const zoom =
+    Number.isFinite(cache.mapInternalZoom) && cache.mapInternalZoom > 0
+      ? style.mapInternalZoom / cache.mapInternalZoom
+      : 1
+  const panX = (style.mapInternalPanX - cache.mapInternalPanX) * old.width
+  const panY = -(style.mapInternalPanY - cache.mapInternalPanY) * old.height
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(target.x, target.y, target.width, target.height)
+  ctx.clip()
+  ctx.translate(target.x, target.y)
+  ctx.scale(scaleX, scaleY)
+  ctx.translate(-old.x, -old.y)
+  ctx.translate(centerX + panX, centerY + panY)
+  ctx.scale(zoom, zoom)
+  ctx.translate(-centerX, -centerY)
+  ctx.drawImage(cache.canvas, 0, 0, width, height)
+  ctx.restore()
 }
 
 interface RowBase {
@@ -750,6 +952,7 @@ function renderMap(
   info: TransportInfo,
   style: OverlayStyle,
   datasets: MapDatasets,
+  rasterScale = 1,
 ): MapRenderResult | null {
   const points = focusPoints(info)
   if (!points.length) return null
@@ -894,14 +1097,24 @@ function renderMap(
     ctx.lineJoin = 'round'
     ctx.lineCap = 'round'
     const path = new Path2D()
+    const detail = 1 / Math.max(0.25, rasterScale)
     for (const ring of rings) {
       const b = ringBounds(ring)
       if (!b) continue
       const ringMin = normalizeLon(b.minLon, viewCenterLon)
       const ringMax = normalizeLon(b.maxLon, viewCenterLon)
       if (ringMax < viewMinLon || ringMin > viewMaxLon) continue
+      // Sub-pixel islands and fragments do not affect the watermark, and
+      // dropping sub-pixel segments keeps the small map box at 60fps.
+      const bx1 = projectX(b.minLon)
+      const bx2 = projectX(b.maxLon)
+      const by1 = projectY(b.minLat)
+      const by2 = projectY(b.maxLat)
+      if (Math.max(Math.abs(bx2 - bx1), Math.abs(by2 - by1)) < 1.2 * detail) continue
       let started = false
       let prevX = 0
+      let lastX = 0
+      let lastY = 0
       for (let i = 0; i < ring.length; i++) {
         const [lon, lat] = ring[i]
         const x = projectX(lon)
@@ -909,10 +1122,16 @@ function renderMap(
         if (!started) {
           path.moveTo(x, y)
           started = true
+          lastX = x
+          lastY = y
         } else if (Math.abs(x - prevX) > rect.width * 0.5) {
           path.moveTo(x, y)
-        } else {
+          lastX = x
+          lastY = y
+        } else if (Math.hypot(x - lastX, y - lastY) >= 0.6 * detail) {
           path.lineTo(x, y)
+          lastX = x
+          lastY = y
         }
         prevX = x
       }
@@ -1086,7 +1305,70 @@ export function renderOverlay(options: RenderOptions): OverlayLayout {
 
   ctx.save()
   ctx.clearRect(0, 0, width, height)
-  const map = style.showMap ? renderMap(ctx, width, height, info, style, datasets) : null
+  // Keep the expensive map raster separate from text so style/text drags
+  // only need a cheap canvas blit.
+  let map: MapRenderResult | null = null
+  if (style.showMap) {
+    const cache = options.mapLayer
+    const scale = Math.min(1, Math.max(0.25, options.mapScale ?? 1))
+    const rebuild = (targetCache: MapLayerCache) => {
+      const layer = targetCache.canvas ?? document.createElement('canvas')
+      const layerWidth = Math.max(1, Math.round(width * scale))
+      const layerHeight = Math.max(1, Math.round(height * scale))
+      if (layer.width !== layerWidth) layer.width = layerWidth
+      if (layer.height !== layerHeight) layer.height = layerHeight
+      const layerCtx = layer.getContext('2d')
+      if (!layerCtx) return renderMap(ctx, width, height, info, style, datasets)
+      layerCtx.setTransform(scale, 0, 0, scale, 0, 0)
+      layerCtx.clearRect(0, 0, width, height)
+      const result = renderMap(layerCtx, width, height, info, style, datasets, scale)
+      targetCache.canvas = layer
+      targetCache.rect = result?.rect ?? null
+      targetCache.mapInfo = mapInfoKey(info)
+      targetCache.world = datasets.world
+      targetCache.japanCoast = datasets.japanCoast
+      targetCache.japanPrefectures = datasets.japanPrefectures
+      targetCache.japanWater = datasets.japanWater
+      targetCache.usStates = datasets.usStates
+      targetCache.width = width
+      targetCache.height = height
+      targetCache.scale = scale
+      targetCache.wasmReady = wasmReady()
+      targetCache.mapBoxScale = style.mapBoxScale
+      targetCache.mapInternalZoom = style.mapInternalZoom
+      targetCache.mapInternalPanX = style.mapInternalPanX
+      targetCache.mapInternalPanY = style.mapInternalPanY
+      targetCache.mapCorner = style.mapCorner
+      targetCache.mapFreePos = style.mapFreePos
+      targetCache.routeColor = style.routeColor
+      targetCache.borderColor = style.borderColor
+      targetCache.showOriginPlaneBadge = style.showOriginPlaneBadge
+      ctx.drawImage(layer, 0, 0, width, height)
+      return result
+    }
+    if (cache && mapLayerContentValid(cache, width, height, scale, info, style, datasets)) {
+      if (mapTransformMatches(cache, style) || options.forceMapRedraw) {
+        if (mapTransformMatches(cache, style)) {
+          ctx.drawImage(cache.canvas!, 0, 0, width, height)
+          map = cache.rect ? { rect: cache.rect } : null
+        } else {
+          map = rebuild(cache)
+        }
+      } else {
+        const target = transformedMapRect(cache, style, width, height)
+        if (target) {
+          drawTransformedMap(ctx, cache, target, style, width, height)
+          map = { rect: target }
+        } else {
+          map = rebuild(cache)
+        }
+      }
+    } else if (cache) {
+      map = rebuild(cache)
+    } else {
+      map = renderMap(ctx, width, height, info, style, datasets)
+    }
+  }
 
   const rows = buildRows(ctx, info, style, unit, width)
   if (!rows.length) {

@@ -3,7 +3,7 @@ import { Pause, Play, Volume2, VolumeX } from 'lucide-react'
 import type { MediaAsset, OverlayStyle } from '@/types'
 import type { MapDatasets } from '@/lib/map-data'
 import { computeCropRect } from '@/lib/export'
-import { hitTest, renderOverlay, type OverlayLayout } from '@/lib/renderer'
+import { createMapLayerCache, hitTest, renderOverlay, type OverlayLayout } from '@/lib/renderer'
 import { useAppStore } from '@/store/app-store'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -98,11 +98,13 @@ export function PreviewStage({
   const bgRef = useRef<HTMLCanvasElement>(null)
   const overlayRef = useRef<HTMLCanvasElement>(null)
   const layoutRef = useRef<OverlayLayout | null>(null)
+  const mapLayerRef = useRef(createMapLayerCache())
   const [slot, setSlot] = useState({ w: 1, h: 1 })
   const [active, setActive] = useState<'text' | 'map' | null>(null)
   const [playing, setPlaying] = useState(true)
   const [muted, setMuted] = useState(true)
   const [dragStyle, setDragStyle] = useState<OverlayStyle | null>(null)
+  const [mapIdleTick, setMapIdleTick] = useState(0)
   const dragRef = useRef<{
     mode: DragMode
     pointerId: number
@@ -189,13 +191,30 @@ export function PreviewStage({
     drawBackground(canvas, activeSource, activeSource.naturalWidth || media.width, activeSource.naturalHeight || media.height, crop)
   }, [activeSource, canvasW, canvasH, crop, media.width, media.height])
 
+  const lastStyleChangeRef = useRef(0)
+  useLayoutEffect(() => {
+    lastStyleChangeRef.current = performance.now()
+    const timer = window.setTimeout(() => setMapIdleTick((value) => value + 1), 160)
+    return () => window.clearTimeout(timer)
+  }, [effectiveStyle, info])
+
   useLayoutEffect(() => {
     const canvas = overlayRef.current
     if (!canvas) return
-    canvas.width = canvasW
-    canvas.height = canvasH
+    if (canvas.width !== canvasW) canvas.width = canvasW
+    if (canvas.height !== canvasH) canvas.height = canvasH
     const ctx = canvas.getContext('2d')
-    if (!ctx || !datasets) return
+    if (!ctx) return
+    if (!datasets) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      layoutRef.current = null
+      return
+    }
+    const maxDimension = Math.max(canvasW, canvasH)
+    const fullMapScale = Math.min(1, 1200 / maxDimension)
+    const fastMap = performance.now() - lastStyleChangeRef.current < 160
+    const mapScale =
+      fastMap && maxDimension > 1000 ? Math.min(fullMapScale, 650 / maxDimension) : fullMapScale
     const layout = renderOverlay({
       ctx,
       width: canvasW,
@@ -203,10 +222,12 @@ export function PreviewStage({
       info,
       style: effectiveStyle,
       datasets,
+      mapLayer: mapLayerRef.current,
+      mapScale,
     })
     layoutRef.current = layout
     if (active) drawSelection(ctx, layout, active, dpr)
-  }, [canvasW, canvasH, info, effectiveStyle, datasets, active, dpr, renderKey])
+  }, [canvasW, canvasH, info, effectiveStyle, datasets, active, dpr, renderKey, mapIdleTick])
 
   function toCanvas(e: React.PointerEvent<HTMLCanvasElement>) {
     const canvas = overlayRef.current

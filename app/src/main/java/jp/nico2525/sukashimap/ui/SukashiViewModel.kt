@@ -31,6 +31,7 @@ import jp.nico2525.sukashimap.render.OverlayCanvasRenderer
 import jp.nico2525.sukashimap.ui.theme.ThemeMode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -79,6 +80,7 @@ class SukashiViewModel(application: Application) : AndroidViewModel(application)
 
     private var routeJob: Job? = null
     private var mediaJob: Job? = null
+    private var stylePersistJob: Job? = null
     private var mediaLoadId: Long = 0L
 
     /**
@@ -299,7 +301,9 @@ class SukashiViewModel(application: Application) : AndroidViewModel(application)
         val updated = transform(_editorState.value.overlayStyle)
         _editorState.update { it.copy(overlayStyle = updated) }
         if (persist) {
-            viewModelScope.launch {
+            stylePersistJob?.cancel()
+            stylePersistJob = viewModelScope.launch {
+                delay(180)
                 preferencesRepository.saveOverlayStyle(updated)
             }
         }

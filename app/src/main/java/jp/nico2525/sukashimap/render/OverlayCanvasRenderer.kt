@@ -1,6 +1,7 @@
 package jp.nico2525.sukashimap.render
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.DashPathEffect
@@ -26,6 +27,7 @@ import jp.nico2525.sukashimap.model.TransportInfo
 import jp.nico2525.sukashimap.model.TransportMode
 import java.util.Locale
 import kotlin.math.abs
+import kotlin.math.ceil
 import kotlin.math.atan2
 import kotlin.math.hypot
 import kotlin.math.max
@@ -52,6 +54,79 @@ data class OverlayLayoutMetrics(
     val textBounds: RectF,
     val mapBounds: RectF?
 )
+
+/** Reusable preview-only raster of the map layer. */
+class OverlayMapCache {
+    var bitmap: Bitmap? = null
+    var mapBounds: RectF? = null
+    var width = 0f
+    var height = 0f
+    var info: TransportInfo? = null
+    var slice: MapDatasetSlice? = null
+    var mapBoxScale = 1f
+    var mapInternalZoom = 1f
+    var mapInternalPanX = 0f
+    var mapInternalPanY = 0f
+    var mapCorner = OverlayCorner.BOTTOM_LEFT
+    var mapFreeX: Float? = null
+    var mapFreeY: Float? = null
+    var routeColorArgb = 0
+    var borderColorArgb = 0
+    var showOriginPlaneBadge = true
+
+    fun matches(
+        w: Float,
+        h: Float,
+        info: TransportInfo,
+        style: OverlayStyle,
+        slice: MapDatasetSlice
+    ): Boolean {
+        return bitmap != null &&
+            width == w &&
+            height == h &&
+            this.info === info &&
+            this.slice === slice &&
+            routeColorArgb == style.routeColorArgb &&
+            borderColorArgb == style.borderColorArgb &&
+            showOriginPlaneBadge == style.showOriginPlaneBadge
+    }
+
+    fun transformMatches(style: OverlayStyle): Boolean =
+        mapBoxScale == style.mapBoxScale &&
+            mapInternalZoom == style.mapInternalZoom &&
+            mapInternalPanX == style.mapInternalPanX &&
+            mapInternalPanY == style.mapInternalPanY &&
+            mapCorner == style.mapCorner &&
+            mapFreeX == style.mapFreePos?.x &&
+            mapFreeY == style.mapFreePos?.y
+
+    fun remember(
+        w: Float,
+        h: Float,
+        info: TransportInfo,
+        style: OverlayStyle,
+        slice: MapDatasetSlice,
+        bitmap: Bitmap,
+        bounds: RectF?
+    ) {
+        this.bitmap = bitmap
+        this.mapBounds = bounds
+        width = w
+        height = h
+        this.info = info
+        this.slice = slice
+        mapBoxScale = style.mapBoxScale
+        mapInternalZoom = style.mapInternalZoom
+        mapInternalPanX = style.mapInternalPanX
+        mapInternalPanY = style.mapInternalPanY
+        mapCorner = style.mapCorner
+        mapFreeX = style.mapFreePos?.x
+        mapFreeY = style.mapFreePos?.y
+        routeColorArgb = style.routeColorArgb
+        borderColorArgb = style.borderColorArgb
+        showOriginPlaneBadge = style.showOriginPlaneBadge
+    }
+}
 
 object OverlayCanvasRenderer {
 
@@ -205,6 +280,68 @@ object OverlayCanvasRenderer {
         )
     }
 
+    private fun approximateCachedMapRect(
+        cache: OverlayMapCache,
+        style: OverlayStyle,
+        width: Float,
+        height: Float,
+        mapMargin: Float
+    ): RectF? {
+        val old = cache.mapBounds ?: return null
+        val ratio = if (cache.mapBoxScale > 0f) style.mapBoxScale / cache.mapBoxScale else 1f
+        val minBound = mapMargin * 0.4f
+        val maxW = (width - minBound * 2f).coerceAtLeast(1f)
+        val maxH = (height - minBound * 2f).coerceAtLeast(1f)
+        val boxW = (old.width() * ratio).coerceIn(1f, maxW)
+        val boxH = (old.height() * ratio).coerceIn(1f, maxH)
+        val free = style.mapFreePos
+        val left: Float
+        val top: Float
+        if (free != null) {
+            left = (free.x * width - boxW * 0.5f)
+                .coerceIn(minBound, (width - boxW - minBound).coerceAtLeast(minBound))
+            top = (free.y * height - boxH * 0.5f)
+                .coerceIn(minBound, (height - boxH - minBound).coerceAtLeast(minBound))
+        } else {
+            left = when (style.mapCorner) {
+                OverlayCorner.TOP_LEFT, OverlayCorner.BOTTOM_LEFT -> mapMargin
+                OverlayCorner.TOP_RIGHT, OverlayCorner.BOTTOM_RIGHT -> (width - mapMargin - boxW).coerceAtLeast(0f)
+            }
+            top = when (style.mapCorner) {
+                OverlayCorner.TOP_LEFT, OverlayCorner.TOP_RIGHT -> mapMargin
+                OverlayCorner.BOTTOM_LEFT, OverlayCorner.BOTTOM_RIGHT -> (height - mapMargin - boxH).coerceAtLeast(0f)
+            }
+        }
+        return RectF(left, top, left + boxW, top + boxH)
+    }
+
+    private fun drawTransformedCachedMap(
+        canvas: Canvas,
+        cache: OverlayMapCache,
+        target: RectF,
+        style: OverlayStyle,
+        width: Float,
+        height: Float
+    ) {
+        val bitmap = cache.bitmap ?: return
+        val old = cache.mapBounds ?: return
+        val centerX = old.centerX()
+        val centerY = old.centerY()
+        val zoom = if (cache.mapInternalZoom > 0f) style.mapInternalZoom / cache.mapInternalZoom else 1f
+        val panX = (style.mapInternalPanX - cache.mapInternalPanX) * old.width()
+        val panY = -(style.mapInternalPanY - cache.mapInternalPanY) * old.height()
+        canvas.save()
+        canvas.clipRect(target)
+        canvas.translate(target.left, target.top)
+        canvas.scale(target.width() / old.width(), target.height() / old.height())
+        canvas.translate(-old.left, -old.top)
+        canvas.translate(centerX + panX, centerY + panY)
+        canvas.scale(zoom, zoom)
+        canvas.translate(-centerX, -centerY)
+        canvas.drawBitmap(bitmap, 0f, 0f, null)
+        canvas.restore()
+    }
+
     fun render(
         context: Context,
         canvas: Canvas,
@@ -212,7 +349,8 @@ object OverlayCanvasRenderer {
         canvasHeight: Float,
         info: TransportInfo,
         style: OverlayStyle,
-        mapSlice: MapDatasetSlice?
+        mapSlice: MapDatasetSlice?,
+        mapCache: OverlayMapCache? = null
     ): OverlayLayoutMetrics {
         val isLandscape = canvasWidth > canvasHeight
         val landscapeScale = if (isLandscape) 0.85f else 1.0f
@@ -221,9 +359,28 @@ object OverlayCanvasRenderer {
         val textMargin = 0.05f * canvasWidth * landscapeScale
         val mapMargin = 0.03f * canvasWidth * landscapeScale
 
-        val mapRect: RectF? = if (style.showMap && mapSlice != null) {
-            drawMapOverlay(
-                canvas = canvas,
+        fun rebuildMapLayer(cache: OverlayMapCache): RectF? {
+            val bmpW = ceil(canvasWidth).toInt().coerceAtLeast(1)
+            val bmpH = ceil(canvasHeight).toInt().coerceAtLeast(1)
+            if (bmpW.toLong() * bmpH.toLong() > 16_000_000L) {
+                return drawMapOverlay(
+                    canvas = canvas,
+                    W = canvasWidth,
+                    H = canvasHeight,
+                    landscapeScale = landscapeScale,
+                    unit = unit,
+                    mapMargin = mapMargin,
+                    info = info,
+                    style = style,
+                    slice = mapSlice!!
+                )
+            }
+            val bitmap = cache.bitmap
+                ?.takeIf { it.width == bmpW && it.height == bmpH }
+                ?: Bitmap.createBitmap(bmpW, bmpH, Bitmap.Config.ARGB_8888)
+            bitmap.eraseColor(Color.TRANSPARENT)
+            val bounds = drawMapOverlay(
+                canvas = Canvas(bitmap),
                 W = canvasWidth,
                 H = canvasHeight,
                 landscapeScale = landscapeScale,
@@ -231,8 +388,45 @@ object OverlayCanvasRenderer {
                 mapMargin = mapMargin,
                 info = info,
                 style = style,
-                slice = mapSlice
+                slice = mapSlice!!
             )
+            cache.remember(canvasWidth, canvasHeight, info, style, mapSlice, bitmap, bounds)
+            canvas.drawBitmap(bitmap, 0f, 0f, null)
+            return bounds
+        }
+
+        val mapRect: RectF? = if (style.showMap && mapSlice != null) {
+            val cache = mapCache
+            if (cache != null && cache.matches(canvasWidth, canvasHeight, info, style, mapSlice!!)) {
+                if (cache.transformMatches(style)) {
+                    cache.bitmap?.let { canvas.drawBitmap(it, 0f, 0f, null) }
+                    cache.mapBounds
+                } else {
+                    val target = approximateCachedMapRect(
+                        cache, style, canvasWidth, canvasHeight, mapMargin
+                    )
+                    if (target != null) {
+                        drawTransformedCachedMap(canvas, cache, target, style, canvasWidth, canvasHeight)
+                        target
+                    } else {
+                        rebuildMapLayer(cache)
+                    }
+                }
+            } else if (cache != null) {
+                rebuildMapLayer(cache)
+            } else {
+                drawMapOverlay(
+                    canvas = canvas,
+                    W = canvasWidth,
+                    H = canvasHeight,
+                    landscapeScale = landscapeScale,
+                    unit = unit,
+                    mapMargin = mapMargin,
+                    info = info,
+                    style = style,
+                    slice = mapSlice!!
+                )
+            }
         } else null
 
         val textRect = drawTextOverlay(
@@ -433,13 +627,20 @@ object OverlayCanvasRenderer {
             strokePaint.strokeWidth = width
             strokePaint.color = colorArgb
             haloPaint.strokeWidth = width * 1.65f
+            val combined = Path()
             for (ring in rings) {
                 if (isRingOutsideFrustum(ring)) continue
-                buildProjectedPath(ring, proj, ::toScreenX, ::toScreenY, closePolys, mapRect, scratchPath)
-                if (scratchPath.isEmpty) continue
-                if (withHalo) canvas.drawPath(scratchPath, haloPaint)
-                canvas.drawPath(scratchPath, strokePaint)
+                val bx1 = toScreenX(ring.minLon.toDouble(), ring.minLat.toDouble())
+                val bx2 = toScreenX(ring.maxLon.toDouble(), ring.maxLat.toDouble())
+                val by1 = toScreenY(ring.minLat.toDouble())
+                val by2 = toScreenY(ring.maxLat.toDouble())
+                if (max(abs(bx2 - bx1), abs(by2 - by1)) < 1.2f) continue
+                buildProjectedPath(ring, proj, ::toScreenX, ::toScreenY, closePolys, mapRect, scratchPath, 0.6f)
+                if (!scratchPath.isEmpty) combined.addPath(scratchPath)
             }
+            if (combined.isEmpty) return
+            if (withHalo) canvas.drawPath(combined, haloPaint)
+            canvas.drawPath(combined, strokePaint)
         }
 
         if (slice.isJapanMultiPass) {
@@ -616,7 +817,8 @@ object OverlayCanvasRenderer {
         toY: (Double) -> Float,
         closePoly: Boolean,
         mapRect: RectF,
-        outPath: Path
+        outPath: Path,
+        minStep: Float = 0f
     ): Boolean {
         outPath.reset()
         val pairs = ring.lonLatPairs
@@ -631,6 +833,8 @@ object OverlayCanvasRenderer {
         var prevAdjLon = proj.normalizeLon(firstLon)
         var prevSx = toX(firstLon, firstLat)
         var prevSy = toY(firstLat)
+        var lastX = prevSx
+        var lastY = prevSy
         outPath.moveTo(prevSx, prevSy)
 
         val cullPad = 24f
@@ -643,9 +847,13 @@ object OverlayCanvasRenderer {
 
             if (abs(adjLon - prevAdjLon) > 170.0) {
                 outPath.moveTo(sx, sy)
+                lastX = sx
+                lastY = sy
                 jumped = true
-            } else {
+            } else if (minStep <= 0f || hypot(sx - lastX, sy - lastY) >= minStep) {
                 outPath.lineTo(sx, sy)
+                lastX = sx
+                lastY = sy
                 val segMinX = min(prevSx, sx)
                 val segMaxX = max(prevSx, sx)
                 val segMinY = min(prevSy, sy)

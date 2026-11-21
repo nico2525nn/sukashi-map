@@ -120,6 +120,7 @@ import jp.nico2525.sukashimap.model.ExportFormat
 import jp.nico2525.sukashimap.model.NormOffset
 import jp.nico2525.sukashimap.model.TransportMode
 import jp.nico2525.sukashimap.render.OverlayCanvasRenderer
+import jp.nico2525.sukashimap.render.OverlayMapCache
 import jp.nico2525.sukashimap.render.OverlayLayoutMetrics
 import jp.nico2525.sukashimap.ui.SukashiViewModel
 import jp.nico2525.sukashimap.ui.settings.SettingsSheet
@@ -156,6 +157,7 @@ fun EditorScreen(
 
     var activeDrag by remember { mutableStateOf(DragTarget.NONE) }
     val metricsHolder = remember { LayoutMetricsHolder() }
+    val mapCache = remember { OverlayMapCache() }
 
     val latestState by rememberUpdatedState(state)
 
@@ -523,7 +525,8 @@ fun EditorScreen(
                                             canvasHeight = size.height,
                                             info = state.transportInfo,
                                             style = state.overlayStyle,
-                                            mapSlice = state.mapSlice
+                                            mapSlice = state.mapSlice,
+                                            mapCache = mapCache
                                         )
                                         metricsHolder.value = m
                                         drawnMetrics = m
