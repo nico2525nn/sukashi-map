@@ -32,6 +32,7 @@ import jp.nico2525.sukashimap.ui.theme.ThemeMode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -81,6 +82,7 @@ class SukashiViewModel(application: Application) : AndroidViewModel(application)
     private var routeJob: Job? = null
     private var mediaJob: Job? = null
     private var stylePersistJob: Job? = null
+    private var cropRevision = 0L
     private var mediaLoadId: Long = 0L
 
     /**
@@ -108,6 +110,7 @@ class SukashiViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun openMediaUri(uri: Uri, fromCamera: Boolean = false, onReady: () -> Unit = {}) {
+        cropRevision++
         mediaJob?.cancel()
         val loadId = ++mediaLoadId
         mediaJob = viewModelScope.launch {
@@ -148,7 +151,7 @@ class SukashiViewModel(application: Application) : AndroidViewModel(application)
                     photoCountryCode = geo?.countryCode.orEmpty()
                 )
                 val revision = ++infoRevision
-                val slice = OverlayCanvasRenderer.prepareMapSlice(updatedInfo, mapVectorRepository)
+                val slice = prepareSlice(updatedInfo)
                 if (loadId != mediaLoadId) return@launch
                 _editorState.update {
                     it.copy(
@@ -180,7 +183,7 @@ class SukashiViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun applyTransportInfo(newInfo: TransportInfo, saveToHistory: Boolean = true) {
-        _editorState.update { it.copy(transportInfo = newInfo) }
+        _editorState.update { it.copy(transportInfo = newInfo, isComputingRoute = true) }
         val revision = ++infoRevision
         viewModelScope.launch {
             refreshMapSlice(newInfo, revision)
@@ -189,8 +192,13 @@ class SukashiViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    private suspend fun prepareSlice(info: TransportInfo): MapDatasetSlice =
+        withContext(Dispatchers.Default) {
+            OverlayCanvasRenderer.prepareMapSlice(info, mapVectorRepository)
+        }
+
     private suspend fun refreshMapSlice(info: TransportInfo, revision: Long = infoRevision) {
-        val slice = OverlayCanvasRenderer.prepareMapSlice(info, mapVectorRepository)
+        val slice = prepareSlice(info)
         if (revision == infoRevision) {
             _editorState.update { it.copy(mapSlice = slice) }
         }
@@ -232,7 +240,7 @@ class SukashiViewModel(application: Application) : AndroidViewModel(application)
                             railwayLineName = info.railwayLineName.ifBlank { res.autoDetectedLineName.orEmpty() },
                             railwayCompany = info.railwayCompany.ifBlank { res.autoDetectedCompany.orEmpty() }
                         )
-                        val slice = OverlayCanvasRenderer.prepareMapSlice(merged, mapVectorRepository)
+                        val slice = prepareSlice(merged)
                         if (revision != infoRevision) return@launch
                         _editorState.update {
                             it.copy(transportInfo = merged, mapSlice = slice, isComputingRoute = false)
@@ -267,7 +275,7 @@ class SukashiViewModel(application: Application) : AndroidViewModel(application)
                         )
                         if (revision != infoRevision) return@launch
                         val merged = info.copy(routePolylines = road)
-                        val slice = OverlayCanvasRenderer.prepareMapSlice(merged, mapVectorRepository)
+                        val slice = prepareSlice(merged)
                         if (revision != infoRevision) return@launch
                         _editorState.update {
                             it.copy(transportInfo = merged, mapSlice = slice, isComputingRoute = false)
@@ -286,7 +294,7 @@ class SukashiViewModel(application: Application) : AndroidViewModel(application)
 
                 TransportMode.AIRPLANE, TransportMode.SPOT -> {
                     val cleaned = info.copy(routePolylines = emptyList())
-                    val slice = OverlayCanvasRenderer.prepareMapSlice(cleaned, mapVectorRepository)
+                    val slice = prepareSlice(cleaned)
                     if (revision != infoRevision) return@launch
                     _editorState.update { it.copy(transportInfo = cleaned, mapSlice = slice, isComputingRoute = false) }
                     if (saveToHistory && revision == infoRevision) {
@@ -351,17 +359,23 @@ class SukashiViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun commitInteractiveStyle() {
+        stylePersistJob?.cancel()
+        stylePersistJob = null
         viewModelScope.launch {
             preferencesRepository.saveOverlayStyle(_editorState.value.overlayStyle)
         }
     }
 
     fun applyCropFrame(settings: CropFrameSettings) {
+        val revision = ++cropRevision
+        val mediaAtStart = _editorState.value.mediaUri
+        _editorState.update { it.copy(cropFrame = settings) }
         viewModelScope.launch(Dispatchers.Default) {
             val raw = _editorState.value.rawBitmap
             val staged = if (raw != null) {
                 MediaExporter.applyCropAndFrameToBitmap(raw, settings)
             } else null
+            if (revision != cropRevision || _editorState.value.mediaUri != mediaAtStart) return@launch
             _editorState.update {
                 it.copy(
                     cropFrame = settings,
@@ -377,6 +391,11 @@ class SukashiViewModel(application: Application) : AndroidViewModel(application)
         val state = _editorState.value
         val uri = state.mediaUri ?: run {
             emitMessage("写真または動画を選択してください")
+            return
+        }
+        if (state.isExporting) return
+        if (state.isComputingRoute) {
+            emitMessage("ルート計算が完了してから保存してください")
             return
         }
         viewModelScope.launch {

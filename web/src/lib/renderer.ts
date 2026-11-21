@@ -229,10 +229,16 @@ function drawTransformedMap(
       ? style.mapInternalZoom / cache.mapInternalZoom
       : 1
   const panX = (style.mapInternalPanX - cache.mapInternalPanX) * old.width
-  const panY = -(style.mapInternalPanY - cache.mapInternalPanY) * old.height
+  const panY = (style.mapInternalPanY - cache.mapInternalPanY) * old.height
   ctx.save()
   ctx.beginPath()
-  ctx.rect(target.x, target.y, target.width, target.height)
+  ctx.roundRect(
+    target.x,
+    target.y,
+    target.width,
+    target.height,
+    Math.min(18, target.width * 0.06),
+  )
   ctx.clip()
   ctx.translate(target.x, target.y)
   ctx.scale(scaleX, scaleY)
@@ -328,7 +334,9 @@ function focusPoints(info: TransportInfo): Coord[] {
     return points
   }
   if (info.mode !== 'SPOT') {
-    for (const polyline of info.routePolylines) points.push(...polyline)
+    for (const polyline of info.routePolylines) {
+      for (const point of polyline) points.push(point)
+    }
     if (start) points.push(start)
     if (end) points.push(end)
     if (!info.routePolylines.length && start && end) {
@@ -976,11 +984,17 @@ function renderMap(
   const context = allJapan ? [] : []
 
   const centerRef = points[0].lon
-  const normalized = points.map((p) => normalizeLon(p.lon, centerRef))
-  let minLon = Math.min(...normalized)
-  let maxLon = Math.max(...normalized)
-  let minLat = Math.min(...points.map((p) => p.lat))
-  let maxLat = Math.max(...points.map((p) => p.lat))
+  let minLon = Infinity
+  let maxLon = -Infinity
+  let minLat = Infinity
+  let maxLat = -Infinity
+  for (const point of points) {
+    const lon = normalizeLon(point.lon, centerRef)
+    if (lon < minLon) minLon = lon
+    if (lon > maxLon) maxLon = lon
+    if (point.lat < minLat) minLat = point.lat
+    if (point.lat > maxLat) maxLat = point.lat
+  }
 
   if (points.length === 1) {
     const b = singlePointBounds(points[0], datasets)
@@ -1153,8 +1167,8 @@ function renderMap(
     drawRings(context, Math.max(0.8, borderStroke(boxW)), withAlpha(borderColor, 0.5), true, 0.7)
   }
   if (allJapan) {
-    const visibleSpanLon = spanX / zoom
-    if (visibleSpanLon >= 2.5) {
+    const visibleSpanLonDeg = ((spanX / zoom) * 180) / Math.PI
+    if (visibleSpanLonDeg >= 2.5) {
       drawRings(borders, Math.max(0.7, 0.0015 * boxW), withAlpha(borderColor, 0.38), false)
       drawRings(primary, Math.max(1.2, 0.005 * boxW), borderColor, true)
     } else {

@@ -48,6 +48,14 @@ export function CameraDialog({ datasets }: CameraDialogProps) {
     setReady(false)
   }, [])
 
+  useEffect(
+    () => () => {
+      captureId.current += 1
+      stop()
+    },
+    [stop],
+  )
+
   useEffect(() => {
     if (!open) {
       captureId.current++

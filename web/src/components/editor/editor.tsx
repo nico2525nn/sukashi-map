@@ -22,7 +22,7 @@ import {
   exportVideo,
   shareOrDownload,
 } from '@/lib/export'
-import type { MapDatasets } from '@/lib/map-data'
+import { EMPTY_MAP_DATASETS, type MapDatasets } from '@/lib/map-data'
 import { cn } from '@/lib/utils'
 import { useAppStore } from '@/store/app-store'
 import { useUiStore } from '@/store/ui-store'
@@ -69,6 +69,7 @@ export function Editor({ datasets, renderKey = 0, onRetryMap }: EditorProps) {
   if (!media) return null
 
   const asset = media
+  const mapDatasets = datasets ?? EMPTY_MAP_DATASETS
   const source = asset.type === 'image' ? image : video
   const aspect = effectiveAspect(crop, asset.width, asset.height)
 
@@ -80,10 +81,6 @@ export function Editor({ datasets, renderKey = 0, onRetryMap }: EditorProps) {
   }
 
   async function exportCurrent(format: ExportFormat, share: boolean) {
-    if (!datasets) {
-      toast.error('地図データを読み込み中です。少し待ってから再度お試しください')
-      return
-    }
     if (asset.type === 'video' && !canExportVideo()) {
       toast.error('このブラウザは動画の書き出しに対応していません')
       return
@@ -128,7 +125,7 @@ export function Editor({ datasets, renderKey = 0, onRetryMap }: EditorProps) {
           info,
           style,
           crop,
-          datasets,
+          datasets: mapDatasets,
           onProgress: setProgress,
           signal: controller.signal,
         })
@@ -150,7 +147,7 @@ export function Editor({ datasets, renderKey = 0, onRetryMap }: EditorProps) {
           info,
           style,
           crop,
-          datasets,
+          datasets: mapDatasets,
         })
         const blob = await canvasToBlob(canvas, format)
         if (!blob) throw new Error('画像を書き出せませんでした')
@@ -209,7 +206,7 @@ export function Editor({ datasets, renderKey = 0, onRetryMap }: EditorProps) {
           media={media}
           source={source}
           aspect={aspect}
-          datasets={datasets}
+          datasets={mapDatasets}
           renderKey={renderKey}
           className={stageShift}
         />

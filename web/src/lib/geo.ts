@@ -72,7 +72,35 @@ export function greatCircle(
     for (let i = 0; i < flat.length; i += 2) out.push({ lon: flat[i], lat: flat[i + 1] })
     return out
   }
-  return [{ lon: lon1, lat: lat1 }, { lon: lon2, lat: lat2 }]
+  const toRad = Math.PI / 180
+  const p1 = lat1 * toRad
+  const l1 = lon1 * toRad
+  const p2 = lat2 * toRad
+  const l2 = lon2 * toRad
+  const d = 2 * Math.asin(
+    Math.sqrt(
+      Math.sin((p2 - p1) / 2) ** 2 +
+        Math.cos(p1) * Math.cos(p2) * Math.sin((l2 - l1) / 2) ** 2,
+    ),
+  )
+  if (d < 1e-6 || Math.abs(Math.sin(d)) < 1e-6) {
+    return [{ lon: lon1, lat: lat1 }, { lon: lon2, lat: lat2 }]
+  }
+  const count = Math.max(2, Math.min(segments, 96))
+  const out: { lon: number; lat: number }[] = []
+  for (let i = 0; i <= count; i++) {
+    const f = i / count
+    const a = Math.sin((1 - f) * d) / Math.sin(d)
+    const b = Math.sin(f * d) / Math.sin(d)
+    const x = a * Math.cos(p1) * Math.cos(l1) + b * Math.cos(p2) * Math.cos(l2)
+    const y = a * Math.cos(p1) * Math.sin(l1) + b * Math.cos(p2) * Math.sin(l2)
+    const z = a * Math.sin(p1) + b * Math.sin(p2)
+    out.push({
+      lon: Math.atan2(y, x) / toRad,
+      lat: Math.atan2(z, Math.hypot(x, y)) / toRad,
+    })
+  }
+  return out
 }
 
 export function simplifyPolyline(points: { lon: number; lat: number }[], epsilonMeters = 150) {

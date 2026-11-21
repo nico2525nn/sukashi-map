@@ -73,6 +73,7 @@ class OverlayMapCache {
     var routeColorArgb = 0
     var borderColorArgb = 0
     var showOriginPlaneBadge = true
+    var settledToken = -1
 
     fun matches(
         w: Float,
@@ -329,7 +330,7 @@ object OverlayCanvasRenderer {
         val centerY = old.centerY()
         val zoom = if (cache.mapInternalZoom > 0f) style.mapInternalZoom / cache.mapInternalZoom else 1f
         val panX = (style.mapInternalPanX - cache.mapInternalPanX) * old.width()
-        val panY = -(style.mapInternalPanY - cache.mapInternalPanY) * old.height()
+        val panY = (style.mapInternalPanY - cache.mapInternalPanY) * old.height()
         canvas.save()
         canvas.clipRect(target)
         canvas.translate(target.left, target.top)
@@ -350,7 +351,8 @@ object OverlayCanvasRenderer {
         info: TransportInfo,
         style: OverlayStyle,
         mapSlice: MapDatasetSlice?,
-        mapCache: OverlayMapCache? = null
+        mapCache: OverlayMapCache? = null,
+        mapSettleToken: Int = 0
     ): OverlayLayoutMetrics {
         val isLandscape = canvasWidth > canvasHeight
         val landscapeScale = if (isLandscape) 0.85f else 1.0f
@@ -391,6 +393,7 @@ object OverlayCanvasRenderer {
                 slice = mapSlice!!
             )
             cache.remember(canvasWidth, canvasHeight, info, style, mapSlice, bitmap, bounds)
+            cache.settledToken = mapSettleToken
             canvas.drawBitmap(bitmap, 0f, 0f, null)
             return bounds
         }
@@ -398,7 +401,15 @@ object OverlayCanvasRenderer {
         val mapRect: RectF? = if (style.showMap && mapSlice != null) {
             val cache = mapCache
             if (cache != null && cache.matches(canvasWidth, canvasHeight, info, style, mapSlice!!)) {
-                if (cache.transformMatches(style)) {
+                if (mapSettleToken != cache.settledToken) {
+                    if (cache.transformMatches(style)) {
+                        cache.settledToken = mapSettleToken
+                        cache.bitmap?.let { canvas.drawBitmap(it, 0f, 0f, null) }
+                        cache.mapBounds
+                    } else {
+                        rebuildMapLayer(cache)
+                    }
+                } else if (cache.transformMatches(style)) {
                     cache.bitmap?.let { canvas.drawBitmap(it, 0f, 0f, null) }
                     cache.mapBounds
                 } else {

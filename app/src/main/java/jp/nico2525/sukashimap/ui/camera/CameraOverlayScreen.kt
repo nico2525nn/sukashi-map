@@ -47,6 +47,7 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -75,6 +76,7 @@ import jp.nico2525.sukashimap.ui.editor.StyleSettingsSheet
 import jp.nico2525.sukashimap.ui.editor.TransportInfoSheet
 import kotlinx.coroutines.delay
 import java.io.File
+import java.util.concurrent.atomic.AtomicBoolean
 
 @Composable
 fun CameraOverlayScreen(
@@ -117,6 +119,8 @@ fun CameraOverlayScreen(
     var showInfoSheet by remember { mutableStateOf(false) }
     var showStyleSheet by remember { mutableStateOf(false) }
     var boundCamera by remember { mutableStateOf<Camera?>(null) }
+    var captureInFlight by remember { mutableStateOf(false) }
+    val disposed = remember { AtomicBoolean(false) }
     val latestCamera by rememberUpdatedState(boundCamera)
 
     val imageCapture = remember {
@@ -134,19 +138,36 @@ fun CameraOverlayScreen(
         }
     }
 
+    DisposableEffect(Unit) {
+        onDispose {
+            disposed.set(true)
+            val providerFuture = ProcessCameraProvider.getInstance(context)
+            providerFuture.addListener({
+                runCatching { providerFuture.get().unbindAll() }
+            }, ContextCompat.getMainExecutor(context))
+        }
+    }
+
     LaunchedEffect(hasCameraPermission, lensFacing, flashEnabled) {
         if (!hasCameraPermission) return@LaunchedEffect
         imageCapture.flashMode = if (flashEnabled) ImageCapture.FLASH_MODE_ON else ImageCapture.FLASH_MODE_OFF
         val providerFuture = ProcessCameraProvider.getInstance(context)
         providerFuture.addListener({
+            if (disposed.get()) return@addListener
             runCatching {
                 val cameraProvider = providerFuture.get()
+                if (disposed.get()) {
+                    cameraProvider.unbindAll()
+                    return@runCatching
+                }
                 val preview = Preview.Builder().build().also {
                     it.surfaceProvider = previewView.surfaceProvider
                 }
                 val selector = CameraSelector.Builder().requireLensFacing(lensFacing).build()
                 cameraProvider.unbindAll()
                 boundCamera = cameraProvider.bindToLifecycle(lifecycleOwner, selector, preview, imageCapture)
+            }.onFailure { err ->
+                viewModel.emitMessage("カメラ起動エラー: ${err.localizedMessage ?: ""}")
             }
         }, ContextCompat.getMainExecutor(context))
     }
@@ -159,7 +180,8 @@ fun CameraOverlayScreen(
     }
 
     val capturePhoto = {
-        if (hasCameraPermission) {
+        if (hasCameraPermission && !captureInFlight && !disposed.get()) {
+            captureInFlight = true
             val outDir = File(context.cacheDir, "captures").apply { mkdirs() }
             val photoFile = File(outDir, "camera_${System.currentTimeMillis()}.jpg")
             val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
@@ -168,6 +190,11 @@ fun CameraOverlayScreen(
                 ContextCompat.getMainExecutor(context),
                 object : ImageCapture.OnImageSavedCallback {
                     override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
+                        captureInFlight = false
+                        if (disposed.get()) {
+                            photoFile.delete()
+                            return
+                        }
                         runCatching {
                             FileProvider.getUriForFile(
                                 context,
@@ -182,7 +209,10 @@ fun CameraOverlayScreen(
                     }
 
                     override fun onError(exception: ImageCaptureException) {
-                        viewModel.emitMessage("撮影エラー: ${exception.localizedMessage}")
+                        captureInFlight = false
+                        if (!disposed.get()) {
+                            viewModel.emitMessage("撮影エラー: ${exception.localizedMessage}")
+                        }
                     }
                 }
             )

@@ -86,9 +86,11 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import kotlinx.coroutines.delay
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -158,6 +160,11 @@ fun EditorScreen(
     var activeDrag by remember { mutableStateOf(DragTarget.NONE) }
     val metricsHolder = remember { LayoutMetricsHolder() }
     val mapCache = remember { OverlayMapCache() }
+    var mapSettleToken by remember { mutableIntStateOf(0) }
+    LaunchedEffect(state.overlayStyle, state.transportInfo, state.mapSlice) {
+        delay(180)
+        mapSettleToken++
+    }
 
     val latestState by rememberUpdatedState(state)
 
@@ -526,7 +533,8 @@ fun EditorScreen(
                                             info = state.transportInfo,
                                             style = state.overlayStyle,
                                             mapSlice = state.mapSlice,
-                                            mapCache = mapCache
+                                            mapCache = mapCache,
+                                            mapSettleToken = mapSettleToken
                                         )
                                         metricsHolder.value = m
                                         drawnMetrics = m

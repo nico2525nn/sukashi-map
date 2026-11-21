@@ -121,7 +121,6 @@ export function PreviewStage({
   const styleRef = useRef(style)
   styleRef.current = style
   const effectiveStyle = dragStyle ?? style
-  const dpr = Math.min(2, window.devicePixelRatio || 1)
   const lastMoveRef = useRef(0)
   useEffect(() => {
     setPlaying(true)
@@ -169,6 +168,8 @@ export function PreviewStage({
 
   const stageW = Math.max(1, Math.min(slot.w, slot.h * aspect))
   const stageH = Math.max(1, stageW / aspect)
+  const requestedDpr = Math.min(2, window.devicePixelRatio || 1)
+  const dpr = Math.max(1, Math.min(requestedDpr, Math.sqrt(12_000_000 / (stageW * stageH))))
   const canvasW = Math.max(1, Math.round(stageW * dpr))
   const canvasH = Math.max(1, Math.round(stageH * dpr))
 
@@ -178,6 +179,9 @@ export function PreviewStage({
     canvas.width = canvasW
     canvas.height = canvasH
     if (activeSource instanceof HTMLVideoElement) {
+      if (activeSource.readyState >= 2) {
+        drawBackground(canvas, activeSource, activeSource.videoWidth || media.width, activeSource.videoHeight || media.height, crop)
+      }
       let raf = 0
       const loop = () => {
         if (!activeSource.paused && !activeSource.ended) {
@@ -224,6 +228,7 @@ export function PreviewStage({
       datasets,
       mapLayer: mapLayerRef.current,
       mapScale,
+      forceMapRedraw: !fastMap,
     })
     layoutRef.current = layout
     if (active) drawSelection(ctx, layout, active, dpr)

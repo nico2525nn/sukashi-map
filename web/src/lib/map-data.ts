@@ -145,11 +145,22 @@ let usPromise: Promise<Ring[]> | null = null
 export async function ensureMapDatasetsFor(points: { lon: number; lat: number }[]): Promise<MapDatasets> {
   const needJapan = points.some((p) => isInJapan(p.lon, p.lat))
   const needUs = points.some((p) => isInUs(p.lon, p.lat))
-  worldPromise ??= loadWorldMap()
+  worldPromise ??= loadWorldMap().catch((err) => {
+    worldPromise = null
+    throw err
+  })
   if (needJapan) {
-    japanPromise ??= Promise.all([loadJapanCoast(), loadJapanPrefectures(), loadJapanWater()])
+    japanPromise ??= Promise.all([loadJapanCoast(), loadJapanPrefectures(), loadJapanWater()]).catch((err) => {
+      japanPromise = null
+      throw err
+    })
   }
-  if (needUs) usPromise ??= loadUsStates()
+  if (needUs) {
+    usPromise ??= loadUsStates().catch((err) => {
+      usPromise = null
+      throw err
+    })
+  }
   const [world, japan, us] = await Promise.all([
     worldPromise,
     japanPromise ?? Promise.resolve(null),
@@ -163,4 +174,12 @@ export async function ensureMapDatasetsFor(points: { lon: number; lat: number }[
     usStates: us ?? datasetCache.usStates,
   }
   return datasetCache
+}
+
+export const EMPTY_MAP_DATASETS: MapDatasets = {
+  world: [],
+  japanCoast: [],
+  japanPrefectures: [],
+  japanWater: [],
+  usStates: [],
 }

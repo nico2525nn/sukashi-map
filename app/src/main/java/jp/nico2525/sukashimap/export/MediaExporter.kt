@@ -275,7 +275,10 @@ object MediaExporter {
                 context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) }
                 if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return@withContext null
                 var sample = 1
-                while (max(bounds.outWidth, bounds.outHeight) / (sample * 2) >= maxLongEdge) {
+                while (
+                    max(bounds.outWidth, bounds.outHeight) / sample > maxLongEdge ||
+                    (bounds.outWidth.toLong() / sample) * (bounds.outHeight.toLong() / sample) > 12_000_000L
+                ) {
                     sample *= 2
                 }
                 val decodeOpts = BitmapFactory.Options().apply {
@@ -305,6 +308,8 @@ object MediaExporter {
                     if (rotated !== raw) raw.recycle()
                     rotated
                 }
+            } catch (_: OutOfMemoryError) {
+                null
             } catch (_: Exception) {
                 null
             }
