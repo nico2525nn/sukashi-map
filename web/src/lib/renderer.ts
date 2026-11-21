@@ -558,6 +558,10 @@ function fontFamily(key: string): string {
       return '"DM Sans", system-ui, sans-serif'
     case 'kaisei-tokumin':
       return '"Kaisei Tokumin", serif'
+    case 'noto-sans-jp':
+      return '"Noto Sans JP", system-ui, sans-serif'
+    case 'noto-serif-jp':
+      return '"Noto Serif JP", serif'
     case 'artemis':
       return '"Artemis Inter", "Outfit", system-ui, sans-serif'
     case 'default':

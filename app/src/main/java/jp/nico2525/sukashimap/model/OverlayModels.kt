@@ -47,9 +47,13 @@ enum class OverlayFont(val id: String, val displayName: String, val fontResId: I
     DM_SANS("dm_sans", "DM Sans", R.font.dm_sans_bold),
     OUTFIT("outfit", "Outfit", R.font.outfit_bold),
     ARTEMIS_INTER("artemis", "ARTEMIS INTER", R.font.artemis_inter),
-    KAISEI_TOKUMIN("kaisei_tokumin", "Kaisei Tokumin", R.font.kaisei_tokumin_bold);
+    KAISEI_TOKUMIN("kaisei_tokumin", "Kaisei Tokumin", R.font.kaisei_tokumin_bold),
+    JP_SANS("jp_sans", "Noto Sans JP", null),
+    JP_SERIF("jp_serif", "Noto Serif JP", null);
 
     fun resolveTypeface(context: Context): Typeface {
+        if (this == JP_SANS) return Typeface.create("sans-serif", Typeface.BOLD)
+        if (this == JP_SERIF) return Typeface.create("serif", Typeface.BOLD)
         val resId = fontResId ?: return Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         return try {
             ResourcesCompat.getFont(context, resId) ?: Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
@@ -59,6 +63,8 @@ enum class OverlayFont(val id: String, val displayName: String, val fontResId: I
     }
 
     fun toComposeFontFamily(): FontFamily {
+        if (this == JP_SANS) return FontFamily.SansSerif
+        if (this == JP_SERIF) return FontFamily.Serif
         val resId = fontResId ?: return FontFamily.SansSerif
         return FontFamily(Font(resId, FontWeight.Bold))
     }

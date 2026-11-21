@@ -107,6 +107,7 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
@@ -159,6 +160,9 @@ fun EditorScreen(
 
     var activeDrag by remember { mutableStateOf(DragTarget.NONE) }
     val metricsHolder = remember { LayoutMetricsHolder() }
+    val configuration = LocalConfiguration.current
+    val portraitMedia = state.mediaHeight > state.mediaWidth
+    val stylePanelHeight = (configuration.screenHeightDp * if (portraitMedia) 0.50f else 0.55f).dp
     val mapCache = remember { OverlayMapCache() }
     var mapSettleToken by remember { mutableIntStateOf(0) }
     LaunchedEffect(state.overlayStyle, state.transportInfo, state.mapSlice) {
@@ -289,7 +293,7 @@ fun EditorScreen(
                 )
             } else {
                 val stageBottomInset by animateDpAsState(
-                    targetValue = if (showStyleSheet) 400.dp else 96.dp,
+                    targetValue = if (showStyleSheet) stylePanelHeight + 24.dp else 96.dp,
                     label = "stageBottomInset"
                 )
                 Column(
@@ -724,7 +728,8 @@ fun EditorScreen(
             onResetLayout = { viewModel.snapLayoutReset() },
             onSavePreset = { name -> viewModel.saveStylePreset(name) },
             onDeletePreset = { id -> viewModel.deleteStylePreset(id) },
-            onDismiss = { showStyleSheet = false }
+            onDismiss = { showStyleSheet = false },
+            panelMaxHeight = stylePanelHeight
         )
     }
 

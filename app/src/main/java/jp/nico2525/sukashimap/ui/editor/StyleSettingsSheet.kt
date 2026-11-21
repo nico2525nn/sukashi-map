@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -50,13 +51,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import jp.nico2525.sukashimap.model.OverlayCorner
 import jp.nico2525.sukashimap.model.OverlayFont
 import jp.nico2525.sukashimap.model.OverlayStyle
 import jp.nico2525.sukashimap.model.StylePreset
 import jp.nico2525.sukashimap.model.TransportMode
 import jp.nico2525.sukashimap.ui.components.ExpressiveColorSwatchRow
 import jp.nico2525.sukashimap.ui.components.ExpressiveSectionCard
+import jp.nico2525.sukashimap.ui.components.ExpressiveConnectedSegmentedRow
 import jp.nico2525.sukashimap.ui.components.ExpressiveValueSlider
 import java.util.Locale
 
@@ -70,7 +74,8 @@ fun StyleSettingsSheet(
     onResetLayout: () -> Unit = {},
     onSavePreset: (String) -> Unit,
     onDeletePreset: (String) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    panelMaxHeight: Dp = 460.dp
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -88,6 +93,7 @@ fun StyleSettingsSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .heightIn(max = panelMaxHeight)
                 .navigationBarsPadding()
         ) {
             Row(
@@ -135,6 +141,7 @@ fun StyleSettingsSheet(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .weight(1f, fill = false)
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 20.dp, vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -218,7 +225,25 @@ fun StyleSettingsSheet(
                     }
 
                     2 -> {
-                        ExpressiveSectionCard(title = "サイズ（%）・ズーム") {
+                        ExpressiveSectionCard(title = "サイズ（%）・配置") {
+                            Text("テキストの位置", style = MaterialTheme.typography.bodyMedium)
+                            ExpressiveConnectedSegmentedRow(
+                                options = OverlayCorner.entries.toList(),
+                                selected = style.textCorner,
+                                onSelect = { corner ->
+                                    onStyleChange(style.copy(textCorner = corner, textFreePos = null))
+                                },
+                                labelProvider = ::cornerLabel
+                            )
+                            Text("地図の位置", style = MaterialTheme.typography.bodyMedium)
+                            ExpressiveConnectedSegmentedRow(
+                                options = OverlayCorner.entries.toList(),
+                                selected = style.mapCorner,
+                                onSelect = { corner ->
+                                    onStyleChange(style.copy(mapCorner = corner, mapFreePos = null))
+                                },
+                                labelProvider = ::cornerLabel
+                            )
                             PercentSlider(
                                 label = "文字全体",
                                 value = style.textScale,
@@ -353,6 +378,13 @@ fun StyleSettingsSheet(
             }
         )
     }
+}
+
+private fun cornerLabel(corner: OverlayCorner): String = when (corner) {
+    OverlayCorner.TOP_LEFT -> "左上"
+    OverlayCorner.TOP_RIGHT -> "右上"
+    OverlayCorner.BOTTOM_LEFT -> "左下"
+    OverlayCorner.BOTTOM_RIGHT -> "右下"
 }
 
 @Composable

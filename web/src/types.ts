@@ -213,6 +213,8 @@ export const FONT_OPTIONS = [
   { value: 'jetbrains-mono', label: 'JetBrains Mono', family: '"JetBrains Mono"' },
   { value: 'dm-sans', label: 'DM Sans', family: '"DM Sans"' },
   { value: 'kaisei-tokumin', label: 'Kaisei Tokumin', family: '"Kaisei Tokumin"' },
+  { value: 'noto-sans-jp', label: 'Noto Sans JP', family: '"Noto Sans JP"' },
+  { value: 'noto-serif-jp', label: 'Noto Serif JP', family: '"Noto Serif JP"' },
   { value: 'artemis', label: 'ARTEMIS INTER', family: '"Artemis Inter"' },
   { value: 'default', label: 'Default', family: 'system-ui' },
 ] as const

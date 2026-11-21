@@ -115,7 +115,31 @@ export function StyleSheet() {
             </div>
           </SectionCard>
 
-          <SectionCard title="サイズ（%）">
+          <SectionCard title="サイズ（%）・配置">
+            <p className="text-sm font-medium">テキストの位置</p>
+            <Segmented
+              ariaLabel="テキストの基準位置"
+              options={(Object.keys(CORNER_LABELS) as OverlayCorner[]).map((corner) => ({
+                value: corner,
+                label: CORNER_LABELS[corner],
+              }))}
+              value={style.textCorner}
+              onValueChange={(corner) =>
+                updateStyle({ textCorner: corner, textFreePos: null })
+              }
+            />
+            <p className="text-sm font-medium">地図の位置</p>
+            <Segmented
+              ariaLabel="地図の基準位置"
+              options={(Object.keys(CORNER_LABELS) as OverlayCorner[]).map((corner) => ({
+                value: corner,
+                label: CORNER_LABELS[corner],
+              }))}
+              value={style.mapCorner}
+              onValueChange={(corner) =>
+                updateStyle({ mapCorner: corner, mapFreePos: null })
+              }
+            />
             <ScaleSlider
               label="文字全体"
               value={style.textScale}
@@ -170,32 +194,6 @@ export function StyleSheet() {
               min={0.5}
               max={5}
               onChange={(mapInternalZoom) => updateStyle({ mapInternalZoom })}
-            />
-          </SectionCard>
-
-          <SectionCard title="配置">
-            <p className="text-sm font-medium">テキストの基準位置</p>
-            <Segmented
-              ariaLabel="テキストの基準位置"
-              options={(Object.keys(CORNER_LABELS) as OverlayCorner[]).map((corner) => ({
-                value: corner,
-                label: CORNER_LABELS[corner],
-              }))}
-              value={style.textCorner}
-              onValueChange={(corner) => {
-                const opposite: Record<OverlayCorner, OverlayCorner> = {
-                  BOTTOM_RIGHT: 'BOTTOM_LEFT',
-                  BOTTOM_LEFT: 'BOTTOM_RIGHT',
-                  TOP_RIGHT: 'TOP_LEFT',
-                  TOP_LEFT: 'TOP_RIGHT',
-                }
-                updateStyle({
-                  textCorner: corner,
-                  mapCorner: opposite[corner],
-                  textFreePos: null,
-                  mapFreePos: null,
-                })
-              }}
             />
             <Button variant="outline" className="w-full rounded-[20px]" onClick={resetLayout}>
               <RotateCcw className="size-4" />

@@ -1397,7 +1397,11 @@ object OverlayCanvasRenderer {
         text: String
     ): Typeface {
         if (font == OverlayFont.DEFAULT || text.isBlank()) return custom
-        if (font != OverlayFont.KAISEI_TOKUMIN && text.any { it.code >= 0x3000 }) {
+        if (font != OverlayFont.KAISEI_TOKUMIN &&
+            font != OverlayFont.JP_SANS &&
+            font != OverlayFont.JP_SERIF &&
+            text.any { it.code >= 0x3000 }
+        ) {
             return cjkFallback
         }
         val probe = Paint().apply { typeface = custom }

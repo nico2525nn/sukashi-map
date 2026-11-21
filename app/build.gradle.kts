@@ -16,8 +16,8 @@ android {
         applicationId = "jp.nico2525.sukashimap"
         minSdk = 29
         targetSdk = 37
-        versionCode = 10
-        versionName = "0.2.2"
+        versionCode = 11
+        versionName = "0.3.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
