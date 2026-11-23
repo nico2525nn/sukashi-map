@@ -8,6 +8,7 @@ import {
   summaryLabel,
 } from '@/types'
 import { computeCropRect, effectiveAspect } from '@/lib/export'
+import { decodeRings } from '@/lib/map-data'
 import { buildRows, hitTest, overlayUnits } from '@/lib/renderer'
 
 describe('effectiveAspect', () => {
@@ -43,6 +44,22 @@ describe('computeCropRect', () => {
     const r = computeCropRect(1600, 1200, { ...defaultCropFrame, cropCenterX: 2, cropCenterY: -1 })
     expect(r.x).toBe(0)
     expect(r.y).toBe(0)
+  })
+})
+
+describe('decodeRings', () => {
+  it('decodes delta-encoded integer rings', () => {
+    expect(decodeRings({ scale: 1000, rings: [[123000, 24000, -10, 5, -10, 5]] })).toEqual([
+      [
+        [123, 24],
+        [122.99, 24.005],
+        [122.98, 24.01],
+      ],
+    ])
+  })
+  it('accepts legacy float rings', () => {
+    const legacy: [number, number][][] = [[[139.7, 35.6]]]
+    expect(decodeRings(legacy)).toBe(legacy)
   })
 })
 

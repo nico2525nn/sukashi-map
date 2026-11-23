@@ -1,5 +1,27 @@
 export type Ring = [number, number][]
 
+interface EncodedRings {
+  scale: number
+  rings: number[][]
+}
+
+/** Decode the compact delta-encoded integer rings used by the Web assets. */
+export function decodeRings(data: Ring[] | EncodedRings): Ring[] {
+  if (Array.isArray(data)) return data
+  const { scale, rings } = data
+  return rings.map((flat) => {
+    const ring: Ring = []
+    let x = 0
+    let y = 0
+    for (let index = 0; index < flat.length; index += 2) {
+      x += flat[index]
+      y += flat[index + 1]
+      ring.push([x / scale, y / scale])
+    }
+    return ring
+  })
+}
+
 export interface MapDatasets {
   world: Ring[]
   japanCoast: Ring[]
@@ -20,7 +42,7 @@ function loadRings(name: string): Promise<Ring[]> {
   const promise = fetch(dataUrl(name))
     .then((res) => {
       if (!res.ok) throw new Error(`map asset ${name}: ${res.status}`)
-      return res.json() as Promise<Ring[]>
+      return res.json().then(decodeRings)
     })
     .catch((err) => {
       cache.delete(name)

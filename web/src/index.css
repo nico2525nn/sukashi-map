@@ -160,13 +160,6 @@
   font-weight: 700;
   font-display: swap;
 }
-@font-face {
-  font-family: 'Kaisei Tokumin';
-  src: url('@fontsource/kaisei-tokumin/files/kaisei-tokumin-japanese-700-normal.woff2') format('woff2');
-  font-weight: 700;
-  font-display: swap;
-}
-
 @layer base {
   html {
     -webkit-tap-highlight-color: transparent;

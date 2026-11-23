@@ -1,8 +1,9 @@
 import { FONT_OPTIONS, type TransportInfo } from '@/types'
 
 const dynamicCss: Partial<Record<string, () => Promise<unknown>>> = {
-  'noto-sans-jp': () => import('@fontsource/noto-sans-jp/japanese-700.css'),
-  'noto-serif-jp': () => import('@fontsource/noto-serif-jp/japanese-700.css'),
+  'kaisei-tokumin': () => import('../generated/font-faces-kaisei-tokumin.css'),
+  'noto-sans-jp': () => import('../generated/font-faces-noto-sans-jp.css'),
+  'noto-serif-jp': () => import('../generated/font-faces-noto-serif-jp.css'),
 }
 
 /** All text that may be drawn into the watermark; font subsets are loaded for these glyphs. */

@@ -1,7 +1,7 @@
 {
   "name": "sukashi-map-web",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.3.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,6 +9,8 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
+    "fonts:generate": "node scripts/generate-font-faces.mjs",
+    "map:generate": "python3 scripts/build-web-map-data.py",
     "build:wasm": "cd wasm/geo-core && wasm-pack build --target web --out-dir pkg --release && rm -rf ../../src/wasm/geo && cp -r pkg ../../src/wasm/geo && rm -f ../../src/wasm/geo/.gitignore",
     "typecheck": "tsc -b",
     "build:pages": "GITHUB_ACTIONS=true tsc -b && GITHUB_ACTIONS=true vite build",
