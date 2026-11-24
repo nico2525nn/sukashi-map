@@ -129,8 +129,54 @@ describe('generated rail data', () => {
     expect(maxGap).toBeLessThan(10)
   })
 
-  it('takes the short 3.9 km Sanyo segment instead of the 250 km chain excursion', () => {
-    const kurashiki = { lon: 133.765555, lat: 34.601665 }
+  it('follows the Tokaido track between Tokyo and Shinagawa instead of taking a far point', () => {
+    const points = routeFor(
+      '東海道線',
+      'JR東日本',
+      { lon: 139.766709, lat: 35.681247 },
+      { lon: 139.73902, lat: 35.628549 },
+    )
+    expect(points.length).toBeGreaterThan(10)
+    let maxGap = 0
+    let length = 0
+    for (let i = 1; i < points.length; i++) {
+      const gap = distanceKm(points[i - 1], points[i])
+      maxGap = Math.max(maxGap, gap)
+      length += gap
+    }
+    expect(maxGap).toBeLessThan(1.2)
+    expect(length).toBeGreaterThan(5)
+    expect(length).toBeLessThan(10)
+  })
+
+  it('follows the Yamanote track between Shinjuku and Shibuya', () => {
+    const points = routeFor(
+      '山手線',
+      'JR東日本',
+      { lon: 139.700643, lat: 35.689874 },
+      { lon: 139.701724, lat: 35.658082 },
+    )
+    expect(points.length).toBeGreaterThan(5)
+    let maxGap = 0
+    for (let i = 1; i < points.length; i++) {
+      maxGap = Math.max(maxGap, distanceKm(points[i - 1], points[i]))
+    }
+    expect(maxGap).toBeLessThan(1.2)
+  })
+
+  it('keeps short lines such as Hakone Tozan instead of dropping them', () => {
+    const points = routeFor(
+      '鉄道線',
+      '小田急箱根',
+      { lon: 139.10395, lat: 35.23354 },
+      { lon: 139.048257, lat: 35.250893 },
+    )
+    expect(points.length).toBeGreaterThan(10)
+    expect(distanceKm(points[0], { lon: 139.10395, lat: 35.23354 })).toBeLessThan(0.6)
+    expect(distanceKm(points[points.length - 1], { lon: 139.048257, lat: 35.250893 })).toBeLessThan(0.6)
+  })
+
+  it('takes the short 3.9 km Sanyo segment instead of the 250 km chain excursion', () => {    const kurashiki = { lon: 133.765555, lat: 34.601665 }
     const nishiahati = { lon: 133.72792, lat: 34.58579 }
     const points = routeFor('山陽線', 'JR西日本', kurashiki, nishiahati)
     expect(points.length).toBeGreaterThanOrEqual(2)

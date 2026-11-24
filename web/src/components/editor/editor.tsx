@@ -31,12 +31,13 @@ import type { ExportFormat } from '@/types'
 
 interface EditorProps {
   datasets: MapDatasets | null
+  mapReady: boolean
   mapError?: boolean
   renderKey?: number
   onRetryMap?: () => void
 }
 
-export function Editor({ datasets, mapError = false, renderKey = 0, onRetryMap }: EditorProps) {
+export function Editor({ datasets, mapReady, mapError = false, renderKey = 0, onRetryMap }: EditorProps) {
   const media = useAppStore((s) => s.media)
   const info = useAppStore((s) => s.info)
   const style = useAppStore((s) => s.style)
@@ -83,7 +84,7 @@ export function Editor({ datasets, mapError = false, renderKey = 0, onRetryMap }
   }
 
   async function exportCurrent(format: ExportFormat, share: boolean) {
-    if (!datasets) {
+    if (!mapReady) {
       toast.info(mapError ? '地図データを読み込めませんでした。再試行してください' : '地図データを準備中です')
       return
     }
@@ -138,7 +139,13 @@ export function Editor({ datasets, mapError = false, renderKey = 0, onRetryMap }
         const audioNote = result.audioCaptureFailed ? '（音声を取得できませんでした）' : ''
         if (share) {
           const status = await shareOrDownload(result.blob, name, result.mime)
-          toast.success(status === 'shared' ? '共有メニューを開きました' : status === 'cancelled' ? '共有をキャンセルしました' : `${result.extension.toUpperCase()} を保存しました${audioNote}`)
+          if (status === 'cancelled') {
+            toast.success('共有をキャンセルしました')
+          } else {
+            const message =
+              status === 'shared' ? '共有メニューを開きました' : `${result.extension.toUpperCase()} を保存しました`
+            toast.success(`${message}${audioNote}`)
+          }
         } else {
           downloadBlob(result.blob, name)
           toast.success(`${result.extension.toUpperCase()} を保存しました${audioNote}`)
@@ -187,7 +194,7 @@ export function Editor({ datasets, mapError = false, renderKey = 0, onRetryMap }
   return (
     <div className={cn('flex min-h-0 flex-1 flex-col', compactSide && sheet ? 'pb-0' : 'pb-24')}>
       <RouteChip info={info} onClick={() => openSheet('info')} className={sheetShift} />
-      {!datasets && (
+      {!mapReady && (
         <div className="mx-auto mt-1 flex items-center gap-2 rounded-full border border-border/70 bg-card/80 px-3 py-1 text-xs text-muted-foreground">
           {mapError ? '地図データを読み込めませんでした' : '地図データを準備中…'}
           {mapError && onRetryMap && (
@@ -238,7 +245,7 @@ export function Editor({ datasets, mapError = false, renderKey = 0, onRetryMap }
           onSaveFormat={(format) => void exportCurrent(format, false)}
           onSaveVideo={() => void exportCurrent(settings.exportFormat, false)}
           onResetLayout={() => useAppStore.getState().resetLayout()}
-          disabled={exporting || !datasets}
+          disabled={exporting || !mapReady}
           className={sheetShift}
         />
       )}

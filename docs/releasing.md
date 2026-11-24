@@ -37,17 +37,22 @@ rotating the key, update `SUKASHI_RELEASE_CERT_SHA256` (or the default in
 
 ## CI signing
 
-`.github/workflows/android.yml` builds a signed release when these repository
-secrets exist:
+`.github/workflows/android.yml` builds a signed release only for `v*` tags,
+in the protected `release` environment. The normal test/debug job never sees
+the signing secrets.
+
+Configure the environment in **Settings → Environments → release** (required
+reviewers recommended) and add these repository or environment secrets:
 
 - `ANDROID_KEYSTORE_BASE64` — base64 of the `.jks` file
 - `ANDROID_KEYSTORE_PASSWORD`
 - `ANDROID_KEY_ALIAS`
 - `ANDROID_KEY_PASSWORD`
 
-The workflow prints the certificate and fails if it is unsigned, signed with
-`CN=Android Debug`, or signed with a SHA-256 other than
-`vars.RELEASE_CERT_SHA256` (or the pinned default in the script).
+Optionally set the repository variable `RELEASE_CERT_SHA256` when rotating the
+key; otherwise the script uses its pinned fingerprint. The workflow prints the
+certificate and fails if it is unsigned, signed with `CN=Android Debug`, or
+signed with a different SHA-256.
 
 ## Generated data
 

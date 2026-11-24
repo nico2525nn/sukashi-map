@@ -9,7 +9,7 @@ import {
   summaryLabel,
 } from '@/types'
 import { computeCropRect, effectiveAspect } from '@/lib/export'
-import { decodeRings, isInJapan, isInUs } from '@/lib/map-data'
+import { decodeRings, isInJapan, isInUs, mapDatasetsReady, type MapDatasets } from '@/lib/map-data'
 import { buildRows, hitTest, overlayUnits } from '@/lib/renderer'
 
 describe('effectiveAspect', () => {
@@ -78,6 +78,26 @@ describe('isInJapan', () => {
     expect(isInJapan(139.767, 35.681)).toBe(true)
     expect(isInJapan(153.98, 24.28)).toBe(true)
     expect(isInJapan(-73.78, 40.64)).toBe(false)
+  })
+})
+
+describe('mapDatasetsReady', () => {
+  const worldOnly = {
+    world: [[[0, 0]]],
+    japanCoast: [],
+    japanPrefectures: [],
+    japanWater: [],
+    usStates: [],
+  } as unknown as MapDatasets
+  const withJapan = {
+    ...worldOnly,
+    japanCoast: [[[139, 35]]],
+    japanPrefectures: [[[139, 35]]],
+  } as unknown as MapDatasets
+  it('requires only the regions used by the current anchors', () => {
+    expect(mapDatasetsReady([{ lon: 2.35, lat: 48.85 }], worldOnly)).toBe(true)
+    expect(mapDatasetsReady([{ lon: 139.767, lat: 35.681 }], worldOnly)).toBe(false)
+    expect(mapDatasetsReady([{ lon: 139.767, lat: 35.681 }], withJapan)).toBe(true)
   })
 })
 

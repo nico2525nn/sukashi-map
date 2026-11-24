@@ -230,6 +230,7 @@ class SukashiViewModel(application: Application) : AndroidViewModel(application)
                             arrLon = info.arrivalStationLon,
                             arrGroupCode = info.arrivalStationGroupCode,
                             preferredLineName = info.railwayLineName,
+                            preferredCompany = info.railwayCompany,
                             selectedViaLines = info.selectedViaLines,
                             isAutoShortest = info.isAutoShortestVia
                         )
@@ -457,9 +458,9 @@ class SukashiViewModel(application: Application) : AndroidViewModel(application)
         return railwayRepository.searchLines(query, s.photoLat, s.photoLon)
     }
 
-    suspend fun searchStations(query: String, lineName: String): List<StationRecord> {
+    suspend fun searchStations(query: String, lineName: String, companyName: String): List<StationRecord> {
         val s = _editorState.value.transportInfo
-        return railwayRepository.searchStations(query, lineName, s.photoLat, s.photoLon)
+        return railwayRepository.searchStations(query, lineName, companyName, s.photoLat, s.photoLon)
     }
 
     suspend fun searchPlaces(query: String): List<PlaceCandidate> {

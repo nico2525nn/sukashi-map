@@ -7,6 +7,12 @@ vi.mock('@/lib/renderer', () => ({
   renderOverlay: vi.fn(),
 }))
 
+const fixState = vi.hoisted(() => ({ hang: false }))
+vi.mock('fix-webm-duration', () => ({
+  default: (blob: Blob) =>
+    fixState.hang ? new Promise<Blob>(() => undefined) : Promise.resolve(blob),
+}))
+
 class FakeMediaRecorder {
   static isTypeSupported = () => true
   static failOnStart = false
@@ -40,8 +46,12 @@ class FakeMediaRecorder {
   }
 }
 
-function fakeVideo(options: { hangPlay?: boolean; withAudioApi?: boolean } = {}): HTMLVideoElement {
+function fakeVideo(
+  options: { hangPlay?: boolean; withAudioApi?: boolean; lateAudio?: boolean } = {},
+): HTMLVideoElement {
   const listeners = new Map<string, () => void>()
+  let audioStarted = false
+  const lateTracks = [{ id: 'late-audio', kind: 'audio', stop: () => undefined }]
   const video = {
     videoWidth: 320,
     videoHeight: 240,
@@ -53,6 +63,7 @@ function fakeVideo(options: { hangPlay?: boolean; withAudioApi?: boolean } = {})
       options.hangPlay
         ? new Promise<void>(() => undefined)
         : new Promise<void>((resolve) => {
+            audioStarted = true
             setTimeout(() => {
               video.ended = true
               listeners.get('ended')?.()
@@ -64,18 +75,27 @@ function fakeVideo(options: { hangPlay?: boolean; withAudioApi?: boolean } = {})
     removeEventListener: (name: string) => listeners.delete(name),
   }
   if (options.withAudioApi !== false) {
-    ;(video as unknown as { captureStream: () => MediaStream }).captureStream = () => ({
-      getAudioTracks: () => [],
-    }) as unknown as MediaStream
+    ;(video as unknown as { captureStream: () => MediaStream }).captureStream = () =>
+      ({
+        getAudioTracks: () => (options.lateAudio && audioStarted ? lateTracks : []),
+      }) as unknown as MediaStream
   }
   return video as unknown as HTMLVideoElement
 }
 
-function fakeCanvas() {
-  const stream = {
-    getAudioTracks: () => [],
-    getTracks: () => [],
+function fakeStream() {
+  const tracks: Array<{ id: string; kind: string; stop: () => void }> = []
+  return {
+    addTrack: (track: { id: string; kind: string; stop: () => void }) => {
+      if (!tracks.some((existing) => existing.id === track.id)) tracks.push(track)
+    },
+    getAudioTracks: () => tracks,
+    getTracks: () => tracks,
   }
+}
+
+function fakeCanvas() {
+  const stream = fakeStream()
   return {
     width: 0,
     height: 0,
@@ -91,7 +111,7 @@ function fakeCanvas() {
 
 class FakeHtmlCanvasElement {
   captureStream() {
-    return { getAudioTracks: () => [], getTracks: () => [] }
+    return fakeStream()
   }
 }
 
@@ -100,6 +120,7 @@ beforeEach(() => {
   FakeMediaRecorder.failOnStart = false
   FakeMediaRecorder.emitData = true
   FakeMediaRecorder.hangOnStop = false
+  fixState.hang = false
   vi.stubGlobal('MediaRecorder', FakeMediaRecorder)
   vi.stubGlobal('HTMLCanvasElement', FakeHtmlCanvasElement)
   vi.stubGlobal('requestAnimationFrame', () => 0)
@@ -149,6 +170,22 @@ describe('exportVideo recorder failures', () => {
     await expect(
       exportVideo({ ...options(), signal: controller.signal }),
     ).rejects.toMatchObject({ name: 'AbortError' })
+  })
+
+  it('reports audio tracks that appear only after playback starts', async () => {
+    const result = await exportVideo(options(fakeVideo({ lateAudio: true })))
+    expect(result.hasAudio).toBe(true)
+    expect(result.audioCaptureFailed).toBe(false)
+  })
+
+  it('stops waiting if the WebM duration fix is cancelled', async () => {
+    fixState.hang = true
+    const controller = new AbortController()
+    setTimeout(() => controller.abort(), 50)
+    await expect(
+      exportVideo({ ...options(), signal: controller.signal }),
+    ).rejects.toMatchObject({ name: 'AbortError' })
+    fixState.hang = false
   })
 
   it('reports whether audio was captured and whether the API was available', async () => {

@@ -123,6 +123,7 @@ export function InfoSheet() {
   const locToken = useRef(0)
   const applyingRef = useRef(false)
   const applyToken = useRef(0)
+  const editRevision = useRef(0)
 
   function cancelPendingApply() {
     applyToken.current++
@@ -131,8 +132,9 @@ export function InfoSheet() {
   }
 
   useEffect(() => {
-    // Switching media invalidates any route request started for the old asset.
-    applyToken.current++
+    // Switching media invalidates any route request started for the old asset
+    // and releases the Apply button.
+    if (applyingRef.current) cancelPendingApply()
   }, [mediaUrl])
 
   const wasOpen = useRef(false)
@@ -160,6 +162,8 @@ export function InfoSheet() {
   )
 
   function update(patch: Partial<TransportInfo>) {
+    editRevision.current++
+    if (applyingRef.current) cancelPendingApply()
     setDraft((d) => ({ ...d, ...patch }))
   }
 
@@ -168,7 +172,7 @@ export function InfoSheet() {
     applyingRef.current = true
     setApplying(true)
     const token = ++applyToken.current
-    const startRevision = useAppStore.getState().infoRevision
+    const startEdit = editRevision.current
     const startMediaUrl = useAppStore.getState().media?.url
     let next: TransportInfo = { ...draft, routePolylines: [] }
     let routeMissing = false
@@ -217,9 +221,11 @@ export function InfoSheet() {
         }
       }
 
-      if (applyToken.current !== token) return
+      if (applyToken.current !== token || editRevision.current !== startEdit) return
       const current = useAppStore.getState()
-      if (current.infoRevision !== startRevision || current.media?.url !== startMediaUrl) return
+      // Background metadata/geocode updates may change infoRevision; only a
+      // media change invalidates this apply, and that also bumps applyToken.
+      if (current.media?.url !== startMediaUrl) return
 
       locToken.current++
       updateStyle({

@@ -166,33 +166,67 @@ let worldPromise: Promise<Ring[]> | null = null
 let japanPromise: Promise<[Ring[], Ring[], Ring[]]> | null = null
 let usPromise: Promise<Ring[]> | null = null
 
+export function needsMapRegions(points: { lon: number; lat: number }[]): {
+  japan: boolean
+  us: boolean
+} {
+  return {
+    japan: points.some((p) => isInJapan(p.lon, p.lat)),
+    us: points.some((p) => isInUs(p.lon, p.lat)),
+  }
+}
+
+/** True when every layer required by these anchors is already loaded. */
+export function mapDatasetsReady(
+  points: { lon: number; lat: number }[],
+  datasets: MapDatasets | null,
+): boolean {
+  if (!datasets || datasets.world.length === 0) return false
+  const { japan, us } = needsMapRegions(points)
+  if (japan && (datasets.japanCoast.length === 0 || datasets.japanPrefectures.length === 0)) {
+    return false
+  }
+  if (us && datasets.usStates.length === 0) return false
+  return true
+}
+
 /**
  * Loads only the layers needed by the current anchors, reusing everything already fetched.
- * World is always required as the fallback/context layer.
+ * World is always required as the fallback/context layer. A pending layer for an
+ * unrelated region is never awaited: switching from Paris to Tokyo must not make
+ * the Paris request (or its failure) block the Tokyo export.
  */
 export async function ensureMapDatasetsFor(points: { lon: number; lat: number }[]): Promise<MapDatasets> {
-  const needJapan = points.some((p) => isInJapan(p.lon, p.lat))
-  const needUs = points.some((p) => isInUs(p.lon, p.lat))
+  const { japan: needJapan, us: needUs } = needsMapRegions(points)
   worldPromise ??= loadWorldMap().catch((err) => {
     worldPromise = null
     throw err
   })
   if (needJapan) {
-    japanPromise ??= Promise.all([loadJapanCoast(), loadJapanPrefectures(), loadJapanWater()]).catch((err) => {
+    japanPromise ??= Promise.all([
+      loadJapanCoast(),
+      loadJapanPrefectures(),
+      // Lakes are decorative; a missing lake file must not hide the whole map.
+      loadJapanWater().catch(() => [] as Ring[]),
+    ]).catch((err) => {
       japanPromise = null
       throw err
     })
+  } else {
+    void japanPromise?.catch(() => undefined)
   }
   if (needUs) {
     usPromise ??= loadUsStates().catch((err) => {
       usPromise = null
       throw err
     })
+  } else {
+    void usPromise?.catch(() => undefined)
   }
   const [world, japan, us] = await Promise.all([
     worldPromise,
-    japanPromise ?? Promise.resolve(null),
-    usPromise ?? Promise.resolve(null),
+    needJapan ? japanPromise : Promise.resolve(null),
+    needUs ? usPromise : Promise.resolve(null),
   ])
   datasetCache = {
     world,

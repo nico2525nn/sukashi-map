@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'web/**'
+      - 'app/src/main/assets/**'
       - '.github/workflows/web-pages.yml'
   workflow_dispatch:
 
@@ -36,7 +37,11 @@ jobs:
           npm run fonts:generate
           npm run map:generate
           npm run rail:generate
-          git diff --exit-code -- src/generated public/data
+          if [ -n "$(git status --porcelain -- src/generated public/data)" ]; then
+            git status --short -- src/generated public/data
+            echo "Generated assets are stale or untracked" >&2
+            exit 1
+          fi
       - name: Rust geometry tests
         working-directory: web
         run: cargo test --manifest-path wasm/geo-core/Cargo.toml

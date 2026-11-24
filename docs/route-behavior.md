@@ -30,13 +30,18 @@ company; Android route calculation already keys geometry by
 `company::line`.
 
 - A station must be within `0.05` degrees (about 5.5 km) of a point on the line.
+- If one chain contains both stations within `0.02` degrees, follow that chain
+  directly instead of searching the whole graph.
+- Otherwise the station connects to the nearest point on each chain (never to
+  every point in the radius) and the shortest connected path is used.
 - Adjacent fragments may be linked when their endpoints are within `0.09`
   degrees (about 10 km).
 - Consecutive points farther than `0.9` degrees are treated as corrupted data,
   not as track.
-- The selector runs a shortest-path search over the point graph. If no path
-  exists, it returns nothing and the UI draws the explicitly labelled straight
-  line; returning every fragment on the line is forbidden.
+- Lines longer than `0.002` degrees are kept, so short railways such as Hakone
+  Tozan are not discarded as noise.
+- If no path exists, the selector returns nothing and the UI draws the
+  explicitly labelled straight line; returning every fragment is forbidden.
 
 - Generator: `web/scripts/build-rail-geometry.py`
 - Selector: `web/src/lib/rail-geometry.ts`

@@ -262,17 +262,25 @@ export async function exportVideo(options: VideoExportOptions): Promise<VideoExp
     }).captureStream ?? (video as HTMLVideoElement & {
       mozCaptureStream?: () => MediaStream
     }).mozCaptureStream
-    if (!captureStream) {
-      audioCaptureFailed = true
-    } else {
+    let hasAudio = false
+    const refreshAudio = () => {
+      if (!captureStream) {
+        audioCaptureFailed = true
+        return
+      }
       try {
         const source = captureStream.call(video)
-        source.getAudioTracks().forEach((track: MediaStreamTrack) => stream.addTrack(track))
+        for (const track of source.getAudioTracks()) {
+          if (!stream.getAudioTracks().some((existing) => existing.id === track.id)) {
+            stream.addTrack(track)
+          }
+        }
       } catch {
         audioCaptureFailed = true
       }
+      hasAudio = stream.getAudioTracks().length > 0
     }
-    const hasAudio = stream.getAudioTracks().length > 0
+    refreshAudio()
 
     const mime = pickMime()
     recorder = new MediaRecorder(stream, {
@@ -360,6 +368,8 @@ export async function exportVideo(options: VideoExportOptions): Promise<VideoExp
       recorder.start(250)
       // A stalled play() must not sit outside the cancellation/timeout race.
       await Promise.race([video.play(), abort, timeout, recordingFailed])
+      // captureStream may expose audio tracks only after playback starts.
+      refreshAudio()
       const loop = () => {
         if (video.ended) {
           draw()
@@ -388,13 +398,18 @@ export async function exportVideo(options: VideoExportOptions): Promise<VideoExp
     // inside the same cancellation and timeout boundary.
     const blob = await Promise.race([done, abort, timeout, recordingFailed])
     if (blob.size === 0) throw new Error('動画データが空です')
+    refreshAudio()
     const durationMs =
       Number.isFinite(video.duration) && video.duration > 0
         ? video.duration * 1000
         : performance.now() - startedAt
     const finalBlob =
       (recorder.mimeType || mime).includes('webm')
-        ? await fixWebmDuration(blob, durationMs, { logger: false }).catch(() => blob)
+        ? await Promise.race([
+            fixWebmDuration(blob, durationMs, { logger: false }).catch(() => blob),
+            abort,
+            timeout,
+          ])
         : blob
     onProgress?.(1)
     return {

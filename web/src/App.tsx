@@ -13,7 +13,7 @@ import { TopBar } from '@/components/top-bar'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { initGeoWasm } from '@/lib/geo'
 import { isMediaFile, mediaFromFile } from '@/lib/media'
-import { ensureMapDatasetsFor, type MapDatasets } from '@/lib/map-data'
+import { ensureMapDatasetsFor, mapDatasetsReady, type MapDatasets } from '@/lib/map-data'
 import { formatLatLon } from '@/lib/geo'
 import { reverseGeocode } from '@/lib/data'
 import { type TransportInfo, mapAnchorPoints } from '@/types'
@@ -25,6 +25,7 @@ function App() {
   const media = useAppStore((s) => s.media)
   const info = useAppStore((s) => s.info)
   const font = useAppStore((s) => s.style.font)
+  const showMap = useAppStore((s) => s.style.showMap)
   const setMedia = useAppStore((s) => s.setMedia)
   const settings = useAppStore((s) => s.settings)
   const updateInfo = useAppStore((s) => s.updateInfo)
@@ -42,8 +43,10 @@ function App() {
   const [fontVersion, setFontVersion] = useState(0)
   const mediaToken = useRef(0)
   const [mapAttempt, setMapAttempt] = useState(0)
+  const mapLoadToken = useRef(0)
 
   const mapPoints = useMemo(() => mapAnchorPoints(info), [info])
+  const mapReady = !showMap || (datasets != null && mapDatasetsReady(mapPoints, datasets))
 
   useEffect(() => {
     void loadOverlayFont(font, overlayText(info))
@@ -62,18 +65,26 @@ function App() {
 
   useEffect(() => {
     if (!media && !cameraOpen) return
+    if (!showMap) {
+      setMapError(false)
+      return
+    }
+    const token = ++mapLoadToken.current
+    setMapError(false)
     ensureMapDatasetsFor(mapPoints)
       .then((loaded) => {
+        if (token !== mapLoadToken.current) return
         setMapError(false)
         setDatasets(loaded)
       })
       .catch((err) => {
+        if (token !== mapLoadToken.current) return
         console.error(err)
         setMapError(true)
         setDatasets(null)
         toast.error('地図データの読み込みに失敗しました')
       })
-  }, [media, cameraOpen, mapAttempt, mapPoints])
+  }, [media, cameraOpen, mapAttempt, mapPoints, showMap])
 
   const dark =
     settings.themeMode === 'DARK' || (settings.themeMode === 'SYSTEM' && systemDark)
@@ -209,6 +220,7 @@ function App() {
           {media ? (
             <Editor
               datasets={datasets}
+              mapReady={mapReady}
               mapError={mapError}
               renderKey={fontVersion * 2 + (wasmReady ? 1 : 0)}
               onRetryMap={() => setMapAttempt((v) => v + 1)}

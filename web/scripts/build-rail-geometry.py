@@ -201,7 +201,9 @@ def main():
         simplified = []
         for chain in chains:
             simplified_chain = rdp(chain, SIMPLIFY_METERS)
-            if len(simplified_chain) >= 2 and chain_length(simplified_chain) > 0.15:
+            # Drop only sub-200 m noise. The old 0.15-degree (about 16 km)
+            # cutoff silently removed short lines such as Hakone Tozan.
+            if len(simplified_chain) >= 2 and chain_length(simplified_chain) > 0.002:
                 simplified.append(simplified_chain)
         if not simplified:
             continue

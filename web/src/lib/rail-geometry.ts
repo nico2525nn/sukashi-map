@@ -3,6 +3,7 @@ import { loadRailLines } from '@/lib/data'
 
 const PRECISION = 1e5
 const SNAP_DEG = 0.05 // ~5.5 km: a station must be near the line
+const GOOD_SNAP_DEG = 0.02 // ~2.2 km: prefer a chain containing both stations
 const LINK_DEG = 0.09 // ~10 km: maximum gap between adjacent fragments
 const MAX_STEP_DEG = 0.9 // reject corrupted 100 km jumps inside a chain
 const cache = new Map<string, Promise<Coord[][]>>()
@@ -135,6 +136,62 @@ export function selectRouteFromChains(
     adjacency[b].push({ to: a, cost })
   }
 
+  // If one chain contains both stations, follow that chain. Searching the
+  // whole graph first makes a station spur to a far point look cheaper and
+  // can skip most of the track between two nearby stations.
+  const direct = ranges
+    .map((range) => {
+      let depIndex = -1
+      let arrIndex = -1
+      let depDistance = Number.POSITIVE_INFINITY
+      let arrDistance = Number.POSITIVE_INFINITY
+      for (let i = range.start; i <= range.end; i++) {
+        const toDep = distance(points[i], departure)
+        if (toDep < depDistance) {
+          depDistance = toDep
+          depIndex = i
+        }
+        const toArr = distance(points[i], arrival)
+        if (toArr < arrDistance) {
+          arrDistance = toArr
+          arrIndex = i
+        }
+      }
+      if (depIndex < 0 || arrIndex < 0) return null
+      if (depDistance > GOOD_SNAP_DEG || arrDistance > GOOD_SNAP_DEG) return null
+      const low = Math.min(depIndex, arrIndex)
+      const high = Math.max(depIndex, arrIndex)
+      let length = 0
+      for (let i = low; i < high; i++) {
+        const gap = distance(points[i], points[i + 1])
+        if (gap > MAX_STEP_DEG) return null
+        length += gap
+      }
+      return { depIndex, arrIndex, length }
+    })
+    .filter((candidate): candidate is { depIndex: number; arrIndex: number; length: number } =>
+      candidate != null,
+    )
+    .sort((a, b) => a.length - b.length)
+  if (direct.length) {
+    const best = direct[0]
+    const low = Math.min(best.depIndex, best.arrIndex)
+    const high = Math.max(best.depIndex, best.arrIndex)
+    const slice =
+      best.depIndex <= best.arrIndex
+        ? points.slice(low, high + 1)
+        : points.slice(low, high + 1).reverse()
+    const result: Coord[] = []
+    const push = (point: Coord) => {
+      const last = result[result.length - 1]
+      if (!last || distance(last, point) > 1e-6) result.push(point)
+    }
+    push(departure)
+    for (const point of slice) push(point)
+    push(arrival)
+    return result.length >= 2 ? [result] : []
+  }
+
   for (const range of ranges) {
     for (let i = range.start; i < range.end; i++) {
       const gap = distance(points[i], points[i + 1])
@@ -155,11 +212,21 @@ export function selectRouteFromChains(
     }
   }
 
-  for (let i = 0; i < points.length; i++) {
-    const toDeparture = distance(points[i], departure)
-    if (toDeparture <= SNAP_DEG) addEdge(source, i, toDeparture)
-    const toArrival = distance(points[i], arrival)
-    if (toArrival <= SNAP_DEG) addEdge(i, sink, toArrival)
+  for (const range of ranges) {
+    let departureBest: { index: number; distance: number } | null = null
+    let arrivalBest: { index: number; distance: number } | null = null
+    for (let i = range.start; i <= range.end; i++) {
+      const toDeparture = distance(points[i], departure)
+      if (toDeparture <= SNAP_DEG && (!departureBest || toDeparture < departureBest.distance)) {
+        departureBest = { index: i, distance: toDeparture }
+      }
+      const toArrival = distance(points[i], arrival)
+      if (toArrival <= SNAP_DEG && (!arrivalBest || toArrival < arrivalBest.distance)) {
+        arrivalBest = { index: i, distance: toArrival }
+      }
+    }
+    if (departureBest) addEdge(source, departureBest.index, departureBest.distance)
+    if (arrivalBest) addEdge(arrivalBest.index, sink, arrivalBest.distance)
   }
   if (!adjacency[source].length || !adjacency[sink].length) return []
 

@@ -171,6 +171,7 @@ class RailwayRepository(private val context: Context) {
     suspend fun searchStations(
         query: String,
         preferredLineName: String = "",
+        preferredCompany: String = "",
         refLat: Double? = null,
         refLon: Double? = null,
         limit: Int = 30
@@ -181,18 +182,22 @@ class RailwayRepository(private val context: Context) {
         val db = getDb()
 
         val prefCorridor = expandedCorridorLines(preferredLineName)
+        val company = preferredCompany.trim()
         val results = mutableListOf<StationRecord>()
 
         if (q.isEmpty() && preferredLineName.isNotBlank()) {
             val ph = prefCorridor.joinToString(",") { "?" }
-            val args = prefCorridor.toTypedArray() + arrayOf(
-                rLat.toString(), rLat.toString(), rLon.toString(), rLon.toString(), limit.toString()
-            )
+            val companyClause = if (company.isNotBlank()) "AND company_name = ?" else ""
+            val args = buildList {
+                addAll(prefCorridor)
+                if (company.isNotBlank()) add(company)
+                addAll(listOf(rLat.toString(), rLat.toString(), rLon.toString(), rLon.toString(), limit.toString()))
+            }.toTypedArray()
             db.rawQuery(
                 """
                 SELECT id, company_name, line_name, station_name, group_code, latitude, longitude
                 FROM stations
-                WHERE line_name IN ($ph)
+                WHERE line_name IN ($ph) $companyClause
                 ORDER BY (latitude - ?) * (latitude - ?) + (longitude - ?) * (longitude - ?) ASC
                 LIMIT ?
                 """.trimIndent(),
@@ -204,25 +209,43 @@ class RailwayRepository(private val context: Context) {
         }
 
         if (q.isEmpty()) {
+            val companyClause = if (company.isNotBlank()) "WHERE company_name = ?" else ""
+            val args = buildList {
+                if (company.isNotBlank()) add(company)
+                addAll(listOf(rLat.toString(), rLat.toString(), rLon.toString(), rLon.toString(), limit.toString()))
+            }.toTypedArray()
             db.rawQuery(
                 """
                 SELECT id, company_name, line_name, station_name, group_code, latitude, longitude
                 FROM stations
+                $companyClause
                 ORDER BY (latitude - ?) * (latitude - ?) + (longitude - ?) * (longitude - ?) ASC
                 LIMIT ?
                 """.trimIndent(),
-                arrayOf(rLat.toString(), rLat.toString(), rLon.toString(), rLon.toString(), limit.toString())
+                args
             ).use { c ->
                 while (c.moveToNext()) results.add(c.toStationRecord())
             }
             return@withContext results
         }
 
+        val companyClause = if (company.isNotBlank()) "AND company_name = ?" else ""
+        val args = buildList {
+            add("%$q%")
+            if (company.isNotBlank()) add(company)
+            add(q)
+            add("$q%")
+            add(rLat.toString())
+            add(rLat.toString())
+            add(rLon.toString())
+            add(rLon.toString())
+            add((limit * 2).toString())
+        }.toTypedArray()
         db.rawQuery(
             """
             SELECT id, company_name, line_name, station_name, group_code, latitude, longitude
             FROM stations
-            WHERE station_name LIKE ?
+            WHERE station_name LIKE ? $companyClause
             ORDER BY CASE
                 WHEN station_name = ? THEN 0
                 WHEN station_name LIKE ? THEN 1
@@ -231,7 +254,7 @@ class RailwayRepository(private val context: Context) {
             (latitude - ?) * (latitude - ?) + (longitude - ?) * (longitude - ?) ASC
             LIMIT ?
             """.trimIndent(),
-            arrayOf("%$q%", q, "$q%", rLat.toString(), rLat.toString(), rLon.toString(), rLon.toString(), (limit * 2).toString())
+            args
         ).use { c ->
             while (c.moveToNext()) results.add(c.toStationRecord())
         }
@@ -256,6 +279,7 @@ class RailwayRepository(private val context: Context) {
         arrLon: Double?,
         arrGroupCode: String,
         preferredLineName: String,
+        preferredCompany: String,
         selectedViaLines: List<String>,
         isAutoShortest: Boolean
     ): TrainRouteCalculationResult = withContext(Dispatchers.IO) {
@@ -283,7 +307,10 @@ class RailwayRepository(private val context: Context) {
 
         // Try direct shared (company, line) or connected Shinkansen corridor first
         if (directSharedKeys.isNotEmpty()) {
-            val chosenKey = directSharedKeys.firstOrNull { it.endsWith("::${preferredLineName.trim()}") }
+            val preferredKey =
+                if (preferredCompany.isNotBlank()) "$preferredCompany::${preferredLineName.trim()}" else ""
+            val chosenKey = directSharedKeys.firstOrNull { it == preferredKey }
+                ?: directSharedKeys.firstOrNull { it.endsWith("::${preferredLineName.trim()}") }
                 ?: directSharedKeys.first()
             val parts = chosenKey.split("::", limit = 2)
             autoCompany = parts.getOrNull(0)

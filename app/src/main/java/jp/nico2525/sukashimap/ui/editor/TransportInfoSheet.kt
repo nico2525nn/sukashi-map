@@ -208,7 +208,8 @@ fun TransportInfoSheet(
         draft.departureStationLon,
         draft.arrivalStationLat,
         draft.arrivalStationLon,
-        draft.railwayLineName
+        draft.railwayLineName,
+        draft.railwayCompany
     ) {
         if (draft.mode == TransportMode.TRAIN &&
             draft.isDomesticJapanRail &&
@@ -225,6 +226,7 @@ fun TransportInfoSheet(
                 arrLon = draft.arrivalStationLon!!,
                 arrGroupCode = draft.arrivalStationGroupCode,
                 preferredLineName = draft.railwayLineName,
+                preferredCompany = draft.railwayCompany,
                 selectedViaLines = draft.selectedViaLines,
                 isAutoShortest = draft.isAutoShortestVia
             )
@@ -856,6 +858,7 @@ fun TransportInfoSheet(
             viewModel = viewModel,
             kind = kind,
             currentLineFilter = draft.railwayLineName,
+            currentCompanyFilter = draft.railwayCompany,
             onDismiss = { activeSearchKind = null },
             onSelectAirline = { al ->
                 draft = draft.copy(airlineCode = al.code, airlineDisplayName = al.fullName)
@@ -884,7 +887,25 @@ fun TransportInfoSheet(
                 activeSearchKind = null
             },
             onSelectLine = { ln ->
-                draft = draft.copy(railwayLineName = ln.lineName, railwayCompany = ln.companyName)
+                val clearStations = draft.railwayLineName != ln.lineName || draft.railwayCompany != ln.companyName
+                draft = if (clearStations) {
+                    draft.copy(
+                        railwayLineName = ln.lineName,
+                        railwayCompany = ln.companyName,
+                        departureStationName = "",
+                        departureStationGroupCode = "",
+                        departureStationLat = null,
+                        departureStationLon = null,
+                        departureStationCountry = "",
+                        arrivalStationName = "",
+                        arrivalStationGroupCode = "",
+                        arrivalStationLat = null,
+                        arrivalStationLon = null,
+                        arrivalStationCountry = ""
+                    )
+                } else {
+                    draft.copy(railwayLineName = ln.lineName, railwayCompany = ln.companyName)
+                }
                 activeSearchKind = null
             },
             onSelectStation = { st, isDep ->
@@ -896,7 +917,7 @@ fun TransportInfoSheet(
                         departureStationLon = st.longitude,
                         departureStationCountry = "JP",
                         railwayLineName = draft.railwayLineName.ifBlank { st.lineName },
-                        railwayCompany = draft.railwayCompany.ifBlank { st.companyName }
+                        railwayCompany = st.companyName
                     )
                 } else {
                     draft.copy(
@@ -906,7 +927,7 @@ fun TransportInfoSheet(
                         arrivalStationLon = st.longitude,
                         arrivalStationCountry = "JP",
                         railwayLineName = draft.railwayLineName.ifBlank { st.lineName },
-                        railwayCompany = draft.railwayCompany.ifBlank { st.companyName }
+                        railwayCompany = st.companyName
                     )
                 }
                 activeSearchKind = null
@@ -1297,6 +1318,7 @@ private fun SearchEntitySheet(
     viewModel: SukashiViewModel,
     kind: SearchDialogKind,
     currentLineFilter: String,
+    currentCompanyFilter: String,
     onDismiss: () -> Unit,
     onSelectAirline: (AirlineEntry) -> Unit,
     onSelectAirport: (AirportRecord, Boolean) -> Unit,
@@ -1314,14 +1336,14 @@ private fun SearchEntitySheet(
     var stations by remember { mutableStateOf<List<StationRecord>>(emptyList()) }
     var places by remember { mutableStateOf<List<PlaceCandidate>>(emptyList()) }
 
-    LaunchedEffect(kind, query) {
+    LaunchedEffect(kind, query, currentCompanyFilter) {
         if (query.isNotEmpty()) delay(100)
         when (kind) {
             SearchDialogKind.AIRLINE -> airlines = viewModel.searchAirlines(query)
             SearchDialogKind.DEP_AIRPORT, SearchDialogKind.ARR_AIRPORT -> airports = viewModel.searchAirports(query)
             SearchDialogKind.RAILWAY_LINE -> lines = viewModel.searchLines(query)
             SearchDialogKind.DEP_STATION, SearchDialogKind.ARR_STATION -> {
-                stations = viewModel.searchStations(query, currentLineFilter)
+                stations = viewModel.searchStations(query, currentLineFilter, currentCompanyFilter)
             }
             SearchDialogKind.DEP_PLACE, SearchDialogKind.DEST_PLACE,
             SearchDialogKind.PHOTO_LOCATION -> places = viewModel.searchPlaces(query)
