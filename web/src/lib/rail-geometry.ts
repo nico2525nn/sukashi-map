@@ -2,6 +2,9 @@ import type { Coord } from '@/types'
 import { loadRailLines } from '@/lib/data'
 
 const PRECISION = 1e5
+const SNAP_DEG = 0.05 // ~5.5 km: a station must be near the line
+const LINK_DEG = 0.09 // ~10 km: maximum gap between adjacent fragments
+const MAX_STEP_DEG = 0.9 // reject corrupted 100 km jumps inside a chain
 const cache = new Map<string, Promise<Coord[][]>>()
 
 export function decodePolyline(encoded: string, precision = PRECISION): Coord[] {
@@ -52,24 +55,128 @@ async function fetchGeometry(key: string): Promise<Coord[][]> {
   return promise
 }
 
-function nearestIndex(chain: Coord[], point: Coord): { index: number; distance: number } {
-  let best = 0
-  let bestD = Number.POSITIVE_INFINITY
-  for (let i = 0; i < chain.length; i++) {
-    const dy = chain[i].lat - point.lat
-    const dx = (chain[i].lon - point.lon) * Math.cos((point.lat * Math.PI) / 180)
-    const d = dx * dx + dy * dy
-    if (d < bestD) {
-      bestD = d
-      best = i
-    }
-  }
-  return { index: best, distance: Math.sqrt(bestD) }
+function distance(a: Coord, b: Coord): number {
+  const dx = (a.lon - b.lon) * Math.cos((((a.lat + b.lat) / 2) * Math.PI) / 180)
+  const dy = a.lat - b.lat
+  return Math.hypot(dx, dy)
 }
 
-function sliceChain(chain: Coord[], start: number, end: number): Coord[] {
-  if (start <= end) return chain.slice(start, end + 1)
-  return chain.slice(end, start + 1).reverse()
+interface Edge {
+  to: number
+  cost: number
+}
+
+function shortestPath(adjacency: Edge[][], source: number, sink: number): number[] {
+  const size = adjacency.length
+  const dist = Array<number>(size).fill(Number.POSITIVE_INFINITY)
+  const previous = Array<number>(size).fill(-1)
+  const used = Array<boolean>(size).fill(false)
+  dist[source] = 0
+  for (let step = 0; step < size; step++) {
+    let current = -1
+    for (let i = 0; i < size; i++) {
+      if (!used[i] && dist[i] < Number.POSITIVE_INFINITY && (current < 0 || dist[i] < dist[current])) {
+        current = i
+      }
+    }
+    if (current < 0) break
+    if (current === sink) break
+    used[current] = true
+    for (const edge of adjacency[current]) {
+      if (used[edge.to]) continue
+      const candidate = dist[current] + edge.cost
+      if (candidate < dist[edge.to]) {
+        dist[edge.to] = candidate
+        previous[edge.to] = current
+      }
+    }
+  }
+  if (dist[sink] === Number.POSITIVE_INFINITY) return []
+  const path: number[] = []
+  for (let at = sink; at !== -1; at = previous[at]) {
+    path.push(at)
+    if (at === source) break
+  }
+  if (path[path.length - 1] !== source) return []
+  return path.reverse()
+}
+
+/**
+ * Pick the actual track between two stations.
+ *
+ * Chains can contain bad jumps where source sections were stitched in the
+ * wrong order, and a line can have several disconnected branches. Treating
+ * every point as a graph node and taking the shortest connected path avoids
+ * both the "draw the whole line" fallback and the "jump across the country"
+ * slice. Station endpoints are connected with a short straight spur when the
+ * source geometry stops a few kilometres short.
+ */
+export function selectRouteFromChains(
+  chains: Coord[][],
+  departure: Coord,
+  arrival: Coord,
+): Coord[][] {
+  const points: Coord[] = []
+  const ranges: Array<{ start: number; end: number }> = []
+  for (const chain of chains) {
+    if (chain.length < 2) continue
+    const start = points.length
+    points.push(...chain)
+    ranges.push({ start, end: points.length - 1 })
+  }
+  if (!points.length) return []
+
+  const source = points.length
+  const sink = source + 1
+  const adjacency: Edge[][] = Array.from({ length: sink + 1 }, () => [])
+  const addEdge = (a: number, b: number, cost: number) => {
+    if (a === b) return
+    adjacency[a].push({ to: b, cost })
+    adjacency[b].push({ to: a, cost })
+  }
+
+  for (const range of ranges) {
+    for (let i = range.start; i < range.end; i++) {
+      const gap = distance(points[i], points[i + 1])
+      // A 100 km jump means the generator stitched unrelated fragments.
+      if (gap <= MAX_STEP_DEG) addEdge(i, i + 1, gap)
+    }
+  }
+
+  const endpoints: Array<{ node: number; chain: number }> = []
+  ranges.forEach((range, chain) => {
+    endpoints.push({ node: range.start, chain }, { node: range.end, chain })
+  })
+  for (let i = 0; i < endpoints.length; i++) {
+    for (let j = i + 1; j < endpoints.length; j++) {
+      if (endpoints[i].chain === endpoints[j].chain) continue
+      const gap = distance(points[endpoints[i].node], points[endpoints[j].node])
+      if (gap <= LINK_DEG) addEdge(endpoints[i].node, endpoints[j].node, gap)
+    }
+  }
+
+  for (let i = 0; i < points.length; i++) {
+    const toDeparture = distance(points[i], departure)
+    if (toDeparture <= SNAP_DEG) addEdge(source, i, toDeparture)
+    const toArrival = distance(points[i], arrival)
+    if (toArrival <= SNAP_DEG) addEdge(i, sink, toArrival)
+  }
+  if (!adjacency[source].length || !adjacency[sink].length) return []
+
+  const path = shortestPath(adjacency, source, sink)
+  if (!path.length) return []
+  const trackNodes = path.filter((node) => node < points.length)
+  if (!trackNodes.length) return []
+
+  const result: Coord[] = []
+  const push = (point: Coord) => {
+    const last = result[result.length - 1]
+    if (!last || distance(last, point) > 1e-6) result.push(point)
+  }
+  push(departure)
+  for (const node of trackNodes) push(points[node])
+  push(arrival)
+  return result.length >= 2 ? [result] : []
 }
 
 /**
@@ -78,37 +185,23 @@ function sliceChain(chain: Coord[], start: number, end: number): Coord[] {
  * selected train line; no 14 MB database is downloaded.
  */
 export async function loadTrainRoute(
+  company: string,
   lineName: string,
   departure: Coord | null,
   arrival: Coord | null,
 ): Promise<Coord[][]> {
   if (!lineName.trim() || !departure || !arrival) return []
   const lines = await loadRailLines()
-  const line = lines.find((entry) => entry.line === lineName && entry.geometryKey)
+  let line = lines.find(
+    (entry) => entry.line === lineName && entry.company === company && entry.geometryKey,
+  )
+  if (!line && !company.trim()) {
+    // Old saved entries may not have a company. Only use the line when the
+    // name is unambiguous; never merge JR East/Central/West by name alone.
+    const matches = lines.filter((entry) => entry.line === lineName && entry.geometryKey)
+    if (matches.length === 1) line = matches[0]
+  }
   if (!line?.geometryKey) return []
   const chains = await fetchGeometry(line.geometryKey)
-  const candidates = chains
-    .map((chain) => {
-      const from = nearestIndex(chain, departure)
-      const to = nearestIndex(chain, arrival)
-      return { chain, from, to, score: from.distance + to.distance }
-    })
-    .filter((c) => c.from.distance < 0.22 && c.to.distance < 0.22)
-    .sort((a, b) => a.score - b.score)
-  if (candidates.length) {
-    const best = candidates[0]
-    return [sliceChain(best.chain, best.from.index, best.to.index)]
-  }
-  // Branches: if no single chain holds both stations, return the closest
-  // chain slices rather than inventing a straight line across the country.
-  const fromCandidate = chains
-    .map((chain) => nearestIndex(chain, departure))
-    .sort((a, b) => a.distance - b.distance)[0]
-  const toCandidate = chains
-    .map((chain) => nearestIndex(chain, arrival))
-    .sort((a, b) => a.distance - b.distance)[0]
-  if (fromCandidate && toCandidate) {
-    return chains.map((chain) => chain)
-  }
-  return []
+  return selectRouteFromChains(chains, departure, arrival)
 }

@@ -133,11 +133,17 @@ export function findEnclosingRing(lon: number, lat: number, rings: Ring[]): Ring
 }
 
 export function isInJapan(lon: number, lat: number): boolean {
-  return lon >= 122 && lon <= 148 && lat >= 24 && lat <= 47
+  const main = lon >= 122 && lon <= 148 && lat >= 24 && lat <= 47
+  // Minamitorishima is administered by Tokyo but lies far east of the main box.
+  const minamitorishima = lon >= 153 && lon <= 154.5 && lat >= 23.5 && lat <= 25
+  return main || minamitorishima
 }
 
 export function isInUs(lon: number, lat: number): boolean {
-  return lon >= -126 && lon <= -66 && lat >= 23 && lat <= 50
+  // Mainland, Alaska, Hawaii, and the Aleutians on the positive side of the
+  // dateline; the bundled US state polygons contain all of them.
+  const inLongitude = (lon >= -180 && lon <= -60) || (lon >= 170 && lon <= 180)
+  return inLongitude && lat >= 14 && lat <= 84
 }
 
 export function boundsAround(lon: number, lat: number, lonSpan: number, latSpan: number): Bounds {

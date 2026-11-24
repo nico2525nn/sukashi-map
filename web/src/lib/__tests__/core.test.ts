@@ -4,11 +4,12 @@ import {
   defaultCropFrame,
   defaultOverlayStyle,
   defaultTransportInfo,
+  mapAnchorPoints,
   normalizeOverlayStyle,
   summaryLabel,
 } from '@/types'
 import { computeCropRect, effectiveAspect } from '@/lib/export'
-import { decodeRings } from '@/lib/map-data'
+import { decodeRings, isInJapan, isInUs } from '@/lib/map-data'
 import { buildRows, hitTest, overlayUnits } from '@/lib/renderer'
 
 describe('effectiveAspect', () => {
@@ -47,8 +48,7 @@ describe('computeCropRect', () => {
   })
 })
 
-describe('decodeRings', () => {
-  it('decodes delta-encoded integer rings', () => {
+describe('decodeRings', () => {  it('decodes delta-encoded integer rings', () => {
     expect(decodeRings({ scale: 1000, rings: [[123000, 24000, -10, 5, -10, 5]] })).toEqual([
       [
         [123, 24],
@@ -60,6 +60,47 @@ describe('decodeRings', () => {
   it('accepts legacy float rings', () => {
     const legacy: [number, number][][] = [[[139.7, 35.6]]]
     expect(decodeRings(legacy)).toBe(legacy)
+  })
+})
+
+describe('isInUs', () => {
+  it('includes Alaska and Hawaii as well as the mainland', () => {
+    expect(isInUs(-157.858, 21.306)).toBe(true)
+    expect(isInUs(-149.9, 61.218)).toBe(true)
+    expect(isInUs(-73.78, 40.64)).toBe(true)
+    expect(isInUs(179.2, 52.0)).toBe(true)
+    expect(isInUs(139.767, 35.681)).toBe(false)
+  })
+})
+
+describe('isInJapan', () => {
+  it('includes Minamitorishima without waiting for a mainland point to warm the cache', () => {
+    expect(isInJapan(139.767, 35.681)).toBe(true)
+    expect(isInJapan(153.98, 24.28)).toBe(true)
+    expect(isInJapan(-73.78, 40.64)).toBe(false)
+  })
+})
+
+describe('mapAnchorPoints', () => {
+  it('uses the active transport mode instead of stale coordinates', () => {
+    const info = {
+      ...defaultTransportInfo,
+      mode: 'OTHER' as const,
+      photoLat: null,
+      photoLon: null,
+      departureLat: 40.7128,
+      departureLon: -74.006,
+      arrivalLat: 42.3601,
+      arrivalLon: -71.0589,
+      departurePlaceLat: 40.7128,
+      departurePlaceLon: -74.006,
+      destinationPlaceLat: 42.3601,
+      destinationPlaceLon: -71.0589,
+    }
+    const points = mapAnchorPoints(info)
+    expect(points).toHaveLength(2)
+    expect(points.some((point) => point.lon < -60)).toBe(true)
+    expect(points.some((point) => point.lon > 120)).toBe(false)
   })
 })
 

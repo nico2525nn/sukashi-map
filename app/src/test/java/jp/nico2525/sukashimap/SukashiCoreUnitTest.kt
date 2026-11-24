@@ -3,10 +3,12 @@ package jp.nico2525.sukashimap
 import jp.nico2525.sukashimap.data.AirlinesCatalog
 import jp.nico2525.sukashimap.data.RailwayRepository
 import jp.nico2525.sukashimap.data.RoutingAndPlaceService
+import jp.nico2525.sukashimap.export.exifLocationFor
 import jp.nico2525.sukashimap.model.Coord
 import jp.nico2525.sukashimap.model.CropAspectPreset
 import jp.nico2525.sukashimap.model.CropFrameSettings
 import jp.nico2525.sukashimap.model.GeoCoordinate
+import jp.nico2525.sukashimap.model.LocationDisplayMode
 import jp.nico2525.sukashimap.model.OverlayStyle
 import jp.nico2525.sukashimap.model.TransportInfo
 import jp.nico2525.sukashimap.render.MapProjectionEngine
@@ -20,6 +22,33 @@ import kotlin.math.abs
 import kotlin.math.sin
 
 class SukashiCoreUnitTest {
+
+    @Test
+    fun exifLocationUsesOnlyVisiblePhotoCoordinates() {
+        val visible = TransportInfo(
+            photoLat = 34.4342,
+            photoLon = 135.2440,
+            locationDisplayMode = LocationDisplayMode.NAME
+        )
+        assertEquals(34.4342 to 135.2440, exifLocationFor(visible))
+
+        val hidden = visible.copy(locationDisplayMode = LocationDisplayMode.NONE)
+        assertEquals(null, exifLocationFor(hidden))
+
+        val cleared = visible.copy(photoLat = null, photoLon = null)
+        assertEquals(null, exifLocationFor(cleared))
+
+        // Departure/arrival coordinates must never become the camera location.
+        val noPhoto = visible.copy(
+            photoLat = null,
+            photoLon = null,
+            departureLat = 35.5523,
+            departureLon = 139.7798,
+            arrivalLat = 26.1958,
+            arrivalLon = 127.6459
+        )
+        assertEquals(null, exifLocationFor(noPhoto))
+    }
 
     @Test
     fun projectionSelectsMercatorForDomesticAndRobinsonForTransPacific() {
@@ -37,6 +66,26 @@ class SukashiCoreUnitTest {
         val westUk = pacificProj.normalizeLon(-0.5)
         val eastUk = pacificProj.normalizeLon(0.5)
         assertTrue(abs(eastUk - westUk) > 170.0)
+    }
+
+    @Test
+    fun photoWaypointIsOnlyUsedWhenItDoesNotCreateALargeDetour() {
+        val depLat = 35.681
+        val depLon = 139.767
+        val destLat = 34.694
+        val destLon = 135.502
+
+        assertTrue(
+            RoutingAndPlaceService.shouldUsePhotoAsVia(
+                depLat, depLon, destLat, destLon, 35.45, 138.2
+            )
+        )
+        // Shanghai is far off a Tokyo -> Osaka drive.
+        assertFalse(
+            RoutingAndPlaceService.shouldUsePhotoAsVia(
+                depLat, depLon, destLat, destLon, 31.23, 121.47
+            )
+        )
     }
 
     @Test

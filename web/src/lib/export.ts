@@ -201,6 +201,8 @@ export interface VideoExportResult {
   blob: Blob
   mime: string
   extension: 'webm' | 'mp4'
+  hasAudio: boolean
+  audioCaptureFailed: boolean
 }
 
 export async function exportVideo(options: VideoExportOptions): Promise<VideoExportResult> {
@@ -249,19 +251,28 @@ export async function exportVideo(options: VideoExportOptions): Promise<VideoExp
   const stream = canvas.captureStream(30)
   let recorder: MediaRecorder | null = null
   let raf = 0
+  let audioCaptureFailed = false
+  let timeoutTimer: ReturnType<typeof setTimeout> | undefined
+  let abortHandler: (() => void) | undefined
   const startedAt = performance.now()
   try {
-    try {
-      const source = (video as HTMLVideoElement & {
-        captureStream?: () => MediaStream
-        mozCaptureStream?: () => MediaStream
-      }).captureStream?.() ?? (video as HTMLVideoElement & {
-        mozCaptureStream?: () => MediaStream
-      }).mozCaptureStream?.()
-      source?.getAudioTracks().forEach((track: MediaStreamTrack) => stream.addTrack(track))
-    } catch {
-      // Audio capture is best-effort in browsers.
+    const captureStream = (video as HTMLVideoElement & {
+      captureStream?: () => MediaStream
+      mozCaptureStream?: () => MediaStream
+    }).captureStream ?? (video as HTMLVideoElement & {
+      mozCaptureStream?: () => MediaStream
+    }).mozCaptureStream
+    if (!captureStream) {
+      audioCaptureFailed = true
+    } else {
+      try {
+        const source = captureStream.call(video)
+        source.getAudioTracks().forEach((track: MediaStreamTrack) => stream.addTrack(track))
+      } catch {
+        audioCaptureFailed = true
+      }
     }
+    const hasAudio = stream.getAudioTracks().length > 0
 
     const mime = pickMime()
     recorder = new MediaRecorder(stream, {
@@ -272,10 +283,26 @@ export async function exportVideo(options: VideoExportOptions): Promise<VideoExp
     recorder.ondataavailable = (e) => {
       if (e.data.size) chunks.push(e.data)
     }
+    let rejectRecording: ((error: Error) => void) | null = null
+    const recordingFailed = new Promise<never>((_, reject) => {
+      rejectRecording = reject
+    })
+    // The failure promise is raced below; a late rejection after a normal stop
+    // must not surface as an unhandled rejection.
+    recordingFailed.catch(() => undefined)
     const done = new Promise<Blob>((resolve, reject) => {
       recorder!.onstop = () => resolve(new Blob(chunks, { type: recorder!.mimeType || mime }))
-      recorder!.onerror = () => reject(new Error('動画の書き出しに失敗しました'))
+      recorder!.onerror = (event) => {
+        const error = new Error(
+          event.error?.message
+            ? `動画の書き出しに失敗しました: ${event.error.message}`
+            : '動画の書き出しに失敗しました',
+        )
+        rejectRecording?.(error)
+        reject(error)
+      }
     })
+    done.catch(() => undefined)
 
     const draw = () => {
       drawFrame()
@@ -317,18 +344,22 @@ export async function exportVideo(options: VideoExportOptions): Promise<VideoExp
         reject(new DOMException('Aborted', 'AbortError'))
         return
       }
-      signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')), {
-        once: true,
-      })
+      abortHandler = () => reject(new DOMException('Aborted', 'AbortError'))
+      signal.addEventListener('abort', abortHandler, { once: true })
     })
     const timeout = new Promise<never>((_, reject) => {
       const seconds = Number.isFinite(video.duration) ? video.duration : 30
-      setTimeout(() => reject(new Error('動画の書き出しがタイムアウトしました')), Math.max(15_000, seconds * 2_000 + 10_000))
+      timeoutTimer = setTimeout(
+        () => reject(new Error('動画の書き出しがタイムアウトしました')),
+        Math.max(15_000, seconds * 2_000 + 10_000),
+      )
     })
+    timeout.catch(() => undefined)
 
     try {
       recorder.start(250)
-      await video.play()
+      // A stalled play() must not sit outside the cancellation/timeout race.
+      await Promise.race([video.play(), abort, timeout, recordingFailed])
       const loop = () => {
         if (video.ended) {
           draw()
@@ -338,15 +369,25 @@ export async function exportVideo(options: VideoExportOptions): Promise<VideoExp
         raf = requestAnimationFrame(loop)
       }
       loop()
-      await Promise.race([ended, abort, timeout])
+      await Promise.race([ended, abort, timeout, recordingFailed])
     } finally {
       cancelAnimationFrame(raf)
       video.removeEventListener('ended', onEnded)
       video.removeEventListener('error', onVideoError)
-      if (recorder && recorder.state !== 'inactive') recorder.stop()
+      if (recorder && recorder.state !== 'inactive') {
+        try {
+          recorder.stop()
+        } catch {
+          // A recorder that already errored may reject stop; the failure is
+          // surfaced through recordingFailed/done.
+        }
+      }
     }
 
-    const blob = await done
+    // Stopping the recorder is asynchronous too, so the final blob must stay
+    // inside the same cancellation and timeout boundary.
+    const blob = await Promise.race([done, abort, timeout, recordingFailed])
+    if (blob.size === 0) throw new Error('動画データが空です')
     const durationMs =
       Number.isFinite(video.duration) && video.duration > 0
         ? video.duration * 1000
@@ -360,11 +401,21 @@ export async function exportVideo(options: VideoExportOptions): Promise<VideoExp
       blob: finalBlob,
       mime: finalBlob.type || recorder.mimeType || mime,
       extension: (recorder.mimeType || mime).includes('mp4') ? 'mp4' : 'webm',
+      hasAudio,
+      audioCaptureFailed,
     }
   } finally {
+    if (timeoutTimer) clearTimeout(timeoutTimer)
+    if (signal && abortHandler) signal.removeEventListener('abort', abortHandler)
     cancelAnimationFrame(raf)
     video.pause()
-    if (recorder && recorder.state !== 'inactive') recorder.stop()
+    if (recorder && recorder.state !== 'inactive') {
+      try {
+        recorder.stop()
+      } catch {
+        // Ignore: cleanup must not mask the original export error.
+      }
+    }
     stream.getTracks().forEach((track) => track.stop())
   }
 }

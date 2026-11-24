@@ -31,6 +31,7 @@ import androidx.media3.transformer.ExportResult
 import androidx.media3.transformer.Transformer
 import jp.nico2525.sukashimap.model.CropFrameSettings
 import jp.nico2525.sukashimap.model.ExportFormat
+import jp.nico2525.sukashimap.model.LocationDisplayMode
 import jp.nico2525.sukashimap.model.OverlayStyle
 import jp.nico2525.sukashimap.model.TransportInfo
 import jp.nico2525.sukashimap.render.MapDatasetSlice
@@ -41,6 +42,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import java.io.File
+import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -66,6 +68,21 @@ data class MediaMetadataExtract(
 
 private class VideoExportTimeoutException :
     Exception("動画の書き出しがタイムアウトしました")
+
+/**
+ * Returns the capture location that may be written to exported EXIF.
+ * A location is exported only when the user has an actual photo coordinate and
+ * has not hidden the location. Departure/arrival coordinates are never used:
+ * exporting those as the camera position both leaks the wrong place and
+ * contradicts the visible watermark.
+ */
+internal fun exifLocationFor(info: TransportInfo?): Pair<Double, Double>? {
+    if (info == null) return null
+    if (info.locationDisplayMode == LocationDisplayMode.NONE) return null
+    val lat = info.photoLat ?: return null
+    val lon = info.photoLon ?: return null
+    return lat to lon
+}
 
 object MediaExporter {
 
@@ -423,13 +440,16 @@ object MediaExporter {
         val tmpDir = File(context.cacheDir, "exports").apply { mkdirs() }
         val tmpFile = File(tmpDir, displayName)
         try {
-            tmpFile.outputStream().use { out ->
+            val compressed = tmpFile.outputStream().use { out ->
                 val compressFmt = if (format == ExportFormat.PNG_LOSSLESS) {
                     Bitmap.CompressFormat.PNG
                 } else {
                     Bitmap.CompressFormat.JPEG
                 }
                 bitmap.compress(compressFmt, 95, out)
+            }
+            if (!compressed || tmpFile.length() == 0L) {
+                throw IOException("画像の圧縮に失敗しました")
             }
 
             if (format == ExportFormat.JPEG_95) {
@@ -449,12 +469,8 @@ object MediaExporter {
                         exif.setAttribute(ExifInterface.TAG_DATETIME_ORIGINAL, dtStr)
                         exif.setAttribute(ExifInterface.TAG_DATETIME, dtStr)
                         exif.setAttribute(ExifInterface.TAG_DATETIME_DIGITIZED, dtStr)
-                        val lat = info.photoLat ?: info.startCoord()?.lat
-                        val lon = info.photoLon ?: info.startCoord()?.lon
-                        if (lat != null && lon != null) {
-                            exif.setLatLong(lat, lon)
-                        }
                     }
+                    exifLocationFor(info)?.let { (lat, lon) -> exif.setLatLong(lat, lon) }
                     exif.saveAttributes()
                 }
             }
@@ -475,14 +491,26 @@ object MediaExporter {
                 put(MediaStore.Images.Media.IS_PENDING, 1)
             }
             val resolver = context.contentResolver
-            val destUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values) ?: return@withContext null
-            resolver.openOutputStream(destUri)?.use { out ->
-                tmpFile.inputStream().use { it.copyTo(out) }
+            val destUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+                ?: return@withContext null
+            try {
+                val out = resolver.openOutputStream(destUri)
+                    ?: throw IOException("保存先を開けませんでした")
+                out.use { stream ->
+                    tmpFile.inputStream().use { input -> input.copyTo(stream) }
+                }
+                val published = resolver.update(
+                    destUri,
+                    ContentValues().apply { put(MediaStore.Images.Media.IS_PENDING, 0) },
+                    null,
+                    null
+                )
+                if (published <= 0) throw IOException("保存した画像を公開できませんでした")
+                destUri
+            } catch (error: Exception) {
+                runCatching { resolver.delete(destUri, null, null) }
+                throw error
             }
-            values.clear()
-            values.put(MediaStore.Images.Media.IS_PENDING, 0)
-            resolver.update(destUri, values, null, null)
-            destUri
         } finally {
             runCatching { tmpFile.delete() }
         }
@@ -580,7 +608,7 @@ object MediaExporter {
             }
         }
 
-        try {
+        return try {
             val primaryHdrMode = if (preserveHdr) {
                 Composition.HDR_MODE_KEEP_HDR
             } else {
@@ -597,13 +625,9 @@ object MediaExporter {
                     throw hdrErr
                 }
             }
-        } finally {
-            overlayBitmap.recycle()
-        }
 
-        return withContext(Dispatchers.IO) {
-            try {
-                if (!outFile.exists()) return@withContext null
+            withContext(Dispatchers.IO) {
+                if (!outFile.exists() || outFile.length() == 0L) return@withContext null
                 val dateTakenMillis = Calendar.getInstance().apply {
                     set(info.year, (info.month - 1).coerceIn(0, 11), info.day, info.hour, info.minute, 0)
                 }.timeInMillis
@@ -615,17 +639,30 @@ object MediaExporter {
                     put(MediaStore.Video.Media.IS_PENDING, 1)
                 }
                 val resolver = context.contentResolver
-                val destUri = resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values) ?: return@withContext null
-                resolver.openOutputStream(destUri)?.use { out ->
-                    outFile.inputStream().use { it.copyTo(out) }
+                val destUri = resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values)
+                    ?: return@withContext null
+                try {
+                    val out = resolver.openOutputStream(destUri)
+                        ?: throw IOException("保存先を開けませんでした")
+                    out.use { stream ->
+                        outFile.inputStream().use { input -> input.copyTo(stream) }
+                    }
+                    val published = resolver.update(
+                        destUri,
+                        ContentValues().apply { put(MediaStore.Video.Media.IS_PENDING, 0) },
+                        null,
+                        null
+                    )
+                    if (published <= 0) throw IOException("保存した動画を公開できませんでした")
+                    destUri
+                } catch (error: Exception) {
+                    runCatching { resolver.delete(destUri, null, null) }
+                    throw error
                 }
-                values.clear()
-                values.put(MediaStore.Video.Media.IS_PENDING, 0)
-                resolver.update(destUri, values, null, null)
-                destUri
-            } finally {
-                runCatching { outFile.delete() }
             }
+        } finally {
+            runCatching { overlayBitmap.recycle() }
+            runCatching { outFile.delete() }
         }
     }
 

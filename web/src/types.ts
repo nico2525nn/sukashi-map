@@ -364,6 +364,13 @@ export function currentGpsCoord(info: TransportInfo): Coord | null {
   return { lon: info.photoLon, lat: info.photoLat }
 }
 
+/** Coordinates that decide which map datasets and viewport are needed. */
+export function mapAnchorPoints(info: TransportInfo): Coord[] {
+  return [startCoord(info), endCoord(info), currentGpsCoord(info)].filter(
+    (point): point is Coord => point != null,
+  )
+}
+
 export function startCoord(info: TransportInfo): Coord | null {
   switch (info.mode) {
     case 'AIRPLANE':

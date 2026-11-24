@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Toaster, toast } from 'sonner'
 import { useMediaQuery } from '@/hooks/use-media-query'
 const Editor = lazy(() => import('@/components/editor/editor').then((m) => ({ default: m.Editor })))
@@ -16,7 +16,7 @@ import { isMediaFile, mediaFromFile } from '@/lib/media'
 import { ensureMapDatasetsFor, type MapDatasets } from '@/lib/map-data'
 import { formatLatLon } from '@/lib/geo'
 import { reverseGeocode } from '@/lib/data'
-import { type TransportInfo } from '@/types'
+import { type TransportInfo, mapAnchorPoints } from '@/types'
 import { loadOverlayFont, overlayText } from '@/lib/fonts'
 import { useAppStore } from '@/store/app-store'
 import { useUiStore } from '@/store/ui-store'
@@ -36,11 +36,14 @@ function App() {
   const sheet = useUiStore((s) => s.sheet)
   const inputRef = useRef<HTMLInputElement>(null)
   const [datasets, setDatasets] = useState<MapDatasets | null>(null)
+  const [mapError, setMapError] = useState(false)
   const [dragging, setDragging] = useState(false)
   const [wasmReady, setWasmReady] = useState(false)
   const [fontVersion, setFontVersion] = useState(0)
   const mediaToken = useRef(0)
   const [mapAttempt, setMapAttempt] = useState(0)
+
+  const mapPoints = useMemo(() => mapAnchorPoints(info), [info])
 
   useEffect(() => {
     void loadOverlayFont(font, overlayText(info))
@@ -59,19 +62,18 @@ function App() {
 
   useEffect(() => {
     if (!media && !cameraOpen) return
-    const points = [
-      info.photoLat != null && info.photoLon != null ? { lat: info.photoLat, lon: info.photoLon } : null,
-      info.departureLat != null && info.departureLon != null ? { lat: info.departureLat, lon: info.departureLon } : null,
-      info.arrivalLat != null && info.arrivalLon != null ? { lat: info.arrivalLat, lon: info.arrivalLon } : null,
-    ].filter((p): p is { lat: number; lon: number } => p != null)
-    ensureMapDatasetsFor(points)
-      .then(setDatasets)
+    ensureMapDatasetsFor(mapPoints)
+      .then((loaded) => {
+        setMapError(false)
+        setDatasets(loaded)
+      })
       .catch((err) => {
         console.error(err)
+        setMapError(true)
         setDatasets(null)
         toast.error('地図データの読み込みに失敗しました')
       })
-  }, [media, cameraOpen, mapAttempt, info.photoLat, info.photoLon, info.departureLat, info.departureLon, info.arrivalLat, info.arrivalLon])
+  }, [media, cameraOpen, mapAttempt, mapPoints])
 
   const dark =
     settings.themeMode === 'DARK' || (settings.themeMode === 'SYSTEM' && systemDark)
@@ -207,6 +209,7 @@ function App() {
           {media ? (
             <Editor
               datasets={datasets}
+              mapError={mapError}
               renderKey={fontVersion * 2 + (wasmReady ? 1 : 0)}
               onRetryMap={() => setMapAttempt((v) => v + 1)}
             />

@@ -192,11 +192,7 @@ class RoutingAndPlaceService(
     ): List<List<Coord>> = withContext(Dispatchers.IO) {
         var conn: HttpURLConnection? = null
         try {
-            val chord = hypot(destLat - depLat, destLon - depLon)
-            val useVia = viaPhotoLat != null && viaPhotoLon != null &&
-                hypot(viaPhotoLat - depLat, viaPhotoLon - depLon) > 0.01 &&
-                hypot(viaPhotoLat - destLat, viaPhotoLon - destLon) > 0.01 &&
-                hypot(viaPhotoLat - depLat, viaPhotoLon - depLon) + hypot(viaPhotoLat - destLat, viaPhotoLon - destLon) <= chord * 1.45
+            val useVia = shouldUsePhotoAsVia(depLat, depLon, destLat, destLon, viaPhotoLat, viaPhotoLon)
             val waypoints = if (useVia) {
                 "$depLon,$depLat;$viaPhotoLon,$viaPhotoLat;$destLon,$destLat"
             } else {
@@ -289,6 +285,22 @@ class RoutingAndPlaceService(
 
     companion object {
         fun formatLatLon(lat: Double, lon: Double): String = GeoCoordinate.format(lat, lon)
+
+        /** Keep in sync with Web fetchDrivingRoute in web/src/lib/data.ts. */
+        fun shouldUsePhotoAsVia(
+            depLat: Double,
+            depLon: Double,
+            destLat: Double,
+            destLon: Double,
+            viaLat: Double?,
+            viaLon: Double?
+        ): Boolean {
+            if (viaLat == null || viaLon == null) return false
+            val toDep = hypot(viaLat - depLat, viaLon - depLon)
+            val toDest = hypot(viaLat - destLat, viaLon - destLon)
+            val chord = hypot(destLat - depLat, destLon - depLon)
+            return toDep > 0.01 && toDest > 0.01 && toDep + toDest <= chord * 1.45
+        }
 
         /**
          * 100% Iterative Ramer-Douglas-Peucker simplification (zero StackOverflowError on 200k+ points!).

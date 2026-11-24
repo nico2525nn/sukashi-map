@@ -1,6 +1,7 @@
 import {
   currentGpsCoord,
   endCoord,
+  mapAnchorPoints,
   startCoord,
   type Coord,
   type OverlayCorner,
@@ -345,12 +346,6 @@ function focusPoints(info: TransportInfo): Coord[] {
   }
   if (!points.length && cur) points.push(cur)
   return points
-}
-
-function anchorPoints(info: TransportInfo): Coord[] {
-  return [startCoord(info), endCoord(info), currentGpsCoord(info)].filter(
-    (p): p is Coord => p != null,
-  )
 }
 
 function singlePointBounds(
@@ -972,7 +967,7 @@ function renderMap(
   const end = info.mode === 'SPOT' ? null : endCoord(info)
   const rawCur = currentGpsCoord(info)
 
-  const anchors = anchorPoints(info)
+  const anchors = mapAnchorPoints(info)
   const selectionPoints = anchors.length ? anchors : points
   const allJapan = selectionPoints.every(
     (p) => findEnclosingRing(p.lon, p.lat, datasets.japanPrefectures) != null,

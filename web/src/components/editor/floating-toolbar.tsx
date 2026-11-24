@@ -90,7 +90,7 @@ export function FloatingToolbar({
             {isVideo && (
               <DropdownMenuItem onClick={onSaveVideo}>
                 <Video className="size-4" />
-                WebM（音声付き）で保存
+                動画で保存
               </DropdownMenuItem>
             )}
             <DropdownMenuSeparator />

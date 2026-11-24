@@ -8,7 +8,7 @@
 - Tailwind CSS v4 + shadcn/ui (Radix)
 - Zustand（スタイル・設定・履歴の永続化）
 - Rust → WebAssembly (`wasm/geo-core`): 座標パース/整形、大圏航路、距離、RDP 簡略化
-- Canvas 2D: 写真・動画のプレビュー、地図・テキスト透かし、JPEG/PNG/WebM 書き出し
+- Canvas 2D: 写真・動画のプレビュー、地図・テキスト透かし、JPEG/PNG/MP4/WebM 書き出し
 
 ## 開発
 
@@ -28,7 +28,7 @@ npm run build:wasm
 鉄道形状データを再生成する場合:
 
 ```bash
-python3 web/scripts/build-rail-geometry.py
+npm run rail:generate
 ```
 
 ## M3 Expressive 監査

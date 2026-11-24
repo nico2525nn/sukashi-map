@@ -121,8 +121,19 @@ export function InfoSheet() {
   const [locating, setLocating] = useState(false)
   const [applying, setApplying] = useState(false)
   const locToken = useRef(0)
-  const routeToken = useRef(0)
   const applyingRef = useRef(false)
+  const applyToken = useRef(0)
+
+  function cancelPendingApply() {
+    applyToken.current++
+    applyingRef.current = false
+    setApplying(false)
+  }
+
+  useEffect(() => {
+    // Switching media invalidates any route request started for the old asset.
+    applyToken.current++
+  }, [mediaUrl])
 
   const wasOpen = useRef(false)
   useEffect(() => {
@@ -155,7 +166,13 @@ export function InfoSheet() {
   async function apply() {
     if (applyingRef.current) return
     applyingRef.current = true
+    setApplying(true)
+    const token = ++applyToken.current
+    const startRevision = useAppStore.getState().infoRevision
+    const startMediaUrl = useAppStore.getState().media?.url
     let next: TransportInfo = { ...draft, routePolylines: [] }
+    let routeMissing = false
+    let trainRouteMissing = false
     try {
       if (draft.mode === 'TRAIN' && draft.isDomesticJapanRail) {
         const depLat = draft.departureStationLat
@@ -163,64 +180,66 @@ export function InfoSheet() {
         const arrLat = draft.arrivalStationLat
         const arrLon = draft.arrivalStationLon
         if (depLat != null && depLon != null && arrLat != null && arrLon != null) {
-          setApplying(true)
           try {
             const route = await loadTrainRoute(
+              draft.railwayCompany,
               draft.railwayLineName,
               { lat: depLat, lon: depLon },
               { lat: arrLat, lon: arrLon },
             )
             if (route.length) next = { ...next, routePolylines: route }
+            else trainRouteMissing = true
           } catch (err) {
             console.error(err)
-          } finally {
-            setApplying(false)
+            trainRouteMissing = true
+          }
+        }
+      } else if (draft.mode === 'OTHER') {
+        const depLat = draft.departurePlaceLat
+        const depLon = draft.departurePlaceLon
+        const destLat = draft.destinationPlaceLat
+        const destLon = draft.destinationPlaceLon
+        if (depLat != null && depLon != null && destLat != null && destLon != null) {
+          try {
+            const route = await fetchDrivingRoute(
+              { lat: depLat, lon: depLon },
+              { lat: destLat, lon: destLon },
+              draft.photoLat != null && draft.photoLon != null
+                ? { lat: draft.photoLat, lon: draft.photoLon }
+                : null,
+            )
+            if (route.length) next = { ...next, routePolylines: route }
+            else routeMissing = true
+          } catch (err) {
+            console.error(err)
+            routeMissing = true
           }
         }
       }
-    } finally {
-      applyingRef.current = false
-    }
-    locToken.current++
-    updateStyle({
-      textCorner: styleDraft.textCorner,
-      mapCorner: styleDraft.mapCorner,
-      showMap: styleDraft.showMap,
-    })
-    const revision = applyInfo(next)
-    closeSheet()
-    toast.success('透かし情報を適用しました')
 
-    if (next.mode === 'OTHER') {
-      const depLat = next.departurePlaceLat
-      const depLon = next.departurePlaceLon
-      const destLat = next.destinationPlaceLat
-      const destLon = next.destinationPlaceLon
-      if (depLat != null && depLon != null && destLat != null && destLon != null) {
-        const token = ++routeToken.current
-        void fetchDrivingRoute(
-          { lat: depLat, lon: depLon },
-          { lat: destLat, lon: destLon },
-          next.photoLat != null && next.photoLon != null
-            ? { lat: next.photoLat, lon: next.photoLon }
-            : null,
-        ).then((polylines) => {
-          if (token !== routeToken.current) return
-          if (!polylines.length) {
-            toast.info('道路経路を取得できませんでした。直線で表示します')
-            return
-          }
-          const state = useAppStore.getState()
-          if (state.infoRevision !== revision || state.info.mode !== 'OTHER') return
-          const current = state.info
-          if (
-            current.departurePlaceLat !== depLat ||
-            current.departurePlaceLon !== depLon ||
-            current.destinationPlaceLat !== destLat ||
-            current.destinationPlaceLon !== destLon
-          ) return
-          state.updateInfo({ routePolylines: polylines })
-        })
+      if (applyToken.current !== token) return
+      const current = useAppStore.getState()
+      if (current.infoRevision !== startRevision || current.media?.url !== startMediaUrl) return
+
+      locToken.current++
+      updateStyle({
+        textCorner: styleDraft.textCorner,
+        mapCorner: styleDraft.mapCorner,
+        showMap: styleDraft.showMap,
+      })
+      applyInfo(next)
+      closeSheet()
+      toast.success('透かし情報を適用しました')
+      if (routeMissing) {
+        toast.info('道路経路を取得できませんでした。直線で表示します')
+      }
+      if (trainRouteMissing) {
+        toast.info('鉄道形状を取得できませんでした。直線で表示します')
+      }
+    } finally {
+      if (applyToken.current === token) {
+        applyingRef.current = false
+        setApplying(false)
       }
     }
   }
@@ -312,7 +331,26 @@ export function InfoSheet() {
       update({ airlineCode: airline.code, airlineDisplayName: airline.fullName })
     } else if (kind === 'line') {
       const line = value as RailLineEntry
-      update({ railwayLineName: line.line, railwayCompany: line.company })
+      const clearStations =
+        draft.railwayLineName !== line.line || draft.railwayCompany !== line.company
+      update({
+        railwayLineName: line.line,
+        railwayCompany: line.company,
+        ...(clearStations
+          ? {
+              departureStationName: '',
+              departureStationGroupCode: '',
+              departureStationLat: null,
+              departureStationLon: null,
+              departureStationCountry: '',
+              arrivalStationName: '',
+              arrivalStationGroupCode: '',
+              arrivalStationLat: null,
+              arrivalStationLon: null,
+              arrivalStationCountry: '',
+            }
+          : {}),
+      })
     } else if (kind === 'dep-station' || kind === 'arr-station') {
       const st = value as StationRecord
       const prefix = kind === 'dep-station' ? 'departureStation' : 'arrivalStation'
@@ -323,7 +361,7 @@ export function InfoSheet() {
         [`${prefix}Lon`]: st.lon,
         [`${prefix}Country`]: 'JP',
         railwayLineName: draft.railwayLineName || st.line,
-        railwayCompany: draft.railwayCompany || st.company,
+        railwayCompany: st.company,
       } as Partial<TransportInfo>)
     } else {
       const place = value as PlaceCandidate
@@ -445,7 +483,10 @@ export function InfoSheet() {
     <>
       <SheetShell
         open={open}
-        onOpenChange={(next) => (next ? undefined : closeSheet())}
+        onOpenChange={(next) => {
+          if (!next) cancelPendingApply()
+          closeSheet()
+        }}
         title="透かし情報"
         action={
           <Button
@@ -935,6 +976,7 @@ export function InfoSheet() {
       <EntitySearchDialog
         kind={searchKind}
         lineFilter={draft.railwayLineName}
+        companyFilter={draft.railwayCompany}
         biasLat={draft.photoLat}
         biasLon={draft.photoLon}
         onClose={() => setSearchKind(null)}
@@ -1048,6 +1090,7 @@ function PickerField({
 interface EntitySearchDialogProps {
   kind: SearchKind | null
   lineFilter: string
+  companyFilter: string
   biasLat: number | null
   biasLon: number | null
   onClose: () => void
@@ -1056,7 +1099,7 @@ interface EntitySearchDialogProps {
   onFreeText: (kind: SearchKind, text: string) => void
 }
 
-function EntitySearchDialog({ kind, lineFilter, biasLat, biasLon, onClose, onCloseAutoFocus, onSelect, onFreeText }: EntitySearchDialogProps) {
+function EntitySearchDialog({ kind, lineFilter, companyFilter, biasLat, biasLon, onClose, onCloseAutoFocus, onSelect, onFreeText }: EntitySearchDialogProps) {
   const isMobile = useIsMobile()
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(false)
@@ -1088,7 +1131,7 @@ function EntitySearchDialog({ kind, lineFilter, biasLat, biasLon, onClose, onClo
             const res = await searchRailLines(query)
             if (!cancelled) setLines(res)
           } else if (kind === 'dep-station' || kind === 'arr-station') {
-            const res = await searchStations(query, lineFilter)
+            const res = await searchStations(query, lineFilter, companyFilter)
             if (!cancelled) setStations(res)
           } else if (kind === 'photo-place' || kind === 'dep-place' || kind === 'dest-place') {
             const res = await searchPlaces(query, biasLat, biasLon)
@@ -1112,7 +1155,7 @@ function EntitySearchDialog({ kind, lineFilter, biasLat, biasLon, onClose, onClo
       cancelled = true
       clearTimeout(timer)
     }
-  }, [kind, query, lineFilter, biasLat, biasLon])
+  }, [kind, query, lineFilter, companyFilter, biasLat, biasLon])
 
   const title = kind ? SEARCH_TITLES[kind] : ''
 

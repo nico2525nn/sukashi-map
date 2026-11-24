@@ -127,11 +127,18 @@ export async function searchAirports(query: string): Promise<AirportRecord[]> {
     .slice(0, 24)
 }
 
-export async function searchStations(query: string, lineFilter = ''): Promise<StationRecord[]> {
+export async function searchStations(
+  query: string,
+  lineFilter = '',
+  companyFilter = '',
+): Promise<StationRecord[]> {
   const list = await loadStations()
   const q = query.trim()
   const line = lineFilter.trim()
-  const base = line ? list.filter((s) => s.line === line) : list
+  const company = companyFilter.trim()
+  const base = list.filter(
+    (s) => (!line || s.line === line) && (!company || s.company === company),
+  )
   if (!q) return base.slice(0, 24)
   return base
     .filter((s) => s.name.includes(q) || s.line.includes(q) || s.company.includes(q))
@@ -259,10 +266,16 @@ export async function fetchDrivingRoute(
   try {
     const controller = new AbortController()
     timer = setTimeout(() => controller.abort(), 8000)
+    const chord = Math.hypot(dest.lat - dep.lat, dest.lon - dep.lon)
+    const viaToDep = via ? Math.hypot(via.lat - dep.lat, via.lon - dep.lon) : 0
+    const viaToDest = via ? Math.hypot(via.lat - dest.lat, via.lon - dest.lon) : 0
+    // Keep in sync with Android RoutingAndPlaceService.fetchDrivingRoute:
+    // use the photo as a waypoint only when it does not create a large detour.
     const useVia =
       via != null &&
-      Math.hypot(via.lat - dep.lat, via.lon - dep.lon) > 0.01 &&
-      Math.hypot(via.lat - dest.lat, via.lon - dest.lon) > 0.01
+      viaToDep > 0.01 &&
+      viaToDest > 0.01 &&
+      viaToDep + viaToDest <= chord * 1.45
     const waypoints = useVia
       ? `${dep.lon},${dep.lat};${via!.lon},${via!.lat};${dest.lon},${dest.lat}`
       : `${dep.lon},${dep.lat};${dest.lon},${dest.lat}`

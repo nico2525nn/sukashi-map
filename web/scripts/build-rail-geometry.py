@@ -103,9 +103,11 @@ def merge_chains(chains):
             elif ai == -1 and bi == -1:
                 merged = a + list(reversed(b))[1:]
             elif ai == 0 and bi == -1:
-                merged = list(reversed(a)) + b[1:]
+                # Join a[0] to b[-1]: reverse both, keeping the two join points.
+                merged = list(reversed(a)) + list(reversed(b))
             elif ai == 0 and bi == 0:
-                merged = list(reversed(b)) + a[1:]
+                # Join a[0] to b[0]: reverse a, then keep b's join point.
+                merged = list(reversed(a)) + b
             else:
                 merged = a + b
             chains = [c for k, c in enumerate(chains) if k not in (i, j)] + [merged]
@@ -167,8 +169,8 @@ def encode(points):
 
 def main():
     con = sqlite3.connect(DB)
-    by_line = collections.defaultdict(list)
-    for line, _company, geometry_json in con.execute(
+    by_group = collections.defaultdict(list)
+    for line, company, geometry_json in con.execute(
         "select line_name, company_name, geometry_json from railroad_sections"
     ):
         try:
@@ -176,7 +178,7 @@ def main():
         except Exception:
             continue
         if len(points) >= 2:
-            by_line[line].append(points)
+            by_group[(line, company)].append(points)
     con.close()
 
     os.makedirs(GEOM, exist_ok=True)
@@ -186,9 +188,15 @@ def main():
 
     existing = json.load(open(LINES, encoding="utf-8"))
     by_company = {(x["line"], x["company"]): dict(x) for x in existing}
+    for entry in by_company.values():
+        for field in ("geometryKey", "geometryPoints", "geometryChains"):
+            entry.pop(field, None)
     total_points = 0
     total_bytes = 0
-    for line, sections in sorted(by_line.items()):
+    for (line, company), sections in sorted(by_group.items()):
+        entry = by_company.get((line, company))
+        if entry is None:
+            continue
         chains = merge_chains(build_chains(sections))
         simplified = []
         for chain in chains:
@@ -198,24 +206,45 @@ def main():
         if not simplified:
             continue
         encoded = [encode(c) for c in simplified]
-        key = hashlib.sha1(line.encode("utf-8")).hexdigest()[:12]
-        payload = {"chains": encoded, "points": sum(len(c) for c in simplified)}
+        key = hashlib.sha1(f"{company}\u0000{line}".encode("utf-8")).hexdigest()[:12]
+        payload = {
+            "line": line,
+            "company": company,
+            "chains": encoded,
+            "points": sum(len(c) for c in simplified),
+        }
         raw = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode()
         with open(os.path.join(GEOM, key + ".json"), "wb") as f:
             f.write(raw)
         total_points += payload["points"]
         total_bytes += len(raw)
-        for (l, company), entry in by_company.items():
-            if l == line:
-                entry["geometryKey"] = key
-                entry["geometryPoints"] = payload["points"]
-                entry["geometryChains"] = len(encoded)
+        entry["geometryKey"] = key
+        entry["geometryPoints"] = payload["points"]
+        entry["geometryChains"] = len(encoded)
 
     payload = sorted(by_company.values(), key=lambda x: (x["line"], x["company"]))
     with open(LINES, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, separators=(",", ":"))
 
-    print(f"lines={len(by_line)} points={total_points} geometry_bytes={total_bytes}")
+    errors = []
+    for entry in payload:
+        key = entry.get("geometryKey")
+        if not key:
+            continue
+        path = os.path.join(GEOM, key + ".json")
+        if not os.path.isfile(path):
+            errors.append(f"missing geometry: {entry['company']} {entry['line']} -> {key}")
+            continue
+        data = json.load(open(path, encoding="utf-8"))
+        if data.get("line") != entry["line"] or data.get("company") != entry["company"]:
+            errors.append(
+                f"geometry mismatch: {entry['company']} {entry['line']} -> "
+                f"{data.get('company')} {data.get('line')}"
+            )
+    if errors:
+        raise SystemExit("\n".join(errors))
+
+    print(f"groups={len(by_group)} points={total_points} geometry_bytes={total_bytes}")
     print(f"manifest={os.path.getsize(LINES)} bytes, files={len(os.listdir(GEOM))}")
 
 
